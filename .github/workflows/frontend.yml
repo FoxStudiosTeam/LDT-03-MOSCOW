@@ -28,7 +28,7 @@ jobs:
         run: npm run lint
 
   build-and-deploy:
-    # needs: lint-and-test
+    needs: lint-and-test
     if: ${{ github.ref == 'refs/heads/main' }}
     uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.21
     with:
