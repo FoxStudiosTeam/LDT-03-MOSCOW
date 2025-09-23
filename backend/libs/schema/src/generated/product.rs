@@ -8,20 +8,20 @@ use sqlx::types::*;
 #[derive(Clone, Debug, FromRow)]
 pub struct Product {
     pub title: String,
+    pub guid: uuid::Uuid,
+    pub updated_at: chrono::NaiveDateTime,
     pub created_at: chrono::NaiveDateTime,
     pub count: i32,
-    pub updated_at: chrono::NaiveDateTime,
-    pub guid: uuid::Uuid,
 }
 
 impl Product {
     pub fn into_active(self) -> ActiveProduct {
         ActiveProduct {
             title: Set(self.title),
+            guid: Set(self.guid),
+            updated_at: Set(self.updated_at),
             created_at: Set(self.created_at),
             count: Set(self.count),
-            updated_at: Set(self.updated_at),
-            guid: Set(self.guid),
         }
     }
 }
@@ -29,20 +29,20 @@ impl Product {
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveProduct {
     pub title: Optional<String>,
+    pub guid: Optional<uuid::Uuid>,
+    pub updated_at: Optional<chrono::NaiveDateTime>,
     pub created_at: Optional<chrono::NaiveDateTime>,
     pub count: Optional<i32>,
-    pub updated_at: Optional<chrono::NaiveDateTime>,
-    pub guid: Optional<uuid::Uuid>,
 }
 
 impl ActiveProduct {
     pub fn into_product(self) -> Option<Product> {
         Some(Product {
             title: self.title.into_option()?,
+            guid: self.guid.into_option()?,
+            updated_at: self.updated_at.into_option()?,
             created_at: self.created_at.into_option()?,
             count: self.count.into_option()?,
-            updated_at: self.updated_at.into_option()?,
-            guid: self.guid.into_option()?,
         })
     }
 }
@@ -67,10 +67,10 @@ impl TableSelector for ActiveProduct {
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
             "title" => self.title.is_set(),
+            "guid" => self.guid.is_set(),
+            "updated_at" => self.updated_at.is_set(),
             "created_at" => self.created_at.is_set(),
             "count" => self.count.is_set(),
-            "updated_at" => self.updated_at.is_set(),
-            "guid" => self.guid.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
@@ -80,6 +80,20 @@ impl TableSelector for ActiveProduct {
                 name: "title",
                 nullable: false,
                 default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "guid",
+                nullable: false,
+                default: Some("gen_random_uuid()"),
+                is_unique: false,
+                is_primary: true,
+            },
+            ColumnDef{
+                name: "updated_at",
+                nullable: false,
+                default: Some("LOCALTIMESTAMP"),
                 is_unique: false,
                 is_primary: false,
             },
@@ -96,20 +110,6 @@ impl TableSelector for ActiveProduct {
                 default: None,
                 is_unique: false,
                 is_primary: false,
-            },
-            ColumnDef{
-                name: "updated_at",
-                nullable: false,
-                default: Some("LOCALTIMESTAMP"),
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "guid",
-                nullable: false,
-                default: Some("gen_random_uuid()"),
-                is_unique: false,
-                is_primary: true,
             },
         ]
     }
@@ -151,10 +151,10 @@ impl ModelOps<sqlx::Postgres> for ActiveProduct
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.guid {tracing::debug!("Binded guid"); q = q.bind(v);}
+        if let Set(v) = &self.updated_at {tracing::debug!("Binded updated_at"); q = q.bind(v);}
         if let Set(v) = &self.created_at {tracing::debug!("Binded created_at"); q = q.bind(v);}
         if let Set(v) = &self.count {tracing::debug!("Binded count"); q = q.bind(v);}
-        if let Set(v) = &self.updated_at {tracing::debug!("Binded updated_at"); q = q.bind(v);}
-        if let Set(v) = &self.guid {tracing::debug!("Binded guid"); q = q.bind(v);}
         q
     }
     
@@ -272,10 +272,10 @@ impl ModelOps<sqlx::MySql> for ActiveProduct
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.guid {tracing::debug!("Binded guid"); q = q.bind(v);}
+        if let Set(v) = &self.updated_at {tracing::debug!("Binded updated_at"); q = q.bind(v);}
         if let Set(v) = &self.created_at {tracing::debug!("Binded created_at"); q = q.bind(v);}
         if let Set(v) = &self.count {tracing::debug!("Binded count"); q = q.bind(v);}
-        if let Set(v) = &self.updated_at {tracing::debug!("Binded updated_at"); q = q.bind(v);}
-        if let Set(v) = &self.guid {tracing::debug!("Binded guid"); q = q.bind(v);}
         q
     }
     
@@ -393,10 +393,10 @@ impl ModelOps<sqlx::Sqlite> for ActiveProduct
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.guid {tracing::debug!("Binded guid"); q = q.bind(v);}
+        if let Set(v) = &self.updated_at {tracing::debug!("Binded updated_at"); q = q.bind(v);}
         if let Set(v) = &self.created_at {tracing::debug!("Binded created_at"); q = q.bind(v);}
         if let Set(v) = &self.count {tracing::debug!("Binded count"); q = q.bind(v);}
-        if let Set(v) = &self.updated_at {tracing::debug!("Binded updated_at"); q = q.bind(v);}
-        if let Set(v) = &self.guid {tracing::debug!("Binded guid"); q = q.bind(v);}
         q
     }
     
