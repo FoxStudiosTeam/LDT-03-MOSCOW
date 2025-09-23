@@ -30,7 +30,7 @@ jobs:
   build-and-deploy:
     needs: lint-and-test
     if: ${{ github.ref == 'refs/heads/main' }}
-    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.23
+    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.25
     with:
       image-name: frontend/frontend
       namespace: solution
