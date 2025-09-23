@@ -38,7 +38,7 @@ jobs:
       namespace: solution
       workdir: './frontend'
       context: './'
-      manifest-files-path-root: ./frontend/.deployment/
+      manifest-files-path-root: ./frontend/.deployment
       service-name: frontend
       main-branch: setup
       shared_cache: /mnt/shared
