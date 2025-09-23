@@ -6,66 +6,80 @@ use sqlx::Pool;
 use sqlx::types::*;
 
 #[derive(Clone, Debug, FromRow)]
-pub struct Works {
+pub struct IkoRelationship {
+    pub project: uuid::Uuid,
+    pub user_uuid: Option<uuid::Uuid>,
     pub uuid: uuid::Uuid,
-    pub work_category: uuid::Uuid,
-    pub title: String,
 }
 
-impl Works {
-    pub fn into_active(self) -> ActiveWorks {
-        ActiveWorks {
+impl IkoRelationship {
+    pub fn into_active(self) -> ActiveIkoRelationship {
+        ActiveIkoRelationship {
+            project: Set(self.project),
+            user_uuid: Set(self.user_uuid),
             uuid: Set(self.uuid),
-            work_category: Set(self.work_category),
-            title: Set(self.title),
         }
     }
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
-pub struct ActiveWorks {
+pub struct ActiveIkoRelationship {
+    pub project: Optional<uuid::Uuid>,
+    pub user_uuid: Optional<Option<uuid::Uuid>>,
     pub uuid: Optional<uuid::Uuid>,
-    pub work_category: Optional<uuid::Uuid>,
-    pub title: Optional<String>,
 }
 
-impl ActiveWorks {
-    pub fn into_works(self) -> Option<Works> {
-        Some(Works {
+impl ActiveIkoRelationship {
+    pub fn into_iko_relationship(self) -> Option<IkoRelationship> {
+        Some(IkoRelationship {
+            project: self.project.into_option()?,
+            user_uuid: self.user_uuid.into_option()?,
             uuid: self.uuid.into_option()?,
-            work_category: self.work_category.into_option()?,
-            title: self.title.into_option()?,
         })
     }
 }
 
-pub trait OrmWorks<DB: OrmDB> {
-    fn works<'e>(&'e self) -> DBSelector<'e, DB, Pool<DB>, ActiveWorks>
+pub trait OrmIkoRelationship<DB: OrmDB> {
+    fn iko_relationship<'e>(&'e self) -> DBSelector<'e, DB, Pool<DB>, ActiveIkoRelationship>
     where 
         &'e Pool<DB>: Executor<'e, Database = DB>;
 }
 
-pub trait OrmTXWorks<'c, DB: OrmDB> {
-    fn works(&'c mut self) -> TxSelector<'c, DB, ActiveWorks>;
+pub trait OrmTXIkoRelationship<'c, DB: OrmDB> {
+    fn iko_relationship(&'c mut self) -> TxSelector<'c, DB, ActiveIkoRelationship>;
 }
 
-impl TableSelector for ActiveWorks {
-    const TABLE_NAME: &'static str = "works";
-    const TABLE_SCHEMA: &'static str = "norm";
+impl TableSelector for ActiveIkoRelationship {
+    const TABLE_NAME: &'static str = "iko_relationship";
+    const TABLE_SCHEMA: &'static str = "project";
     type TypePK = uuid::Uuid;
     fn pk_column() -> &'static str {
         "uuid"
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
+            "project" => self.project.is_set(),
+            "user_uuid" => self.user_uuid.is_set(),
             "uuid" => self.uuid.is_set(),
-            "work_category" => self.work_category.is_set(),
-            "title" => self.title.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
     fn columns() -> &'static [ColumnDef] {
         &[
+            ColumnDef{
+                name: "project",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "user_uuid",
+                nullable: true,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
             ColumnDef{
                 name: "uuid",
                 nullable: false,
@@ -73,28 +87,14 @@ impl TableSelector for ActiveWorks {
                 is_unique: false,
                 is_primary: true,
             },
-            ColumnDef{
-                name: "work_category",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "title",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
         ]
     }
 }
 
 #[cfg(feature="postgres")]
-impl OrmWorks<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
+impl OrmIkoRelationship<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
 {
-    fn works<'e>(&'e self) -> DBSelector<'e, sqlx::Postgres, Pool<sqlx::Postgres>, ActiveWorks>
+    fn iko_relationship<'e>(&'e self) -> DBSelector<'e, sqlx::Postgres, Pool<sqlx::Postgres>, ActiveIkoRelationship>
     where 
         &'e Pool<sqlx::Postgres>: Executor<'e, Database = sqlx::Postgres>
     {
@@ -103,18 +103,18 @@ impl OrmWorks<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
 }
 
 #[cfg(feature="postgres")]
-impl<'c> OrmTXWorks<'c, sqlx::Postgres> for OrmTX<sqlx::Postgres>
+impl<'c> OrmTXIkoRelationship<'c, sqlx::Postgres> for OrmTX<sqlx::Postgres>
 {
-    fn works(&'c mut self) -> TxSelector<'c, sqlx::Postgres, ActiveWorks>
+    fn iko_relationship(&'c mut self) -> TxSelector<'c, sqlx::Postgres, ActiveIkoRelationship>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="postgres")]
-impl ModelOps<sqlx::Postgres> for ActiveWorks 
+impl ModelOps<sqlx::Postgres> for ActiveIkoRelationship 
 {
-    type NonActive = Works;
+    type NonActive = IkoRelationship;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::Postgres> ,for<'q> <sqlx::Postgres as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::Postgres>  {
         match mode {
@@ -126,9 +126,9 @@ impl ModelOps<sqlx::Postgres> for ActiveWorks
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
+        if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
+        if let Set(v) = &self.user_uuid {tracing::debug!("Binded user_uuid"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
@@ -211,9 +211,9 @@ impl ModelOps<sqlx::Postgres> for ActiveWorks
 }
 
 #[cfg(feature="mysql")]
-impl OrmWorks<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
+impl OrmIkoRelationship<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
 {
-    fn works<'e>(&'e self) -> DBSelector<'e, sqlx::MySql, Pool<sqlx::MySql>, ActiveWorks>
+    fn iko_relationship<'e>(&'e self) -> DBSelector<'e, sqlx::MySql, Pool<sqlx::MySql>, ActiveIkoRelationship>
     where 
         &'e Pool<sqlx::MySql>: Executor<'e, Database = sqlx::MySql>
     {
@@ -222,18 +222,18 @@ impl OrmWorks<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
 }
 
 #[cfg(feature="mysql")]
-impl<'c> OrmTXWorks<'c, sqlx::MySql> for OrmTX<sqlx::MySql>
+impl<'c> OrmTXIkoRelationship<'c, sqlx::MySql> for OrmTX<sqlx::MySql>
 {
-    fn works(&'c mut self) -> TxSelector<'c, sqlx::MySql, ActiveWorks>
+    fn iko_relationship(&'c mut self) -> TxSelector<'c, sqlx::MySql, ActiveIkoRelationship>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="mysql")]
-impl ModelOps<sqlx::MySql> for ActiveWorks 
+impl ModelOps<sqlx::MySql> for ActiveIkoRelationship 
 {
-    type NonActive = Works;
+    type NonActive = IkoRelationship;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::MySql> ,for<'q> <sqlx::MySql as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::MySql>  {
         match mode {
@@ -245,9 +245,9 @@ impl ModelOps<sqlx::MySql> for ActiveWorks
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
+        if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
+        if let Set(v) = &self.user_uuid {tracing::debug!("Binded user_uuid"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
@@ -330,9 +330,9 @@ impl ModelOps<sqlx::MySql> for ActiveWorks
 }
 
 #[cfg(feature="sqlite")]
-impl OrmWorks<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
+impl OrmIkoRelationship<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
 {
-    fn works<'e>(&'e self) -> DBSelector<'e, sqlx::Sqlite, Pool<sqlx::Sqlite>, ActiveWorks>
+    fn iko_relationship<'e>(&'e self) -> DBSelector<'e, sqlx::Sqlite, Pool<sqlx::Sqlite>, ActiveIkoRelationship>
     where 
         &'e Pool<sqlx::Sqlite>: Executor<'e, Database = sqlx::Sqlite>
     {
@@ -341,18 +341,18 @@ impl OrmWorks<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
 }
 
 #[cfg(feature="sqlite")]
-impl<'c> OrmTXWorks<'c, sqlx::Sqlite> for OrmTX<sqlx::Sqlite>
+impl<'c> OrmTXIkoRelationship<'c, sqlx::Sqlite> for OrmTX<sqlx::Sqlite>
 {
-    fn works(&'c mut self) -> TxSelector<'c, sqlx::Sqlite, ActiveWorks>
+    fn iko_relationship(&'c mut self) -> TxSelector<'c, sqlx::Sqlite, ActiveIkoRelationship>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="sqlite")]
-impl ModelOps<sqlx::Sqlite> for ActiveWorks 
+impl ModelOps<sqlx::Sqlite> for ActiveIkoRelationship 
 {
-    type NonActive = Works;
+    type NonActive = IkoRelationship;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::Sqlite> ,for<'q> <sqlx::Sqlite as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::Sqlite>  {
         match mode {
@@ -364,9 +364,9 @@ impl ModelOps<sqlx::Sqlite> for ActiveWorks
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
+        if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
+        if let Set(v) = &self.user_uuid {tracing::debug!("Binded user_uuid"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     

@@ -7,46 +7,46 @@ use sqlx::types::*;
 
 #[derive(Clone, Debug, FromRow)]
 pub struct Materials {
-    pub measurement: i32,
-    pub title: String,
     pub volume: f64,
+    pub uuid: uuid::Uuid,
     pub project_schedule_item: uuid::Uuid,
     pub delivery_date: chrono::NaiveDate,
-    pub uuid: uuid::Uuid,
+    pub measurement: i32,
+    pub title: String,
 }
 
 impl Materials {
     pub fn into_active(self) -> ActiveMaterials {
         ActiveMaterials {
-            measurement: Set(self.measurement),
-            title: Set(self.title),
             volume: Set(self.volume),
+            uuid: Set(self.uuid),
             project_schedule_item: Set(self.project_schedule_item),
             delivery_date: Set(self.delivery_date),
-            uuid: Set(self.uuid),
+            measurement: Set(self.measurement),
+            title: Set(self.title),
         }
     }
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveMaterials {
-    pub measurement: Optional<i32>,
-    pub title: Optional<String>,
     pub volume: Optional<f64>,
+    pub uuid: Optional<uuid::Uuid>,
     pub project_schedule_item: Optional<uuid::Uuid>,
     pub delivery_date: Optional<chrono::NaiveDate>,
-    pub uuid: Optional<uuid::Uuid>,
+    pub measurement: Optional<i32>,
+    pub title: Optional<String>,
 }
 
 impl ActiveMaterials {
     pub fn into_materials(self) -> Option<Materials> {
         Some(Materials {
-            measurement: self.measurement.into_option()?,
-            title: self.title.into_option()?,
             volume: self.volume.into_option()?,
+            uuid: self.uuid.into_option()?,
             project_schedule_item: self.project_schedule_item.into_option()?,
             delivery_date: self.delivery_date.into_option()?,
-            uuid: self.uuid.into_option()?,
+            measurement: self.measurement.into_option()?,
+            title: self.title.into_option()?,
         })
     }
 }
@@ -70,37 +70,30 @@ impl TableSelector for ActiveMaterials {
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
-            "measurement" => self.measurement.is_set(),
-            "title" => self.title.is_set(),
             "volume" => self.volume.is_set(),
+            "uuid" => self.uuid.is_set(),
             "project_schedule_item" => self.project_schedule_item.is_set(),
             "delivery_date" => self.delivery_date.is_set(),
-            "uuid" => self.uuid.is_set(),
+            "measurement" => self.measurement.is_set(),
+            "title" => self.title.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
     fn columns() -> &'static [ColumnDef] {
         &[
             ColumnDef{
-                name: "measurement",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "title",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
                 name: "volume",
                 nullable: false,
                 default: None,
                 is_unique: false,
                 is_primary: false,
+            },
+            ColumnDef{
+                name: "uuid",
+                nullable: false,
+                default: Some("gen_random_uuid()"),
+                is_unique: false,
+                is_primary: true,
             },
             ColumnDef{
                 name: "project_schedule_item",
@@ -117,11 +110,18 @@ impl TableSelector for ActiveMaterials {
                 is_primary: false,
             },
             ColumnDef{
-                name: "uuid",
+                name: "measurement",
                 nullable: false,
                 default: None,
                 is_unique: false,
-                is_primary: true,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "title",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
             },
         ]
     }
@@ -162,12 +162,12 @@ impl ModelOps<sqlx::Postgres> for ActiveMaterials
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.volume {tracing::debug!("Binded volume"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.project_schedule_item {tracing::debug!("Binded project_schedule_item"); q = q.bind(v);}
         if let Set(v) = &self.delivery_date {tracing::debug!("Binded delivery_date"); q = q.bind(v);}
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
@@ -284,12 +284,12 @@ impl ModelOps<sqlx::MySql> for ActiveMaterials
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.volume {tracing::debug!("Binded volume"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.project_schedule_item {tracing::debug!("Binded project_schedule_item"); q = q.bind(v);}
         if let Set(v) = &self.delivery_date {tracing::debug!("Binded delivery_date"); q = q.bind(v);}
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
@@ -406,12 +406,12 @@ impl ModelOps<sqlx::Sqlite> for ActiveMaterials
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.volume {tracing::debug!("Binded volume"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.project_schedule_item {tracing::debug!("Binded project_schedule_item"); q = q.bind(v);}
         if let Set(v) = &self.delivery_date {tracing::debug!("Binded delivery_date"); q = q.bind(v);}
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
