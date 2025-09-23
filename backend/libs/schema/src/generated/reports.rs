@@ -6,51 +6,59 @@ use sqlx::Pool;
 use sqlx::types::*;
 
 #[derive(Clone, Debug, FromRow)]
-pub struct Works {
+pub struct Reports {
+    pub check_date: Option<chrono::NaiveDate>,
+    pub report_date: chrono::NaiveDate,
     pub uuid: uuid::Uuid,
-    pub work_category: uuid::Uuid,
-    pub title: String,
+    pub project_schedule_item: uuid::Uuid,
+    pub status: i32,
 }
 
-impl Works {
-    pub fn into_active(self) -> ActiveWorks {
-        ActiveWorks {
+impl Reports {
+    pub fn into_active(self) -> ActiveReports {
+        ActiveReports {
+            check_date: Set(self.check_date),
+            report_date: Set(self.report_date),
             uuid: Set(self.uuid),
-            work_category: Set(self.work_category),
-            title: Set(self.title),
+            project_schedule_item: Set(self.project_schedule_item),
+            status: Set(self.status),
         }
     }
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
-pub struct ActiveWorks {
+pub struct ActiveReports {
+    pub check_date: Optional<Option<chrono::NaiveDate>>,
+    pub report_date: Optional<chrono::NaiveDate>,
     pub uuid: Optional<uuid::Uuid>,
-    pub work_category: Optional<uuid::Uuid>,
-    pub title: Optional<String>,
+    pub project_schedule_item: Optional<uuid::Uuid>,
+    pub status: Optional<i32>,
 }
 
-impl ActiveWorks {
-    pub fn into_works(self) -> Option<Works> {
-        Some(Works {
+impl ActiveReports {
+    pub fn into_reports(self) -> Option<Reports> {
+        Some(Reports {
+            check_date: self.check_date.into_option()?,
+            report_date: self.report_date.into_option()?,
             uuid: self.uuid.into_option()?,
-            work_category: self.work_category.into_option()?,
-            title: self.title.into_option()?,
+            project_schedule_item: self.project_schedule_item.into_option()?,
+            status: self.status.into_option()?,
         })
     }
 }
 
-pub trait OrmWorks<DB: OrmDB> {
-    fn works<'e>(&'e self) -> DBSelector<'e, DB, Pool<DB>, ActiveWorks>
+pub trait OrmReports<DB: OrmDB> {
+    fn reports<'e>(&'e self) -> DBSelector<'e, DB, Pool<DB>, ActiveReports>
     where 
         &'e Pool<DB>: Executor<'e, Database = DB>;
 }
 
-pub trait OrmTXWorks<'c, DB: OrmDB> {
-    fn works(&'c mut self) -> TxSelector<'c, DB, ActiveWorks>;
+pub trait OrmTXReports<'c, DB: OrmDB> {
+    fn reports(&'c mut self) -> TxSelector<'c, DB, ActiveReports>;
 }
 
-impl TableSelector for ActiveWorks {
-    const TABLE_NAME: &'static str = "works";
+impl TableSelector for ActiveReports {
+    const TABLE_NAME: &'static str = "reports";
     const TABLE_SCHEMA: &'static str = "norm";
     type TypePK = uuid::Uuid;
     fn pk_column() -> &'static str {
@@ -58,14 +66,30 @@ impl TableSelector for ActiveWorks {
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
+            "check_date" => self.check_date.is_set(),
+            "report_date" => self.report_date.is_set(),
             "uuid" => self.uuid.is_set(),
-            "work_category" => self.work_category.is_set(),
-            "title" => self.title.is_set(),
+            "project_schedule_item" => self.project_schedule_item.is_set(),
+            "status" => self.status.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
     fn columns() -> &'static [ColumnDef] {
         &[
+            ColumnDef{
+                name: "check_date",
+                nullable: true,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "report_date",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
             ColumnDef{
                 name: "uuid",
                 nullable: false,
@@ -74,14 +98,14 @@ impl TableSelector for ActiveWorks {
                 is_primary: true,
             },
             ColumnDef{
-                name: "work_category",
+                name: "project_schedule_item",
                 nullable: false,
                 default: None,
                 is_unique: false,
                 is_primary: false,
             },
             ColumnDef{
-                name: "title",
+                name: "status",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -92,9 +116,9 @@ impl TableSelector for ActiveWorks {
 }
 
 #[cfg(feature="postgres")]
-impl OrmWorks<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
+impl OrmReports<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
 {
-    fn works<'e>(&'e self) -> DBSelector<'e, sqlx::Postgres, Pool<sqlx::Postgres>, ActiveWorks>
+    fn reports<'e>(&'e self) -> DBSelector<'e, sqlx::Postgres, Pool<sqlx::Postgres>, ActiveReports>
     where 
         &'e Pool<sqlx::Postgres>: Executor<'e, Database = sqlx::Postgres>
     {
@@ -103,18 +127,18 @@ impl OrmWorks<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
 }
 
 #[cfg(feature="postgres")]
-impl<'c> OrmTXWorks<'c, sqlx::Postgres> for OrmTX<sqlx::Postgres>
+impl<'c> OrmTXReports<'c, sqlx::Postgres> for OrmTX<sqlx::Postgres>
 {
-    fn works(&'c mut self) -> TxSelector<'c, sqlx::Postgres, ActiveWorks>
+    fn reports(&'c mut self) -> TxSelector<'c, sqlx::Postgres, ActiveReports>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="postgres")]
-impl ModelOps<sqlx::Postgres> for ActiveWorks 
+impl ModelOps<sqlx::Postgres> for ActiveReports 
 {
-    type NonActive = Works;
+    type NonActive = Reports;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::Postgres> ,for<'q> <sqlx::Postgres as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::Postgres>  {
         match mode {
@@ -126,9 +150,11 @@ impl ModelOps<sqlx::Postgres> for ActiveWorks
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
+        if let Set(v) = &self.check_date {tracing::debug!("Binded check_date"); q = q.bind(v);}
+        if let Set(v) = &self.report_date {tracing::debug!("Binded report_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.project_schedule_item {tracing::debug!("Binded project_schedule_item"); q = q.bind(v);}
+        if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
         q
     }
     
@@ -211,9 +237,9 @@ impl ModelOps<sqlx::Postgres> for ActiveWorks
 }
 
 #[cfg(feature="mysql")]
-impl OrmWorks<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
+impl OrmReports<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
 {
-    fn works<'e>(&'e self) -> DBSelector<'e, sqlx::MySql, Pool<sqlx::MySql>, ActiveWorks>
+    fn reports<'e>(&'e self) -> DBSelector<'e, sqlx::MySql, Pool<sqlx::MySql>, ActiveReports>
     where 
         &'e Pool<sqlx::MySql>: Executor<'e, Database = sqlx::MySql>
     {
@@ -222,18 +248,18 @@ impl OrmWorks<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
 }
 
 #[cfg(feature="mysql")]
-impl<'c> OrmTXWorks<'c, sqlx::MySql> for OrmTX<sqlx::MySql>
+impl<'c> OrmTXReports<'c, sqlx::MySql> for OrmTX<sqlx::MySql>
 {
-    fn works(&'c mut self) -> TxSelector<'c, sqlx::MySql, ActiveWorks>
+    fn reports(&'c mut self) -> TxSelector<'c, sqlx::MySql, ActiveReports>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="mysql")]
-impl ModelOps<sqlx::MySql> for ActiveWorks 
+impl ModelOps<sqlx::MySql> for ActiveReports 
 {
-    type NonActive = Works;
+    type NonActive = Reports;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::MySql> ,for<'q> <sqlx::MySql as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::MySql>  {
         match mode {
@@ -245,9 +271,11 @@ impl ModelOps<sqlx::MySql> for ActiveWorks
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
+        if let Set(v) = &self.check_date {tracing::debug!("Binded check_date"); q = q.bind(v);}
+        if let Set(v) = &self.report_date {tracing::debug!("Binded report_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.project_schedule_item {tracing::debug!("Binded project_schedule_item"); q = q.bind(v);}
+        if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
         q
     }
     
@@ -330,9 +358,9 @@ impl ModelOps<sqlx::MySql> for ActiveWorks
 }
 
 #[cfg(feature="sqlite")]
-impl OrmWorks<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
+impl OrmReports<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
 {
-    fn works<'e>(&'e self) -> DBSelector<'e, sqlx::Sqlite, Pool<sqlx::Sqlite>, ActiveWorks>
+    fn reports<'e>(&'e self) -> DBSelector<'e, sqlx::Sqlite, Pool<sqlx::Sqlite>, ActiveReports>
     where 
         &'e Pool<sqlx::Sqlite>: Executor<'e, Database = sqlx::Sqlite>
     {
@@ -341,18 +369,18 @@ impl OrmWorks<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
 }
 
 #[cfg(feature="sqlite")]
-impl<'c> OrmTXWorks<'c, sqlx::Sqlite> for OrmTX<sqlx::Sqlite>
+impl<'c> OrmTXReports<'c, sqlx::Sqlite> for OrmTX<sqlx::Sqlite>
 {
-    fn works(&'c mut self) -> TxSelector<'c, sqlx::Sqlite, ActiveWorks>
+    fn reports(&'c mut self) -> TxSelector<'c, sqlx::Sqlite, ActiveReports>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="sqlite")]
-impl ModelOps<sqlx::Sqlite> for ActiveWorks 
+impl ModelOps<sqlx::Sqlite> for ActiveReports 
 {
-    type NonActive = Works;
+    type NonActive = Reports;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::Sqlite> ,for<'q> <sqlx::Sqlite as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::Sqlite>  {
         match mode {
@@ -364,9 +392,11 @@ impl ModelOps<sqlx::Sqlite> for ActiveWorks
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
+        if let Set(v) = &self.check_date {tracing::debug!("Binded check_date"); q = q.bind(v);}
+        if let Set(v) = &self.report_date {tracing::debug!("Binded report_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.project_schedule_item {tracing::debug!("Binded project_schedule_item"); q = q.bind(v);}
+        if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
         q
     }
     

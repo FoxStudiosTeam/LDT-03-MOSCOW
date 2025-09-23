@@ -7,42 +7,42 @@ use sqlx::types::*;
 
 #[derive(Clone, Debug, FromRow)]
 pub struct Attachments {
-    pub base_entity_uuid: uuid::Uuid,
-    pub uuid: uuid::Uuid,
-    pub content_type: String,
     pub original_filename: String,
+    pub uuid: uuid::Uuid,
+    pub base_entity_uuid: uuid::Uuid,
     pub file_uuid: uuid::Uuid,
+    pub content_type: Option<String>,
 }
 
 impl Attachments {
     pub fn into_active(self) -> ActiveAttachments {
         ActiveAttachments {
-            base_entity_uuid: Set(self.base_entity_uuid),
-            uuid: Set(self.uuid),
-            content_type: Set(self.content_type),
             original_filename: Set(self.original_filename),
+            uuid: Set(self.uuid),
+            base_entity_uuid: Set(self.base_entity_uuid),
             file_uuid: Set(self.file_uuid),
+            content_type: Set(self.content_type),
         }
     }
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveAttachments {
-    pub base_entity_uuid: Optional<uuid::Uuid>,
-    pub uuid: Optional<uuid::Uuid>,
-    pub content_type: Optional<String>,
     pub original_filename: Optional<String>,
+    pub uuid: Optional<uuid::Uuid>,
+    pub base_entity_uuid: Optional<uuid::Uuid>,
     pub file_uuid: Optional<uuid::Uuid>,
+    pub content_type: Optional<Option<String>>,
 }
 
 impl ActiveAttachments {
     pub fn into_attachments(self) -> Option<Attachments> {
         Some(Attachments {
-            base_entity_uuid: self.base_entity_uuid.into_option()?,
-            uuid: self.uuid.into_option()?,
-            content_type: self.content_type.into_option()?,
             original_filename: self.original_filename.into_option()?,
+            uuid: self.uuid.into_option()?,
+            base_entity_uuid: self.base_entity_uuid.into_option()?,
             file_uuid: self.file_uuid.into_option()?,
+            content_type: self.content_type.into_option()?,
         })
     }
 }
@@ -66,37 +66,16 @@ impl TableSelector for ActiveAttachments {
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
-            "base_entity_uuid" => self.base_entity_uuid.is_set(),
-            "uuid" => self.uuid.is_set(),
-            "content_type" => self.content_type.is_set(),
             "original_filename" => self.original_filename.is_set(),
+            "uuid" => self.uuid.is_set(),
+            "base_entity_uuid" => self.base_entity_uuid.is_set(),
             "file_uuid" => self.file_uuid.is_set(),
+            "content_type" => self.content_type.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
     fn columns() -> &'static [ColumnDef] {
         &[
-            ColumnDef{
-                name: "base_entity_uuid",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "uuid",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: true,
-            },
-            ColumnDef{
-                name: "content_type",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
             ColumnDef{
                 name: "original_filename",
                 nullable: false,
@@ -105,8 +84,29 @@ impl TableSelector for ActiveAttachments {
                 is_primary: false,
             },
             ColumnDef{
+                name: "uuid",
+                nullable: false,
+                default: Some("gen_random_uuid()"),
+                is_unique: false,
+                is_primary: true,
+            },
+            ColumnDef{
+                name: "base_entity_uuid",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
                 name: "file_uuid",
                 nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "content_type",
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
@@ -150,11 +150,11 @@ impl ModelOps<sqlx::Postgres> for ActiveAttachments
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
         if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         q
     }
     
@@ -271,11 +271,11 @@ impl ModelOps<sqlx::MySql> for ActiveAttachments
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
         if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         q
     }
     
@@ -392,11 +392,11 @@ impl ModelOps<sqlx::Sqlite> for ActiveAttachments
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
         if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         q
     }
     

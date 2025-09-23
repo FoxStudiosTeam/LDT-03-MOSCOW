@@ -7,30 +7,30 @@ use sqlx::types::*;
 
 #[derive(Clone, Debug, FromRow)]
 pub struct Measurements {
-    pub title: String,
     pub id: i32,
+    pub title: String,
 }
 
 impl Measurements {
     pub fn into_active(self) -> ActiveMeasurements {
         ActiveMeasurements {
-            title: Set(self.title),
             id: Set(self.id),
+            title: Set(self.title),
         }
     }
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveMeasurements {
-    pub title: Optional<String>,
     pub id: Optional<i32>,
+    pub title: Optional<String>,
 }
 
 impl ActiveMeasurements {
     pub fn into_measurements(self) -> Option<Measurements> {
         Some(Measurements {
-            title: self.title.into_option()?,
             id: self.id.into_option()?,
+            title: self.title.into_option()?,
         })
     }
 }
@@ -54,26 +54,26 @@ impl TableSelector for ActiveMeasurements {
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
-            "title" => self.title.is_set(),
             "id" => self.id.is_set(),
+            "title" => self.title.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
     fn columns() -> &'static [ColumnDef] {
         &[
             ColumnDef{
-                name: "title",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
                 name: "id",
                 nullable: false,
                 default: None,
                 is_unique: false,
                 is_primary: true,
+            },
+            ColumnDef{
+                name: "title",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
             },
         ]
     }
@@ -114,8 +114,8 @@ impl ModelOps<sqlx::Postgres> for ActiveMeasurements
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.id {tracing::debug!("Binded id"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
@@ -232,8 +232,8 @@ impl ModelOps<sqlx::MySql> for ActiveMeasurements
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.id {tracing::debug!("Binded id"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
@@ -350,8 +350,8 @@ impl ModelOps<sqlx::Sqlite> for ActiveMeasurements
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.id {tracing::debug!("Binded id"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
