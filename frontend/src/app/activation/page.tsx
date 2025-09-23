@@ -86,33 +86,32 @@ export default function Activation() {
                     />
                 </div>
 
-                {/* Список вопросов */}
-                <div className="flex flex-col gap-6">
+                <div className="w-[70%] flex flex-col gap-6">
                     {questionsList.map((q, idx) => (
                         <div
                             key={q.id}
-                            className="w-[75%] bg-[#8F6868] flex flex-col gap-3 p-3 rounded-md text-white"
+                            className="bg-white flex flex-col gap-3 p-3 border-[1px] border-[#D0D0D0] rounded-md text-black shadow-[8px_7px_8px_0px_rgba(34,60,80,0.2)]"
                         >
                             <div className="flex items-center gap-4">
                                 <p className="flex-1">
                                     {idx + 1}. {q.question}
                                 </p>
                                 <select
-                                    className="text-black border p-1 rounded"
+                                    className="w-[180px] h-[25px] text-center outline-0 border-[1px] border-[#D0D0D0] text-black rounded"
                                     onChange={(e) =>
                                         handleAnswerChange(q.id, "answer", e.target.value)
                                     }
                                 >
-                                    <option value="">Выберите</option>
-                                    <option value="Не требуется">Не требуется</option>
-                                    <option value="Да">Да</option>
-                                    <option value="Нет">Нет</option>
+                                    <option  value="" className="text-black">Выберите</option>
+                                    <option value="Не требуется" className="text-black">Не требуется</option>
+                                    <option value="Да" className="text-black">Да</option>
+                                    <option value="Нет" className="text-black">Нет</option>
                                 </select>
                             </div>
 
                             <textarea
                                 placeholder="Комментарий..."
-                                className="w-full bg-[#D0D0D0] p-2 rounded text-black"
+                                className="w-full bg-white border-[1px] border-[#D0D0D0] p-2 rounded text-black"
                                 onChange={(e) =>
                                     handleAnswerChange(q.id, "comment", e.target.value)
                                 }
@@ -121,7 +120,6 @@ export default function Activation() {
                     ))}
                 </div>
 
-                {/* Прикрепление файлов */}
                 <div className="mt-6">
                     <label className="block mb-2 font-medium">Прикрепить файлы:</label>
                     <input
@@ -132,10 +130,9 @@ export default function Activation() {
                     />
                 </div>
 
-                {/* Кнопка отправки */}
                 <button
                     onClick={handleSubmit}
-                    className="bg-red-700 text-white px-6 py-2 mt-4"
+                    className="bg-red-700 text-white px-6 py-2 mt-4 rounded-lg"
                 >
                     Отправить
                 </button>
