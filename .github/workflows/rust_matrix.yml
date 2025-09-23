@@ -39,7 +39,7 @@ jobs:
       workdir: './backend'
       context: './'
       manifest-files-path-root: ./backend/.deployment/${{ matrix.service }}
-      version_dir: ./backend/.deployment/${{ matrix.service }}
+      version-dir: ./backend/.deployment/${{ matrix.service }}
       service-name: ${{ matrix.service }}
       shared_cache: /mnt/shared
       shared_cache_key: ${{ matrix.service }}
