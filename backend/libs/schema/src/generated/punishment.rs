@@ -1,17 +1,10 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
-
-#[derive(Clone, Debug, FromRow)]
-pub struct Punishment {
-    pub custom_number: Option<String>,
-    pub project: uuid::Uuid,
-    pub punish_datetime: chrono::NaiveDateTime,
-    pub uuid: uuid::Uuid,
-}
 
 impl Punishment {
     pub fn into_active(self) -> ActivePunishment {
@@ -22,6 +15,25 @@ impl Punishment {
             uuid: Set(self.uuid),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct Punishment {
+    pub custom_number: Option<String>,
+    pub project: uuid::Uuid,
+    pub punish_datetime: chrono::NaiveDateTime,
+    pub uuid: uuid::Uuid,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct Punishment {
+    pub custom_number: Option<String>,
+    pub project: uuid::Uuid,
+    pub punish_datetime: chrono::NaiveDateTime,
+    pub uuid: uuid::Uuid,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]

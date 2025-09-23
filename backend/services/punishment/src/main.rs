@@ -5,12 +5,13 @@ use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Basic;
 use axum_prometheus::PrometheusMetricLayer;
+use sqlx::{Pool, Postgres};
 use tower::ServiceBuilder;
 use tracing::*;
 use utils::env_config;
 use utoipa::OpenApi;
 use utoipa_axum::router::{OpenApiRouter, UtoipaMethodRouterExt};
-
+mod api;
 
 use orm::prelude::*;
 // Some useful things
@@ -43,8 +44,8 @@ pub const MAIN_TAG: &str = "punishment";
 struct ApiDoc;
 
 #[derive(Clone)]
-pub struct AppState<DB> where DB: Clone {
-    pub orm: Orm<DB>,
+pub struct AppState{
+    pub orm: Orm<Pool<Postgres>>,
 }
 
 #[tokio::main]
@@ -83,28 +84,14 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .routes(routes!(
-            demo_route
-        ))
-        .routes(
-            routes!(
-                secured_route
-            ).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
-        )
-        .routes(
-            routes!(
-                role_secured_route
-            )
-            .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::Inspector))
-            .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
-        )
-        .with_state(state)
+        .nest("/api/punishment", api::make_router(state.clone()))
         .split_for_parts();
     
     let app = axum::Router::new()
         .merge(Scalar::with_url("/docs/scalar", api))
         .merge(metrics)
         .merge(api_router)
+        
         .layer(default_layers);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", CFG.PORT)).await
@@ -119,45 +106,3 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-
-#[utoipa::path(
-    get,
-    path = "/hello_world",
-    tag = crate::MAIN_TAG,
-    summary = "Hello world",
-    responses(
-        (status = 200, description = "Hello world!"),
-    )
-)]
-async fn demo_route() -> String {
-    "Hello from punishment!".to_string()
-}
-
-
-#[utoipa::path(
-    get,
-    path = "/secured",
-    tag = crate::MAIN_TAG,
-    summary = "Secured route. Any authorized user can access it",
-    responses(
-        (status = 200, description = "You passed!"),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-async fn secured_route() -> String {
-    "Hello from secured!".to_string()
-}
-
-#[utoipa::path(
-    get,
-    path = "/specific_role",
-    tag = crate::MAIN_TAG,
-    summary = "Secured route. Only users with Operator or Inspector role can access it. Admin can access any route secured with this middleware",
-    responses(
-        (status = 200, description = "You passed!"),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-async fn role_secured_route() -> String {
-    "Hello from secured!".to_string()
-}

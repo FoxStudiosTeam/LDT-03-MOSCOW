@@ -1,19 +1,10 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
-
-#[derive(Clone, Debug, FromRow)]
-pub struct Materials {
-    pub volume: f64,
-    pub uuid: uuid::Uuid,
-    pub project_schedule_item: uuid::Uuid,
-    pub delivery_date: chrono::NaiveDate,
-    pub measurement: i32,
-    pub title: String,
-}
 
 impl Materials {
     pub fn into_active(self) -> ActiveMaterials {
@@ -26,6 +17,29 @@ impl Materials {
             title: Set(self.title),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct Materials {
+    pub volume: f64,
+    pub uuid: uuid::Uuid,
+    pub project_schedule_item: uuid::Uuid,
+    pub delivery_date: chrono::NaiveDate,
+    pub measurement: i32,
+    pub title: String,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct Materials {
+    pub volume: f64,
+    pub uuid: uuid::Uuid,
+    pub project_schedule_item: uuid::Uuid,
+    pub delivery_date: chrono::NaiveDate,
+    pub measurement: i32,
+    pub title: String,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
