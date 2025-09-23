@@ -1,35 +1,84 @@
-'use client';
+"use client";
 
+import { useState } from "react";
 import { Header } from "@/app/components/header";
 
-interface CheckList {
+interface Question {
     id: number;
-    questions: [{
-        question: string;
-        comment?: string;
-    }]
-}[]
+    question: string;
+}
 
-const questionsList: CheckList[] = [{
-    id: 1,
-    questions: [
-        {
-            question: 'TestQuestion'
-        },
-    ]
-}]
+const questionsList: Question[] = [
+    { id: 1, question: "Есть ли на объекте действующая лицензия?" },
+    { id: 2, question: "Соответствует ли проектная документация нормативам?" },
+    { id: 3, question: "Были ли выявлены дефекты при последней проверке?" },
+    { id: 4, question: "Подписан ли договор с заказчиком?" },
+    { id: 5, question: "Все ли подрядчики предоставили акты выполненных работ?" },
+    {
+        id: 6,
+        question:
+            "Соблюдены ли сроки поставки материалов по графику? Укажите причины, если нет.",
+    },
+    { id: 7, question: "Наличие согласования с инспекцией Ростехнадзора?" },
+    {
+        id: 8,
+        question:
+            "Имеется ли актуальный план по охране труда и технике безопасности?",
+    },
+    {
+        id: 9,
+        question:
+            "Проводился ли инструктаж персонала в течение последних 30 дней?",
+    },
+    {
+        id: 10,
+        question:
+            "Опишите состояние строительной площадки, наличие ограждений и предупреждающих знаковdsadsafdafjgnhhdfabhgjhfdaebfhsadbnfkhbnndshkjbfjhasdbfhjbsdhjfbhsadbf dsfbhasbfhdbaghbfkjdabb absjgbfahdjbgkhjlabdfhgbajhb jsdfjabghjkfdbghkabgjhab jbagjbfahgbhadbfghabhjb jagbhkabfdhgbahjbghkjab ajgbhfbaghjbafjkngakjh.",
+    },
+];
 
 export default function Activation() {
+    const [answers, setAnswers] = useState<
+        { id: number; answer: string; comment: string }[]
+    >([]);
+    const [files, setFiles] = useState<File[]>([]);
+
+    const handleAnswerChange = (id: number, field: "answer" | "comment", value: string) => {
+        setAnswers((prev) => {
+            const existing = prev.find((a) => a.id === id);
+            if (existing) {
+                return prev.map((a) =>
+                    a.id === id ? { ...a, [field]: value } : a
+                );
+            }
+            return [...prev, { id, answer: field === "answer" ? value : "", comment: field === "comment" ? value : "" }];
+        });
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setFiles(Array.from(e.target.files));
+        }
+    };
+
+    const handleSubmit = () => {
+        const payload = {
+            answers,
+            files,
+        };
+        console.log("Отправка данных на сервер:", payload);
+    };
+
     return (
         <div className="flex justify-center min-h-screen bg-[#D0D0D0] mt-[50px]">
             <Header />
 
             <main className="w-[80%] bg-white px-8 pt-2">
-                <div className="w-full h-[40px] border-b-[1px] border-[#D0D0D0]">
-                    <p>Активация объекта</p>
+                <div className="w-full h-[40px] border-b-[1px] border-[#D0D0D0] mb-6">
+                    <p className="font-semibold">Активация объекта</p>
                 </div>
 
-                <div className="flex flex-row items-center gap-3 h-[40px]">
+                <div className="flex flex-row items-center gap-3 h-[40px] mb-6">
                     <label className="block text-sm mb-1">ИНН исполнителя</label>
                     <input
                         type="text"
@@ -37,28 +86,60 @@ export default function Activation() {
                     />
                 </div>
 
-                <div>
-                    {questionsList.map((questionsList, questionsListIdx) => (
-                        <div key={questionsListIdx} className="flex flex-col gap-4">
-                            <span>{questionsListIdx + 1}</span>
-                            {questionsList.questions.map((question, questionIdx) => (
-                                <div key={questionIdx} className="w-[75%] bg-[#8F6868] flex flex-col gap-3 p-3">
-                                    <div className="flex">
-                                        <p className="flex-1 w-[80%]">{questionsListIdx + 1} {questionIdx + 1} {question.question}</p>
-                                        <select name="" id="">
-                                            <option value="Не требуется">Не требуется</option>
-                                            <option value="Да">Да</option>
-                                            <option value="Нет">Нет</option>
-                                        </select>
-                                    </div>
+                {/* Список вопросов */}
+                <div className="flex flex-col gap-6">
+                    {questionsList.map((q, idx) => (
+                        <div
+                            key={q.id}
+                            className="w-[75%] bg-[#8F6868] flex flex-col gap-3 p-3 rounded-md text-white"
+                        >
+                            <div className="flex items-center gap-4">
+                                <p className="flex-1">
+                                    {idx + 1}. {q.question}
+                                </p>
+                                <select
+                                    className="text-black border p-1 rounded"
+                                    onChange={(e) =>
+                                        handleAnswerChange(q.id, "answer", e.target.value)
+                                    }
+                                >
+                                    <option value="">Выберите</option>
+                                    <option value="Не требуется">Не требуется</option>
+                                    <option value="Да">Да</option>
+                                    <option value="Нет">Нет</option>
+                                </select>
+                            </div>
 
-                                    <textarea className="w-full bg-[#D0D0D0]"></textarea>
-                                </div>
-                            ))}
+                            <textarea
+                                placeholder="Комментарий..."
+                                className="w-full bg-[#D0D0D0] p-2 rounded text-black"
+                                onChange={(e) =>
+                                    handleAnswerChange(q.id, "comment", e.target.value)
+                                }
+                            ></textarea>
                         </div>
                     ))}
                 </div>
+
+                {/* Прикрепление файлов */}
+                <div className="mt-6">
+                    <label className="block mb-2 font-medium">Прикрепить файлы:</label>
+                    <input
+                        type="file"
+                        multiple
+                        onChange={handleFileChange}
+                        className="mb-4"
+                    />
+                </div>
+
+                {/* Кнопка отправки */}
+                <button
+                    onClick={handleSubmit}
+                    className="bg-red-700 text-white px-6 py-2 mt-4"
+                >
+                    Отправить
+                </button>
             </main>
         </div>
-    )
+    );
 }
