@@ -11,4 +11,4 @@ migrate:
 gen:
 	cargo run --bin schema_gen
 yml:
-	cargo run --bin yaml_from_db -- ./backend/.schema attachment journal norm product project --ignore-nullability
+	cargo run --bin yaml_from_db -- ./backend/.schema attachment journal norm product project
