@@ -2071,6 +2071,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "caf4aa5b0f434c91fe5c7f1ecb6a5ece2130b02ad2a590589dda5146df959001"
 
 [[package]]
+name = "report"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "auth_jwt",
+ "axum",
+ "axum-extra",
+ "axum-prometheus",
+ "bb8",
+ "bb8-redis",
+ "bigdecimal",
+ "chrono",
+ "di",
+ "jsonwebtoken",
+ "once_cell",
+ "orm",
+ "schema",
+ "schema_reader",
+ "serde",
+ "serde_json",
+ "shared",
+ "sqlx",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "utils",
+ "utoipa",
+ "utoipa-axum",
+ "utoipa-scalar",
+ "uuid",
+]
+
+[[package]]
 name = "ring"
 version = "0.17.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
