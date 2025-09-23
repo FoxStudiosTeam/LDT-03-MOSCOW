@@ -2,9 +2,7 @@ name: ⚡ Rust matrix 🦀
 
 on:
   push:
-    branches: [ "setup" ]
   pull_request:
-    branches: [ "setup" ]
 
 jobs:
   lint-and-test:
@@ -30,7 +28,7 @@ jobs:
 
   build-and-deploy:
     needs: lint-and-test
-    if: ${{ github.ref == 'refs/heads/setup' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     strategy:
       matrix:
         service: [attachment, materials, project, punishment]
@@ -42,7 +40,6 @@ jobs:
       context: './'
       manifest-files-path-root: ./backend/.deployment/${{ matrix.service }}
       service-name: ${{ matrix.service }}
-      main-branch: setup
       shared_cache: /mnt/shared
       shared_cache_key: ${{ matrix.service }}
     secrets:

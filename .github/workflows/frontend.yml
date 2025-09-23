@@ -2,9 +2,7 @@ name: ⚡ Next.js App 🟢
 
 on:
   push:
-    branches: [ "setup" ]
   pull_request:
-    branches: [ "setup" ]
 
 jobs:
 #   lint-and-test:
@@ -31,7 +29,7 @@ jobs:
 
   build-and-deploy:
     # needs: lint-and-test
-    if: ${{ github.ref == 'refs/heads/setup' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.21
     with:
       image-name: frontend/frontend
@@ -40,7 +38,6 @@ jobs:
       context: './'
       manifest-files-path-root: ./frontend/.deployment
       service-name: frontend
-      main-branch: setup
       shared_cache: /mnt/shared
       shared_cache_key: frontend
     secrets:
