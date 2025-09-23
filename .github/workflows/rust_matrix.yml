@@ -36,7 +36,7 @@ jobs:
         service: [attachment, materials, project, punishment]
     uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.20
     with:
-      image-name: ${{ matrix.service }}:${{ matrix.service }}
+      image-name: ${{ matrix.service }}
       namespace: solution
       workdir: './backend'
       context: './'
