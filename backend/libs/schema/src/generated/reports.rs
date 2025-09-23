@@ -1,18 +1,10 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
-
-#[derive(Clone, Debug, FromRow)]
-pub struct Reports {
-    pub check_date: Option<chrono::NaiveDate>,
-    pub report_date: chrono::NaiveDate,
-    pub uuid: uuid::Uuid,
-    pub project_schedule_item: uuid::Uuid,
-    pub status: i32,
-}
 
 impl Reports {
     pub fn into_active(self) -> ActiveReports {
@@ -24,6 +16,27 @@ impl Reports {
             status: Set(self.status),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct Reports {
+    pub check_date: Option<chrono::NaiveDate>,
+    pub report_date: chrono::NaiveDate,
+    pub uuid: uuid::Uuid,
+    pub project_schedule_item: uuid::Uuid,
+    pub status: i32,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct Reports {
+    pub check_date: Option<chrono::NaiveDate>,
+    pub report_date: chrono::NaiveDate,
+    pub uuid: uuid::Uuid,
+    pub project_schedule_item: uuid::Uuid,
+    pub status: i32,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]

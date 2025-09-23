@@ -1,16 +1,10 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
-
-#[derive(Clone, Debug, FromRow)]
-pub struct Kpgz {
-    pub id: i64,
-    pub title: String,
-    pub code: String,
-}
 
 impl Kpgz {
     pub fn into_active(self) -> ActiveKpgz {
@@ -20,6 +14,23 @@ impl Kpgz {
             code: Set(self.code),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct Kpgz {
+    pub id: i64,
+    pub title: String,
+    pub code: String,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct Kpgz {
+    pub id: i64,
+    pub title: String,
+    pub code: String,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]

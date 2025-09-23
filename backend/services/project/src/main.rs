@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use auth_jwt::prelude::Role;
 use axum::http::StatusCode;
 use axum::routing::get;
 use axum_extra::TypedHeader;
@@ -11,7 +10,7 @@ use tower::ServiceBuilder;
 use tracing::*;
 use utils::env_config;
 use utoipa::OpenApi;
-use utoipa_axum::router::{OpenApiRouter, UtoipaMethodRouterExt};
+use utoipa_axum::router::{OpenApiRouter};
 
 
 use orm::prelude::*;
@@ -20,9 +19,11 @@ use shared::prelude::*;
 use utoipa_axum::routes;
 use utoipa_scalar::{Scalar, Servable};
 
-use crate::controller::project_controller::{self};
+use crate::services::IProjectService;
 
-mod controller;
+mod controllers;
+mod services;
+mod entities;
 
 // Hover to see docs
 env_config!(
@@ -48,10 +49,29 @@ pub const MAIN_TAG: &str = "project";
 
 struct ApiDoc;
 
-#[derive(Clone)]
-pub struct AppState<DB> where DB: Clone {
-    pub orm: Orm<DB>,
+pub type DB = sqlx::Postgres;
+pub type Orm = orm::prelude::Orm<sqlx::Pool<DB>>;
+
+
+#[derive(Default, Clone)]
+struct AppState {
+    orm: Option<Orm>,
+    project_service: Option<Arc<dyn IProjectService>>
+} 
+
+impl AppState {
+    fn orm(&self) -> &Orm {
+        self.orm.as_ref().expect("Orm is not initialized")
+    }
+    fn orm_mut(&mut self) -> &mut Orm {
+        self.orm.as_mut().expect("Orm is not initialized")
+    }
+    fn project_service(&self) -> &Arc<dyn IProjectService> {
+        self.project_service.as_ref().expect("Project Service is not initialized")
+    }
+    
 }
+
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -66,10 +86,13 @@ async fn main() -> anyhow::Result<()> {
         .inspect_err(|e| info!("Can't connect to db: {e}"))?;
     info!("Connected to DB");
 
-    let orm = orm::prelude::Orm::new(pg);
+    let mut state = AppState::default();
+    let orm = Orm::new(pg);
+    state.orm = Some(orm);
 
-    let state = AppState{orm};
-
+    let project_service = services::new_project_service(state.clone());
+    state.project_service = Some(project_service);
+    
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
     let default_layers = ServiceBuilder::new()
@@ -77,7 +100,6 @@ async fn main() -> anyhow::Result<()> {
         .layer(axum::middleware::from_fn(logging_middleware))
         .layer(prometheus_layer)
         .layer(tower_http::catch_panic::CatchPanicLayer::new());
-
     
     let metrics = axum::Router::new().route(
         "/metrics",
@@ -91,20 +113,22 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .routes(routes!(
-            demo_route
-        ))
+        // .routes(
+        //     routes!(
+        //         secured_route
+        //     ).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        // )
+        // .routes(
+        //     routes!(
+        //         role_secured_route
+        //     )
+        //     .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::Inspector))
+        //     .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        // )
         .routes(
             routes!(
-                secured_route
-            ).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
-        )
-        .routes(
-            routes!(
-                role_secured_route
+                controllers::handle_get_project
             )
-            .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::Inspector))
-            .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
         )
         .with_state(state)
         .split_for_parts();
@@ -128,44 +152,30 @@ async fn main() -> anyhow::Result<()> {
 }
 
 
-#[utoipa::path(
-    get,
-    path = "/hello_world",
-    tag = crate::MAIN_TAG,
-    summary = "Hello world",
-    responses(
-        (status = 200, description = "Hello world!"),
-    )
-)]
-async fn demo_route() -> String {
-    "Hello from project!".to_string()
-}
+// #[utoipa::path(
+//     get,
+//     path = "/secured",
+//     tag = crate::MAIN_TAG,
+//     summary = "Secured route. Any authorized user can access it",
+//     responses(
+//         (status = 200, description = "You passed!"),
+//         (status = 401, description = "Unauthorized"),
+//     )
+// )]
+// async fn secured_route() -> String {
+//     "Hello from secured!".to_string()
+// }
 
-
-#[utoipa::path(
-    get,
-    path = "/secured",
-    tag = crate::MAIN_TAG,
-    summary = "Secured route. Any authorized user can access it",
-    responses(
-        (status = 200, description = "You passed!"),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-async fn secured_route() -> String {
-    "Hello from secured!".to_string()
-}
-
-#[utoipa::path(
-    get,
-    path = "/specific_role",
-    tag = crate::MAIN_TAG,
-    summary = "Secured route. Only users with Operator or Inspector role can access it. Admin can access any route secured with this middleware",
-    responses(
-        (status = 200, description = "You passed!"),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-async fn role_secured_route() -> String {
-    "Hello from secured!".to_string()
-}
+// #[utoipa::path(
+//     get,
+//     path = "/specific_role",
+//     tag = crate::MAIN_TAG,
+//     summary = "Secured route. Only users with Operator or Inspector role can access it. Admin can access any route secured with this middleware",
+//     responses(
+//         (status = 200, description = "You passed!"),
+//         (status = 401, description = "Unauthorized"),
+//     )
+// )]
+// async fn role_secured_route() -> String {
+//     "Hello from secured!".to_string()
+// }

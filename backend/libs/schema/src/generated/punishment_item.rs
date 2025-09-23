@@ -1,25 +1,10 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
-
-#[derive(Clone, Debug, FromRow)]
-pub struct PunishmentItem {
-    pub punishment: uuid::Uuid,
-    pub uuid: uuid::Uuid,
-    pub correction_date_fact: Option<chrono::NaiveDate>,
-    pub correction_date_info: Option<String>,
-    pub is_suspend: bool,
-    pub comment: Option<String>,
-    pub punish_datetime: chrono::NaiveDateTime,
-    pub regulation_doc: Option<uuid::Uuid>,
-    pub correction_date_plan: chrono::NaiveDate,
-    pub title: String,
-    pub punishment_item_status: i32,
-    pub place: String,
-}
 
 impl PunishmentItem {
     pub fn into_active(self) -> ActivePunishmentItem {
@@ -38,6 +23,41 @@ impl PunishmentItem {
             place: Set(self.place),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct PunishmentItem {
+    pub punishment: uuid::Uuid,
+    pub uuid: uuid::Uuid,
+    pub correction_date_fact: Option<chrono::NaiveDate>,
+    pub correction_date_info: Option<String>,
+    pub is_suspend: bool,
+    pub comment: Option<String>,
+    pub punish_datetime: chrono::NaiveDateTime,
+    pub regulation_doc: Option<uuid::Uuid>,
+    pub correction_date_plan: chrono::NaiveDate,
+    pub title: String,
+    pub punishment_item_status: i32,
+    pub place: String,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct PunishmentItem {
+    pub punishment: uuid::Uuid,
+    pub uuid: uuid::Uuid,
+    pub correction_date_fact: Option<chrono::NaiveDate>,
+    pub correction_date_info: Option<String>,
+    pub is_suspend: bool,
+    pub comment: Option<String>,
+    pub punish_datetime: chrono::NaiveDateTime,
+    pub regulation_doc: Option<uuid::Uuid>,
+    pub correction_date_plan: chrono::NaiveDate,
+    pub title: String,
+    pub punishment_item_status: i32,
+    pub place: String,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
