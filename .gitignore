@@ -4,3 +4,4 @@
 /certs/*.pem
 .certs
 refinery.toml
+/.idea
