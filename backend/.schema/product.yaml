@@ -2,17 +2,17 @@ tables:
 - name: product
   schema: product
   fields:
-  - name: created_at
-    type: timestamp
-    default: LOCALTIMESTAMP
-  - name: updated_at
-    type: timestamp
-    default: LOCALTIMESTAMP
-  - name: count
-    type: integer
+  - name: title
+    type: text
   - name: guid
     type: uuid
     isPrimary: true
     default: gen_random_uuid()
-  - name: title
-    type: text
+  - name: updated_at
+    type: timestamp
+    default: LOCALTIMESTAMP
+  - name: created_at
+    type: timestamp
+    default: LOCALTIMESTAMP
+  - name: count
+    type: integer
