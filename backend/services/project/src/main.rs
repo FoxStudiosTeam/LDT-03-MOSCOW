@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use auth_jwt::prelude::Role;
 use axum::http::StatusCode;
 use axum::routing::get;
@@ -17,6 +19,10 @@ use orm::prelude::*;
 use shared::prelude::*;
 use utoipa_axum::routes;
 use utoipa_scalar::{Scalar, Servable};
+
+use crate::controller::project_controller::{self};
+
+mod controller;
 
 // Hover to see docs
 env_config!(
@@ -61,6 +67,7 @@ async fn main() -> anyhow::Result<()> {
     info!("Connected to DB");
 
     let orm = orm::prelude::Orm::new(pg);
+
     let state = AppState{orm};
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
@@ -71,6 +78,7 @@ async fn main() -> anyhow::Result<()> {
         .layer(prometheus_layer)
         .layer(tower_http::catch_panic::CatchPanicLayer::new());
 
+    
     let metrics = axum::Router::new().route(
         "/metrics",
         get(move |TypedHeader(auth): TypedHeader<Authorization<Basic>>| async move {
