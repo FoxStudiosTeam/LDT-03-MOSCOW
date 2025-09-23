@@ -5,44 +5,44 @@ on:
   pull_request:
 
 jobs:
-#   lint-and-test:
-#     runs-on: self-hosted
-#     defaults:
-#       run:
-#         working-directory: ./frontend
-#     name: Next.js Lint & Test
-#     steps:
-#       - uses: actions/checkout@v3
+  lint-and-test:
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: ./frontend
+    name: Next.js Lint & Test
+    steps:
+      - uses: actions/checkout@v3
 
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v3
-#         with:
-#           node-version: 20
-#           cache: "npm"
-#           cache-dependency-path: ./frontend/package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: ./frontend/package-lock.json
 
-#       - name: Install dependencies
-#         run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    #   - name: Run lint
-    #     run: npm run lint
+      - name: Run lint
+        run: npm run lint
 
-  build-and-deploy:
-    # needs: lint-and-test
-    if: ${{ github.ref == 'refs/heads/main' }}
-    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.21
-    with:
-      image-name: frontend/frontend
-      namespace: solution
-      workdir: './frontend'
-      context: './'
-      manifest-files-path-root: ./frontend/.deployment
-      service-name: frontend
-      shared_cache: /mnt/shared
-      shared_cache_key: frontend
-    secrets:
-      DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      KUBECONFIG: ${{ secrets.KUBE_CONFIG_DATA }}
-      SSH_KEY: ${{ secrets.RUST_SSH_KEY }}
+    build-and-deploy:
+      # needs: lint-and-test
+      if: ${{ github.ref == 'refs/heads/main' }}
+      uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.21
+      with:
+        image-name: frontend/frontend
+        namespace: solution
+        workdir: './frontend'
+        context: './'
+        manifest-files-path-root: ./frontend/.deployment
+        service-name: frontend
+        shared_cache: /mnt/shared
+        shared_cache_key: frontend
+      secrets:
+        DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        KUBECONFIG: ${{ secrets.KUBE_CONFIG_DATA }}
+        SSH_KEY: ${{ secrets.RUST_SSH_KEY }}
