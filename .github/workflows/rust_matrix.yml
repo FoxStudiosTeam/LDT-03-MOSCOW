@@ -1,0 +1,50 @@
+name: ⚡ Rust matrix 🦀
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: self-hosted
+    name: Rust Tests & Lint
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.RUST_SSH_KEY }}
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Run cargo clippy
+        working-directory: "./"
+        run: make rust_lint
+      - name: Run cargo test
+        working-directory: "./"
+        run: make rust_test
+
+  build-and-deploy:
+    needs: lint-and-test
+    if: ${{ github.ref == 'refs/heads/main' }}
+    strategy:
+      matrix:
+        service: [attachment, materials, project, punishment]
+    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.21
+    with:
+      image-name: ${{ matrix.service }}/${{ matrix.service }}
+      namespace: solution
+      workdir: './backend'
+      context: './'
+      manifest-files-path-root: ./backend/.deployment/${{ matrix.service }}
+      service-name: ${{ matrix.service }}
+      shared_cache: /mnt/shared
+      shared_cache_key: ${{ matrix.service }}
+    secrets:
+      DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      KUBECONFIG: ${{ secrets.KUBE_CONFIG_DATA }}
+      SSH_KEY: ${{ secrets.RUST_SSH_KEY }}

@@ -1,0 +1,15 @@
+tables:
+- name: attachments
+  schema: attachment
+  fields:
+  - name: content_type
+    type: text
+  - name: original_filename
+    type: text
+  - name: base_entity_uuid
+    type: uuid
+  - name: uuid
+    type: uuid
+    isPrimary: true
+  - name: file_uuid
+    type: uuid

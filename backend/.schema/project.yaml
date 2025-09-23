@@ -1,0 +1,19 @@
+tables:
+- name: project
+  schema: project
+  fields:
+  - name: ssk
+    type: uuid
+  - name: foreman
+    type: uuid
+  - name: iko
+    type: uuid
+  - name: uuid
+    type: uuid
+    isPrimary: true
+  - name: polygon
+    type: jsonb
+  - name: status
+    type: integer
+  - name: address
+    type: text

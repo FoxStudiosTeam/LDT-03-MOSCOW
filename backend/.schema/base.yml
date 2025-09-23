@@ -1,0 +1,29 @@
+tables:
+types:
+  float8:
+    rustType: f64
+    pgType: float8
+  jsonb:
+    rustType: serde_json::Value
+    pgType: jsonb
+  integer:
+    rustType: i32
+    pgType: integer
+  text:
+    rustType: String
+    pgType: text
+  timestamp:
+    rustType: chrono::NaiveDateTime
+    pgType: timestamp
+  uuid:
+    rustType: uuid::Uuid
+    pgType: uuid
+  boolean:
+    rustType: bool
+    pgType: boolean
+  date:
+    rustType: chrono::NaiveDate
+    pgType: date
+  bigint:
+    rustType: i64
+    pgType: bigint

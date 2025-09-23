@@ -1,0 +1,77 @@
+tables:
+- name: punishment_item
+  schema: journal
+  fields:
+  - name: is_suspend
+    type: boolean
+  - name: punishment
+    type: uuid
+  - name: correction_date_plan
+    type: date
+  - name: punish_datetime
+    type: timestamp
+  - name: punishment_item_status
+    type: integer
+  - name: correction_date_fact
+    type: date
+  - name: comment
+    type: text
+  - name: correction_date_info
+    type: text
+  - name: title
+    type: text
+  - name: place
+    type: text
+  - name: uuid
+    type: uuid
+    isPrimary: true
+- name: project_schedule_items
+  schema: journal
+  fields:
+  - name: start_date
+    type: date
+  - name: project_schedule_uuid
+    type: uuid
+  - name: work_uuid
+    type: uuid
+  - name: uuid
+    type: uuid
+    isPrimary: true
+  - name: created_by
+    type: uuid
+  - name: is_draft
+    type: boolean
+  - name: is_completed
+    type: boolean
+  - name: updated_by
+    type: uuid
+  - name: target_volume
+    type: float8
+  - name: is_deleted
+    type: boolean
+  - name: end_date
+    type: date
+- name: project_schedule
+  schema: journal
+  fields:
+  - name: start_date
+    type: date
+  - name: project_uuid
+    type: uuid
+  - name: end_date
+    type: date
+  - name: uuid
+    type: uuid
+    isPrimary: true
+- name: punishment
+  schema: journal
+  fields:
+  - name: punish_datetime
+    type: timestamp
+  - name: uuid
+    type: uuid
+    isPrimary: true
+  - name: project
+    type: uuid
+  - name: custom_number
+    type: text

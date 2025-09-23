@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: punishment-deployment
+  labels:
+    app: punishment-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: punishment-app
+  template:
+    metadata:
+      labels:
+        app: punishment-app
+    spec:
+      containers:
+        - name: punishment-container
+          image: 88ba0664-nimble-raven.registry.twcstorage.ru/punishment/punishment:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4000
+          envFrom:
+            - configMapRef:
+               name: punishment-app-config
+            - secretRef:
+               name: punishment-app-secrets
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "150m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+      imagePullSecrets:
+        - name: registry-secret

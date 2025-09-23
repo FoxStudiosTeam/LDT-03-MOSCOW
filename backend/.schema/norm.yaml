@@ -1,0 +1,73 @@
+tables:
+- name: work_category
+  schema: norm
+  fields:
+  - name: uuid
+    type: uuid
+    isPrimary: true
+  - name: id
+    type: integer
+  - name: kpgz
+    type: integer
+  - name: title
+    type: text
+- name: materials
+  schema: norm
+  fields:
+  - name: project_schedule_item
+    type: uuid
+  - name: volume
+    type: float8
+  - name: delivery_date
+    type: date
+  - name: uuid
+    type: uuid
+    isPrimary: true
+  - name: measurement
+    type: integer
+  - name: title
+    type: text
+- name: measurements
+  schema: norm
+  fields:
+  - name: title
+    type: text
+  - name: id
+    type: integer
+    isPrimary: true
+- name: works
+  schema: norm
+  fields:
+  - name: work_category
+    type: uuid
+  - name: uuid
+    type: uuid
+    isPrimary: true
+  - name: title
+    type: text
+- name: kpgz
+  schema: norm
+  fields:
+  - name: title
+    type: text
+  - name: id
+    type: bigint
+    isPrimary: true
+  - name: code
+    type: text
+- name: project_statuses
+  schema: norm
+  fields:
+  - name: id
+    type: integer
+    isPrimary: true
+  - name: title
+    type: text
+- name: punishment_statuses
+  schema: norm
+  fields:
+  - name: id
+    type: integer
+    isPrimary: true
+  - name: title
+    type: text
