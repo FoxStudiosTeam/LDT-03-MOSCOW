@@ -1,0 +1,25 @@
+[package]
+name = "schema_gen"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+schema_reader.workspace = true
+orm.workspace = true
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+tracing = "0.1.41"
+serde = { version = "1.0.219", features = ["derive"] }
+sqlx = { version = "0.8.6", features = ["uuid"] }
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+serde_yaml = "0.9.34"
+utils = { workspace = true }
+clap = { version = "4.5.48", features = ["derive"] }
+hashbrown = "0.16.0"
+
+[[bin]]
+name = "yaml_from_db"
+path = "src/yaml_from_db.rs"
+
+[[bin]]
+name = "schema_gen"
+path = "src/main.rs"

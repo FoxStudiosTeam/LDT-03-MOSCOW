@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: attachment-deployment
+  labels:
+    app: attachment-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: attachment-app
+  template:
+    metadata:
+      labels:
+        app: attachment-app
+    spec:
+      containers:
+        - name: attachment-container
+          image: 88ba0664-nimble-raven.registry.twcstorage.ru/attachment/attachment:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4000
+          envFrom:
+            - configMapRef:
+               name: attachment-app-config
+            - secretRef:
+               name: attachment-app-secrets
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+      imagePullSecrets:
+        - name: registry-secret
