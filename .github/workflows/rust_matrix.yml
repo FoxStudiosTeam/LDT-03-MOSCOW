@@ -32,13 +32,14 @@ jobs:
     strategy:
       matrix:
         service: [attachment, materials, project, punishment]
-    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.21
+    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.25
     with:
       image-name: ${{ matrix.service }}/${{ matrix.service }}
       namespace: solution
       workdir: './backend'
       context: './'
       manifest-files-path-root: ./backend/.deployment/${{ matrix.service }}
+      version-dir: ./backend/.deployment/${{ matrix.service }}
       service-name: ${{ matrix.service }}
       shared_cache: /mnt/shared
       shared_cache_key: ${{ matrix.service }}
