@@ -30,25 +30,21 @@ jobs:
 
   build-and-deploy:
     needs: lint-and-test
-    if: github.ref == 'refs/heads/setup'
+    if: ${{ github.ref == 'refs/heads/setup' }}
     strategy:
       matrix:
-        service:
-          - name: attachment
-          - name: materials
-          - name: project
-          - name: punishment
+        service: [attachment, materials, project, punishment]
     uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.20
     with:
-      image-name: ${{ matrix.service.name }}:${{ matrix.service.name }}
+      image-name: ${{ matrix.service }}:${{ matrix.service }}
       namespace: solution
       workdir: './backend'
       context: './'
-      manifest-files-path-root: ./backend/.deployment/${{ matrix.service.name }}
-      service-name: ${{ matrix.service.name }}
+      manifest-files-path-root: ./backend/.deployment/${{ matrix.service }}
+      service-name: ${{ matrix.service }}
       main-branch: setup
       shared_cache: /mnt/shared
-      shared_cache_key: ${{ matrix.service.name }}
+      shared_cache_key: ${{ matrix.service }}
     secrets:
       DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
