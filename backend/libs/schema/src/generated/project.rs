@@ -1,19 +1,10 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
-
-#[derive(Clone, Debug, FromRow)]
-pub struct Project {
-    pub status: i32,
-    pub polygon: Option<serde_json::Value>,
-    pub uuid: uuid::Uuid,
-    pub foreman: Option<uuid::Uuid>,
-    pub address: Option<String>,
-    pub ssk: Option<uuid::Uuid>,
-}
 
 impl Project {
     pub fn into_active(self) -> ActiveProject {
@@ -26,6 +17,29 @@ impl Project {
             ssk: Set(self.ssk),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct Project {
+    pub status: i32,
+    pub polygon: Option<serde_json::Value>,
+    pub uuid: uuid::Uuid,
+    pub foreman: Option<uuid::Uuid>,
+    pub address: Option<String>,
+    pub ssk: Option<uuid::Uuid>,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct Project {
+    pub status: i32,
+    pub polygon: Option<serde_json::Value>,
+    pub uuid: uuid::Uuid,
+    pub foreman: Option<uuid::Uuid>,
+    pub address: Option<String>,
+    pub ssk: Option<uuid::Uuid>,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]

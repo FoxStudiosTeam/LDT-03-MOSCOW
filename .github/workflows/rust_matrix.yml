@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+env:
+  CARGO_HOME: /mnt/shared/solution/cargo
+  CARGO_TARGET_DIR: /mnt/shared/solution/target
+
 jobs:
   lint-and-test:
     runs-on: self-hosted

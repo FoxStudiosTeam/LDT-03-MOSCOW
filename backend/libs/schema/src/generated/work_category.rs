@@ -1,17 +1,10 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
-
-#[derive(Clone, Debug, FromRow)]
-pub struct WorkCategory {
-    pub kpgz: i32,
-    pub id: Option<i32>,
-    pub uuid: uuid::Uuid,
-    pub title: String,
-}
 
 impl WorkCategory {
     pub fn into_active(self) -> ActiveWorkCategory {
@@ -22,6 +15,25 @@ impl WorkCategory {
             title: Set(self.title),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct WorkCategory {
+    pub kpgz: i32,
+    pub id: Option<i32>,
+    pub uuid: uuid::Uuid,
+    pub title: String,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct WorkCategory {
+    pub kpgz: i32,
+    pub id: Option<i32>,
+    pub uuid: uuid::Uuid,
+    pub title: String,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]

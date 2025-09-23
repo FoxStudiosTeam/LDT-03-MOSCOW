@@ -1,18 +1,10 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
-
-#[derive(Clone, Debug, FromRow)]
-pub struct Product {
-    pub title: String,
-    pub guid: uuid::Uuid,
-    pub updated_at: chrono::NaiveDateTime,
-    pub created_at: chrono::NaiveDateTime,
-    pub count: i32,
-}
 
 impl Product {
     pub fn into_active(self) -> ActiveProduct {
@@ -24,6 +16,27 @@ impl Product {
             count: Set(self.count),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct Product {
+    pub title: String,
+    pub guid: uuid::Uuid,
+    pub updated_at: chrono::NaiveDateTime,
+    pub created_at: chrono::NaiveDateTime,
+    pub count: i32,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct Product {
+    pub title: String,
+    pub guid: uuid::Uuid,
+    pub updated_at: chrono::NaiveDateTime,
+    pub created_at: chrono::NaiveDateTime,
+    pub count: i32,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]

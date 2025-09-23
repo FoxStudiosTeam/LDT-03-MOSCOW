@@ -1,18 +1,10 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
-
-#[derive(Clone, Debug, FromRow)]
-pub struct Attachments {
-    pub original_filename: String,
-    pub uuid: uuid::Uuid,
-    pub base_entity_uuid: uuid::Uuid,
-    pub file_uuid: uuid::Uuid,
-    pub content_type: Option<String>,
-}
 
 impl Attachments {
     pub fn into_active(self) -> ActiveAttachments {
@@ -24,6 +16,27 @@ impl Attachments {
             content_type: Set(self.content_type),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct Attachments {
+    pub original_filename: String,
+    pub uuid: uuid::Uuid,
+    pub base_entity_uuid: uuid::Uuid,
+    pub file_uuid: uuid::Uuid,
+    pub content_type: Option<String>,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct Attachments {
+    pub original_filename: String,
+    pub uuid: uuid::Uuid,
+    pub base_entity_uuid: uuid::Uuid,
+    pub file_uuid: uuid::Uuid,
+    pub content_type: Option<String>,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
