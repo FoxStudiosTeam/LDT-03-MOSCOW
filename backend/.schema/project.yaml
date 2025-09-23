@@ -24,7 +24,7 @@ tables:
   fields:
   - name: project
     type: uuid
-  - name: user
+  - name: user_uuid
     type: uuid
     nullable: true
   - name: uuid
