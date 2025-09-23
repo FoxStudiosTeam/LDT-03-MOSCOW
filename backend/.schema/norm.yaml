@@ -5,6 +5,7 @@ tables:
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
   - name: work_category
     type: uuid
   - name: title
@@ -49,11 +50,13 @@ tables:
   - name: check_date
     type: date
     nullable: true
+    default: null
   - name: report_date
     type: date
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
   - name: project_schedule_item
     type: uuid
   - name: status
@@ -66,6 +69,7 @@ tables:
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
   - name: project_schedule_item
     type: uuid
   - name: delivery_date
@@ -82,9 +86,11 @@ tables:
   - name: id
     type: integer
     nullable: true
+    default: null
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
   - name: title
     type: text
 - name: regulation_docs
@@ -93,9 +99,11 @@ tables:
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
   - name: title
     type: text
     nullable: true
+    default: null
 - name: punishment_statuses
   schema: norm
   fields:

@@ -7,50 +7,46 @@ use sqlx::types::*;
 
 #[derive(Clone, Debug, FromRow)]
 pub struct Project {
-    pub polygon: serde_json::Value,
-    pub uuid: uuid::Uuid,
-    pub foreman: uuid::Uuid,
-    pub iko: uuid::Uuid,
-    pub ssk: uuid::Uuid,
-    pub address: String,
     pub status: i32,
+    pub polygon: Option<serde_json::Value>,
+    pub uuid: uuid::Uuid,
+    pub foreman: Option<uuid::Uuid>,
+    pub address: Option<String>,
+    pub ssk: Option<uuid::Uuid>,
 }
 
 impl Project {
     pub fn into_active(self) -> ActiveProject {
         ActiveProject {
+            status: Set(self.status),
             polygon: Set(self.polygon),
             uuid: Set(self.uuid),
             foreman: Set(self.foreman),
-            iko: Set(self.iko),
-            ssk: Set(self.ssk),
             address: Set(self.address),
-            status: Set(self.status),
+            ssk: Set(self.ssk),
         }
     }
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveProject {
-    pub polygon: Optional<serde_json::Value>,
-    pub uuid: Optional<uuid::Uuid>,
-    pub foreman: Optional<uuid::Uuid>,
-    pub iko: Optional<uuid::Uuid>,
-    pub ssk: Optional<uuid::Uuid>,
-    pub address: Optional<String>,
     pub status: Optional<i32>,
+    pub polygon: Optional<Option<serde_json::Value>>,
+    pub uuid: Optional<uuid::Uuid>,
+    pub foreman: Optional<Option<uuid::Uuid>>,
+    pub address: Optional<Option<String>>,
+    pub ssk: Optional<Option<uuid::Uuid>>,
 }
 
 impl ActiveProject {
     pub fn into_project(self) -> Option<Project> {
         Some(Project {
+            status: self.status.into_option()?,
             polygon: self.polygon.into_option()?,
             uuid: self.uuid.into_option()?,
             foreman: self.foreman.into_option()?,
-            iko: self.iko.into_option()?,
-            ssk: self.ssk.into_option()?,
             address: self.address.into_option()?,
-            status: self.status.into_option()?,
+            ssk: self.ssk.into_option()?,
         })
     }
 }
@@ -74,21 +70,27 @@ impl TableSelector for ActiveProject {
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
+            "status" => self.status.is_set(),
             "polygon" => self.polygon.is_set(),
             "uuid" => self.uuid.is_set(),
             "foreman" => self.foreman.is_set(),
-            "iko" => self.iko.is_set(),
-            "ssk" => self.ssk.is_set(),
             "address" => self.address.is_set(),
-            "status" => self.status.is_set(),
+            "ssk" => self.ssk.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
     fn columns() -> &'static [ColumnDef] {
         &[
             ColumnDef{
-                name: "polygon",
+                name: "status",
                 nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "polygon",
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
@@ -96,41 +98,27 @@ impl TableSelector for ActiveProject {
             ColumnDef{
                 name: "uuid",
                 nullable: false,
-                default: None,
+                default: Some("gen_random_uuid()"),
                 is_unique: false,
                 is_primary: true,
             },
             ColumnDef{
                 name: "foreman",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "iko",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "ssk",
-                nullable: false,
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
             },
             ColumnDef{
                 name: "address",
-                nullable: false,
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
             },
             ColumnDef{
-                name: "status",
-                nullable: false,
+                name: "ssk",
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
@@ -174,13 +162,12 @@ impl ModelOps<sqlx::Postgres> for ActiveProject
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
+        if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
         if let Set(v) = &self.polygon {tracing::debug!("Binded polygon"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
-        if let Set(v) = &self.iko {tracing::debug!("Binded iko"); q = q.bind(v);}
-        if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
-        if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
+        if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
         q
     }
     
@@ -297,13 +284,12 @@ impl ModelOps<sqlx::MySql> for ActiveProject
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
+        if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
         if let Set(v) = &self.polygon {tracing::debug!("Binded polygon"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
-        if let Set(v) = &self.iko {tracing::debug!("Binded iko"); q = q.bind(v);}
-        if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
-        if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
+        if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
         q
     }
     
@@ -420,13 +406,12 @@ impl ModelOps<sqlx::Sqlite> for ActiveProject
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
+        if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
         if let Set(v) = &self.polygon {tracing::debug!("Binded polygon"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
-        if let Set(v) = &self.iko {tracing::debug!("Binded iko"); q = q.bind(v);}
-        if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
-        if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
+        if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
         q
     }
     

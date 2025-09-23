@@ -7,22 +7,27 @@ tables:
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
   - name: correction_date_fact
     type: date
     nullable: true
+    default: null
   - name: correction_date_info
     type: text
     nullable: true
+    default: null
   - name: is_suspend
     type: boolean
   - name: comment
     type: text
     nullable: true
+    default: null
   - name: punish_datetime
     type: timestamp
   - name: regulation_doc
     type: uuid
     nullable: true
+    default: null
   - name: correction_date_plan
     type: date
   - name: title
@@ -37,6 +42,7 @@ tables:
   - name: custom_number
     type: text
     nullable: true
+    default: null
   - name: project
     type: uuid
   - name: punish_datetime
@@ -44,18 +50,22 @@ tables:
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
 - name: project_schedule
   schema: journal
   fields:
   - name: start_date
     type: date
     nullable: true
+    default: null
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
   - name: end_date
     type: date
     nullable: true
+    default: null
   - name: project_uuid
     type: uuid
 - name: project_schedule_items
@@ -70,6 +80,7 @@ tables:
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
   - name: work_uuid
     type: uuid
   - name: start_date
@@ -81,6 +92,7 @@ tables:
   - name: updated_by
     type: uuid
     nullable: true
+    default: null
   - name: is_draft
     type: boolean
   - name: is_deleted
