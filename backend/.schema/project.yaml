@@ -7,18 +7,23 @@ tables:
   - name: polygon
     type: jsonb
     nullable: true
+    default: null
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
   - name: foreman
     type: uuid
     nullable: true
+    default: null
   - name: address
     type: text
     nullable: true
+    default: null
   - name: ssk
     type: uuid
     nullable: true
+    default: null
 - name: iko_relationship
   schema: project
   fields:
@@ -27,6 +32,8 @@ tables:
   - name: user_uuid
     type: uuid
     nullable: true
+    default: null
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
