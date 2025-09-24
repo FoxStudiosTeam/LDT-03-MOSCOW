@@ -19,8 +19,36 @@
   }
 }
 
+table {
+    border: 1px solid #D0D0D0;
+}
+
+thead th, td {
+    border: 1px solid #D0D0D0;
+    text-align: left;
+    padding: 2px 8px 2px 8px;
+}
+
+tbody th, td {
+    border: 1px solid #D0D0D0;
+    text-align: left;
+    padding: 10px 8px 10px 8px;
+}
+
+textarea {
+    caret-color: black;
+}
+
 input {
     caret-color: black;
+}
+
+button {
+    cursor: pointer;
+}
+
+main {
+    min-height: calc(100vh - 50px);
 }
 
 body {
