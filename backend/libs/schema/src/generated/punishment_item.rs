@@ -1,72 +1,96 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
 
-#[derive(Clone, Debug, FromRow)]
-pub struct PunishmentItem {
-    pub punishment: uuid::Uuid,
-    pub correction_date_fact: chrono::NaiveDate,
-    pub correction_date_plan: chrono::NaiveDate,
-    pub is_suspend: bool,
-    pub uuid: uuid::Uuid,
-    pub place: String,
-    pub correction_date_info: String,
-    pub comment: String,
-    pub title: String,
-    pub punish_datetime: chrono::NaiveDateTime,
-    pub punishment_item_status: i32,
-}
-
 impl PunishmentItem {
     pub fn into_active(self) -> ActivePunishmentItem {
         ActivePunishmentItem {
             punishment: Set(self.punishment),
-            correction_date_fact: Set(self.correction_date_fact),
-            correction_date_plan: Set(self.correction_date_plan),
-            is_suspend: Set(self.is_suspend),
             uuid: Set(self.uuid),
-            place: Set(self.place),
+            correction_date_fact: Set(self.correction_date_fact),
             correction_date_info: Set(self.correction_date_info),
+            is_suspend: Set(self.is_suspend),
             comment: Set(self.comment),
-            title: Set(self.title),
             punish_datetime: Set(self.punish_datetime),
+            regulation_doc: Set(self.regulation_doc),
+            correction_date_plan: Set(self.correction_date_plan),
+            title: Set(self.title),
             punishment_item_status: Set(self.punishment_item_status),
+            place: Set(self.place),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct PunishmentItem {
+    pub punishment: uuid::Uuid,
+    pub uuid: uuid::Uuid,
+    pub correction_date_fact: Option<chrono::NaiveDate>,
+    pub correction_date_info: Option<String>,
+    pub is_suspend: bool,
+    pub comment: Option<String>,
+    pub punish_datetime: chrono::NaiveDateTime,
+    pub regulation_doc: Option<uuid::Uuid>,
+    pub correction_date_plan: chrono::NaiveDate,
+    pub title: String,
+    pub punishment_item_status: i32,
+    pub place: String,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct PunishmentItem {
+    pub punishment: uuid::Uuid,
+    pub uuid: uuid::Uuid,
+    pub correction_date_fact: Option<chrono::NaiveDate>,
+    pub correction_date_info: Option<String>,
+    pub is_suspend: bool,
+    pub comment: Option<String>,
+    pub punish_datetime: chrono::NaiveDateTime,
+    pub regulation_doc: Option<uuid::Uuid>,
+    pub correction_date_plan: chrono::NaiveDate,
+    pub title: String,
+    pub punishment_item_status: i32,
+    pub place: String,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActivePunishmentItem {
     pub punishment: Optional<uuid::Uuid>,
-    pub correction_date_fact: Optional<chrono::NaiveDate>,
-    pub correction_date_plan: Optional<chrono::NaiveDate>,
-    pub is_suspend: Optional<bool>,
     pub uuid: Optional<uuid::Uuid>,
-    pub place: Optional<String>,
-    pub correction_date_info: Optional<String>,
-    pub comment: Optional<String>,
-    pub title: Optional<String>,
+    pub correction_date_fact: Optional<Option<chrono::NaiveDate>>,
+    pub correction_date_info: Optional<Option<String>>,
+    pub is_suspend: Optional<bool>,
+    pub comment: Optional<Option<String>>,
     pub punish_datetime: Optional<chrono::NaiveDateTime>,
+    pub regulation_doc: Optional<Option<uuid::Uuid>>,
+    pub correction_date_plan: Optional<chrono::NaiveDate>,
+    pub title: Optional<String>,
     pub punishment_item_status: Optional<i32>,
+    pub place: Optional<String>,
 }
 
 impl ActivePunishmentItem {
     pub fn into_punishment_item(self) -> Option<PunishmentItem> {
         Some(PunishmentItem {
             punishment: self.punishment.into_option()?,
-            correction_date_fact: self.correction_date_fact.into_option()?,
-            correction_date_plan: self.correction_date_plan.into_option()?,
-            is_suspend: self.is_suspend.into_option()?,
             uuid: self.uuid.into_option()?,
-            place: self.place.into_option()?,
+            correction_date_fact: self.correction_date_fact.into_option()?,
             correction_date_info: self.correction_date_info.into_option()?,
+            is_suspend: self.is_suspend.into_option()?,
             comment: self.comment.into_option()?,
-            title: self.title.into_option()?,
             punish_datetime: self.punish_datetime.into_option()?,
+            regulation_doc: self.regulation_doc.into_option()?,
+            correction_date_plan: self.correction_date_plan.into_option()?,
+            title: self.title.into_option()?,
             punishment_item_status: self.punishment_item_status.into_option()?,
+            place: self.place.into_option()?,
         })
     }
 }
@@ -91,16 +115,17 @@ impl TableSelector for ActivePunishmentItem {
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
             "punishment" => self.punishment.is_set(),
-            "correction_date_fact" => self.correction_date_fact.is_set(),
-            "correction_date_plan" => self.correction_date_plan.is_set(),
-            "is_suspend" => self.is_suspend.is_set(),
             "uuid" => self.uuid.is_set(),
-            "place" => self.place.is_set(),
+            "correction_date_fact" => self.correction_date_fact.is_set(),
             "correction_date_info" => self.correction_date_info.is_set(),
+            "is_suspend" => self.is_suspend.is_set(),
             "comment" => self.comment.is_set(),
-            "title" => self.title.is_set(),
             "punish_datetime" => self.punish_datetime.is_set(),
+            "regulation_doc" => self.regulation_doc.is_set(),
+            "correction_date_plan" => self.correction_date_plan.is_set(),
+            "title" => self.title.is_set(),
             "punishment_item_status" => self.punishment_item_status.is_set(),
+            "place" => self.place.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
@@ -114,15 +139,22 @@ impl TableSelector for ActivePunishmentItem {
                 is_primary: false,
             },
             ColumnDef{
-                name: "correction_date_fact",
+                name: "uuid",
                 nullable: false,
+                default: Some("gen_random_uuid()"),
+                is_unique: false,
+                is_primary: true,
+            },
+            ColumnDef{
+                name: "correction_date_fact",
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
             },
             ColumnDef{
-                name: "correction_date_plan",
-                nullable: false,
+                name: "correction_date_info",
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
@@ -135,28 +167,28 @@ impl TableSelector for ActivePunishmentItem {
                 is_primary: false,
             },
             ColumnDef{
-                name: "uuid",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: true,
-            },
-            ColumnDef{
-                name: "place",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "correction_date_info",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
                 name: "comment",
+                nullable: true,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "punish_datetime",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "regulation_doc",
+                nullable: true,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "correction_date_plan",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -170,14 +202,14 @@ impl TableSelector for ActivePunishmentItem {
                 is_primary: false,
             },
             ColumnDef{
-                name: "punish_datetime",
+                name: "punishment_item_status",
                 nullable: false,
                 default: None,
                 is_unique: false,
                 is_primary: false,
             },
             ColumnDef{
-                name: "punishment_item_status",
+                name: "place",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -223,16 +255,17 @@ impl ModelOps<sqlx::Postgres> for ActivePunishmentItem
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.punishment {tracing::debug!("Binded punishment"); q = q.bind(v);}
-        if let Set(v) = &self.correction_date_fact {tracing::debug!("Binded correction_date_fact"); q = q.bind(v);}
-        if let Set(v) = &self.correction_date_plan {tracing::debug!("Binded correction_date_plan"); q = q.bind(v);}
-        if let Set(v) = &self.is_suspend {tracing::debug!("Binded is_suspend"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.place {tracing::debug!("Binded place"); q = q.bind(v);}
+        if let Set(v) = &self.correction_date_fact {tracing::debug!("Binded correction_date_fact"); q = q.bind(v);}
         if let Set(v) = &self.correction_date_info {tracing::debug!("Binded correction_date_info"); q = q.bind(v);}
+        if let Set(v) = &self.is_suspend {tracing::debug!("Binded is_suspend"); q = q.bind(v);}
         if let Set(v) = &self.comment {tracing::debug!("Binded comment"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.punish_datetime {tracing::debug!("Binded punish_datetime"); q = q.bind(v);}
+        if let Set(v) = &self.regulation_doc {tracing::debug!("Binded regulation_doc"); q = q.bind(v);}
+        if let Set(v) = &self.correction_date_plan {tracing::debug!("Binded correction_date_plan"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.punishment_item_status {tracing::debug!("Binded punishment_item_status"); q = q.bind(v);}
+        if let Set(v) = &self.place {tracing::debug!("Binded place"); q = q.bind(v);}
         q
     }
     
@@ -350,16 +383,17 @@ impl ModelOps<sqlx::MySql> for ActivePunishmentItem
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.punishment {tracing::debug!("Binded punishment"); q = q.bind(v);}
-        if let Set(v) = &self.correction_date_fact {tracing::debug!("Binded correction_date_fact"); q = q.bind(v);}
-        if let Set(v) = &self.correction_date_plan {tracing::debug!("Binded correction_date_plan"); q = q.bind(v);}
-        if let Set(v) = &self.is_suspend {tracing::debug!("Binded is_suspend"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.place {tracing::debug!("Binded place"); q = q.bind(v);}
+        if let Set(v) = &self.correction_date_fact {tracing::debug!("Binded correction_date_fact"); q = q.bind(v);}
         if let Set(v) = &self.correction_date_info {tracing::debug!("Binded correction_date_info"); q = q.bind(v);}
+        if let Set(v) = &self.is_suspend {tracing::debug!("Binded is_suspend"); q = q.bind(v);}
         if let Set(v) = &self.comment {tracing::debug!("Binded comment"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.punish_datetime {tracing::debug!("Binded punish_datetime"); q = q.bind(v);}
+        if let Set(v) = &self.regulation_doc {tracing::debug!("Binded regulation_doc"); q = q.bind(v);}
+        if let Set(v) = &self.correction_date_plan {tracing::debug!("Binded correction_date_plan"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.punishment_item_status {tracing::debug!("Binded punishment_item_status"); q = q.bind(v);}
+        if let Set(v) = &self.place {tracing::debug!("Binded place"); q = q.bind(v);}
         q
     }
     
@@ -477,16 +511,17 @@ impl ModelOps<sqlx::Sqlite> for ActivePunishmentItem
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.punishment {tracing::debug!("Binded punishment"); q = q.bind(v);}
-        if let Set(v) = &self.correction_date_fact {tracing::debug!("Binded correction_date_fact"); q = q.bind(v);}
-        if let Set(v) = &self.correction_date_plan {tracing::debug!("Binded correction_date_plan"); q = q.bind(v);}
-        if let Set(v) = &self.is_suspend {tracing::debug!("Binded is_suspend"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.place {tracing::debug!("Binded place"); q = q.bind(v);}
+        if let Set(v) = &self.correction_date_fact {tracing::debug!("Binded correction_date_fact"); q = q.bind(v);}
         if let Set(v) = &self.correction_date_info {tracing::debug!("Binded correction_date_info"); q = q.bind(v);}
+        if let Set(v) = &self.is_suspend {tracing::debug!("Binded is_suspend"); q = q.bind(v);}
         if let Set(v) = &self.comment {tracing::debug!("Binded comment"); q = q.bind(v);}
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.punish_datetime {tracing::debug!("Binded punish_datetime"); q = q.bind(v);}
+        if let Set(v) = &self.regulation_doc {tracing::debug!("Binded regulation_doc"); q = q.bind(v);}
+        if let Set(v) = &self.correction_date_plan {tracing::debug!("Binded correction_date_plan"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         if let Set(v) = &self.punishment_item_status {tracing::debug!("Binded punishment_item_status"); q = q.bind(v);}
+        if let Set(v) = &self.place {tracing::debug!("Binded place"); q = q.bind(v);}
         q
     }
     

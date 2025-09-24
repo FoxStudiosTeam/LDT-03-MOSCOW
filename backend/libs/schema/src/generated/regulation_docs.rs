@@ -6,96 +6,71 @@ use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
 
-impl Attachments {
-    pub fn into_active(self) -> ActiveAttachments {
-        ActiveAttachments {
-            original_filename: Set(self.original_filename),
+impl RegulationDocs {
+    pub fn into_active(self) -> ActiveRegulationDocs {
+        ActiveRegulationDocs {
             uuid: Set(self.uuid),
-            base_entity_uuid: Set(self.base_entity_uuid),
-            file_uuid: Set(self.file_uuid),
-            content_type: Set(self.content_type),
+            title: Set(self.title),
         }
     }
 }
 
 #[cfg(not(feature="serde"))]
 #[derive(Clone, Debug, FromRow)]
-pub struct Attachments {
-    pub original_filename: String,
+pub struct RegulationDocs {
     pub uuid: uuid::Uuid,
-    pub base_entity_uuid: uuid::Uuid,
-    pub file_uuid: uuid::Uuid,
-    pub content_type: Option<String>,
+    pub title: Option<String>,
 }
 
 #[cfg(feature="serde")]
 #[derive(serde::Serialize, serde::Deserialize)]
 #[derive(Clone, Debug, FromRow)]
-pub struct Attachments {
-    pub original_filename: String,
+pub struct RegulationDocs {
     pub uuid: uuid::Uuid,
-    pub base_entity_uuid: uuid::Uuid,
-    pub file_uuid: uuid::Uuid,
-    pub content_type: Option<String>,
+    pub title: Option<String>,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
-pub struct ActiveAttachments {
-    pub original_filename: Optional<String>,
+pub struct ActiveRegulationDocs {
     pub uuid: Optional<uuid::Uuid>,
-    pub base_entity_uuid: Optional<uuid::Uuid>,
-    pub file_uuid: Optional<uuid::Uuid>,
-    pub content_type: Optional<Option<String>>,
+    pub title: Optional<Option<String>>,
 }
 
-impl ActiveAttachments {
-    pub fn into_attachments(self) -> Option<Attachments> {
-        Some(Attachments {
-            original_filename: self.original_filename.into_option()?,
+impl ActiveRegulationDocs {
+    pub fn into_regulation_docs(self) -> Option<RegulationDocs> {
+        Some(RegulationDocs {
             uuid: self.uuid.into_option()?,
-            base_entity_uuid: self.base_entity_uuid.into_option()?,
-            file_uuid: self.file_uuid.into_option()?,
-            content_type: self.content_type.into_option()?,
+            title: self.title.into_option()?,
         })
     }
 }
 
-pub trait OrmAttachments<DB: OrmDB> {
-    fn attachments<'e>(&'e self) -> DBSelector<'e, DB, Pool<DB>, ActiveAttachments>
+pub trait OrmRegulationDocs<DB: OrmDB> {
+    fn regulation_docs<'e>(&'e self) -> DBSelector<'e, DB, Pool<DB>, ActiveRegulationDocs>
     where 
         &'e Pool<DB>: Executor<'e, Database = DB>;
 }
 
-pub trait OrmTXAttachments<'c, DB: OrmDB> {
-    fn attachments(&'c mut self) -> TxSelector<'c, DB, ActiveAttachments>;
+pub trait OrmTXRegulationDocs<'c, DB: OrmDB> {
+    fn regulation_docs(&'c mut self) -> TxSelector<'c, DB, ActiveRegulationDocs>;
 }
 
-impl TableSelector for ActiveAttachments {
-    const TABLE_NAME: &'static str = "attachments";
-    const TABLE_SCHEMA: &'static str = "attachment";
+impl TableSelector for ActiveRegulationDocs {
+    const TABLE_NAME: &'static str = "regulation_docs";
+    const TABLE_SCHEMA: &'static str = "norm";
     type TypePK = uuid::Uuid;
     fn pk_column() -> &'static str {
         "uuid"
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
-            "original_filename" => self.original_filename.is_set(),
             "uuid" => self.uuid.is_set(),
-            "base_entity_uuid" => self.base_entity_uuid.is_set(),
-            "file_uuid" => self.file_uuid.is_set(),
-            "content_type" => self.content_type.is_set(),
+            "title" => self.title.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
     fn columns() -> &'static [ColumnDef] {
         &[
-            ColumnDef{
-                name: "original_filename",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
             ColumnDef{
                 name: "uuid",
                 nullable: false,
@@ -104,21 +79,7 @@ impl TableSelector for ActiveAttachments {
                 is_primary: true,
             },
             ColumnDef{
-                name: "base_entity_uuid",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "file_uuid",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "content_type",
+                name: "title",
                 nullable: true,
                 default: None,
                 is_unique: false,
@@ -129,9 +90,9 @@ impl TableSelector for ActiveAttachments {
 }
 
 #[cfg(feature="postgres")]
-impl OrmAttachments<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
+impl OrmRegulationDocs<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
 {
-    fn attachments<'e>(&'e self) -> DBSelector<'e, sqlx::Postgres, Pool<sqlx::Postgres>, ActiveAttachments>
+    fn regulation_docs<'e>(&'e self) -> DBSelector<'e, sqlx::Postgres, Pool<sqlx::Postgres>, ActiveRegulationDocs>
     where 
         &'e Pool<sqlx::Postgres>: Executor<'e, Database = sqlx::Postgres>
     {
@@ -140,18 +101,18 @@ impl OrmAttachments<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
 }
 
 #[cfg(feature="postgres")]
-impl<'c> OrmTXAttachments<'c, sqlx::Postgres> for OrmTX<sqlx::Postgres>
+impl<'c> OrmTXRegulationDocs<'c, sqlx::Postgres> for OrmTX<sqlx::Postgres>
 {
-    fn attachments(&'c mut self) -> TxSelector<'c, sqlx::Postgres, ActiveAttachments>
+    fn regulation_docs(&'c mut self) -> TxSelector<'c, sqlx::Postgres, ActiveRegulationDocs>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="postgres")]
-impl ModelOps<sqlx::Postgres> for ActiveAttachments 
+impl ModelOps<sqlx::Postgres> for ActiveRegulationDocs 
 {
-    type NonActive = Attachments;
+    type NonActive = RegulationDocs;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::Postgres> ,for<'q> <sqlx::Postgres as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::Postgres>  {
         match mode {
@@ -163,11 +124,8 @@ impl ModelOps<sqlx::Postgres> for ActiveAttachments
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
@@ -250,9 +208,9 @@ impl ModelOps<sqlx::Postgres> for ActiveAttachments
 }
 
 #[cfg(feature="mysql")]
-impl OrmAttachments<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
+impl OrmRegulationDocs<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
 {
-    fn attachments<'e>(&'e self) -> DBSelector<'e, sqlx::MySql, Pool<sqlx::MySql>, ActiveAttachments>
+    fn regulation_docs<'e>(&'e self) -> DBSelector<'e, sqlx::MySql, Pool<sqlx::MySql>, ActiveRegulationDocs>
     where 
         &'e Pool<sqlx::MySql>: Executor<'e, Database = sqlx::MySql>
     {
@@ -261,18 +219,18 @@ impl OrmAttachments<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
 }
 
 #[cfg(feature="mysql")]
-impl<'c> OrmTXAttachments<'c, sqlx::MySql> for OrmTX<sqlx::MySql>
+impl<'c> OrmTXRegulationDocs<'c, sqlx::MySql> for OrmTX<sqlx::MySql>
 {
-    fn attachments(&'c mut self) -> TxSelector<'c, sqlx::MySql, ActiveAttachments>
+    fn regulation_docs(&'c mut self) -> TxSelector<'c, sqlx::MySql, ActiveRegulationDocs>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="mysql")]
-impl ModelOps<sqlx::MySql> for ActiveAttachments 
+impl ModelOps<sqlx::MySql> for ActiveRegulationDocs 
 {
-    type NonActive = Attachments;
+    type NonActive = RegulationDocs;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::MySql> ,for<'q> <sqlx::MySql as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::MySql>  {
         match mode {
@@ -284,11 +242,8 @@ impl ModelOps<sqlx::MySql> for ActiveAttachments
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
@@ -371,9 +326,9 @@ impl ModelOps<sqlx::MySql> for ActiveAttachments
 }
 
 #[cfg(feature="sqlite")]
-impl OrmAttachments<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
+impl OrmRegulationDocs<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
 {
-    fn attachments<'e>(&'e self) -> DBSelector<'e, sqlx::Sqlite, Pool<sqlx::Sqlite>, ActiveAttachments>
+    fn regulation_docs<'e>(&'e self) -> DBSelector<'e, sqlx::Sqlite, Pool<sqlx::Sqlite>, ActiveRegulationDocs>
     where 
         &'e Pool<sqlx::Sqlite>: Executor<'e, Database = sqlx::Sqlite>
     {
@@ -382,18 +337,18 @@ impl OrmAttachments<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
 }
 
 #[cfg(feature="sqlite")]
-impl<'c> OrmTXAttachments<'c, sqlx::Sqlite> for OrmTX<sqlx::Sqlite>
+impl<'c> OrmTXRegulationDocs<'c, sqlx::Sqlite> for OrmTX<sqlx::Sqlite>
 {
-    fn attachments(&'c mut self) -> TxSelector<'c, sqlx::Sqlite, ActiveAttachments>
+    fn regulation_docs(&'c mut self) -> TxSelector<'c, sqlx::Sqlite, ActiveRegulationDocs>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="sqlite")]
-impl ModelOps<sqlx::Sqlite> for ActiveAttachments 
+impl ModelOps<sqlx::Sqlite> for ActiveRegulationDocs 
 {
-    type NonActive = Attachments;
+    type NonActive = RegulationDocs;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::Sqlite> ,for<'q> <sqlx::Sqlite as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::Sqlite>  {
         match mode {
@@ -405,11 +360,8 @@ impl ModelOps<sqlx::Sqlite> for ActiveAttachments
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     

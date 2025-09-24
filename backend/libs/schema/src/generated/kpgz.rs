@@ -1,40 +1,51 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
 
-#[derive(Clone, Debug, FromRow)]
-pub struct Kpgz {
-    pub code: String,
-    pub id: i64,
-    pub title: String,
-}
-
 impl Kpgz {
     pub fn into_active(self) -> ActiveKpgz {
         ActiveKpgz {
-            code: Set(self.code),
             id: Set(self.id),
             title: Set(self.title),
+            code: Set(self.code),
         }
     }
 }
 
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct Kpgz {
+    pub id: i64,
+    pub title: String,
+    pub code: String,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct Kpgz {
+    pub id: i64,
+    pub title: String,
+    pub code: String,
+}
+
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveKpgz {
-    pub code: Optional<String>,
     pub id: Optional<i64>,
     pub title: Optional<String>,
+    pub code: Optional<String>,
 }
 
 impl ActiveKpgz {
     pub fn into_kpgz(self) -> Option<Kpgz> {
         Some(Kpgz {
-            code: self.code.into_option()?,
             id: self.id.into_option()?,
             title: self.title.into_option()?,
+            code: self.code.into_option()?,
         })
     }
 }
@@ -58,21 +69,14 @@ impl TableSelector for ActiveKpgz {
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
-            "code" => self.code.is_set(),
             "id" => self.id.is_set(),
             "title" => self.title.is_set(),
+            "code" => self.code.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
     fn columns() -> &'static [ColumnDef] {
         &[
-            ColumnDef{
-                name: "code",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
             ColumnDef{
                 name: "id",
                 nullable: false,
@@ -82,6 +86,13 @@ impl TableSelector for ActiveKpgz {
             },
             ColumnDef{
                 name: "title",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "code",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -126,9 +137,9 @@ impl ModelOps<sqlx::Postgres> for ActiveKpgz
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.code {tracing::debug!("Binded code"); q = q.bind(v);}
         if let Set(v) = &self.id {tracing::debug!("Binded id"); q = q.bind(v);}
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.code {tracing::debug!("Binded code"); q = q.bind(v);}
         q
     }
     
@@ -245,9 +256,9 @@ impl ModelOps<sqlx::MySql> for ActiveKpgz
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.code {tracing::debug!("Binded code"); q = q.bind(v);}
         if let Set(v) = &self.id {tracing::debug!("Binded id"); q = q.bind(v);}
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.code {tracing::debug!("Binded code"); q = q.bind(v);}
         q
     }
     
@@ -364,9 +375,9 @@ impl ModelOps<sqlx::Sqlite> for ActiveKpgz
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.code {tracing::debug!("Binded code"); q = q.bind(v);}
         if let Set(v) = &self.id {tracing::debug!("Binded id"); q = q.bind(v);}
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.code {tracing::debug!("Binded code"); q = q.bind(v);}
         q
     }
     

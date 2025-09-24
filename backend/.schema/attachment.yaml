@@ -7,6 +7,7 @@ tables:
   - name: uuid
     type: uuid
     isPrimary: true
+    default: "gen_random_uuid()"
   - name: base_entity_uuid
     type: uuid
   - name: file_uuid
@@ -14,3 +15,4 @@ tables:
   - name: content_type
     type: text
     nullable: true
+    default: null

@@ -1,40 +1,51 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
 
-#[derive(Clone, Debug, FromRow)]
-pub struct Works {
-    pub title: String,
-    pub work_category: uuid::Uuid,
-    pub uuid: uuid::Uuid,
-}
-
 impl Works {
     pub fn into_active(self) -> ActiveWorks {
         ActiveWorks {
-            title: Set(self.title),
-            work_category: Set(self.work_category),
             uuid: Set(self.uuid),
+            work_category: Set(self.work_category),
+            title: Set(self.title),
         }
     }
 }
 
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct Works {
+    pub uuid: uuid::Uuid,
+    pub work_category: uuid::Uuid,
+    pub title: String,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct Works {
+    pub uuid: uuid::Uuid,
+    pub work_category: uuid::Uuid,
+    pub title: String,
+}
+
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveWorks {
-    pub title: Optional<String>,
-    pub work_category: Optional<uuid::Uuid>,
     pub uuid: Optional<uuid::Uuid>,
+    pub work_category: Optional<uuid::Uuid>,
+    pub title: Optional<String>,
 }
 
 impl ActiveWorks {
     pub fn into_works(self) -> Option<Works> {
         Some(Works {
-            title: self.title.into_option()?,
-            work_category: self.work_category.into_option()?,
             uuid: self.uuid.into_option()?,
+            work_category: self.work_category.into_option()?,
+            title: self.title.into_option()?,
         })
     }
 }
@@ -58,20 +69,20 @@ impl TableSelector for ActiveWorks {
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
-            "title" => self.title.is_set(),
-            "work_category" => self.work_category.is_set(),
             "uuid" => self.uuid.is_set(),
+            "work_category" => self.work_category.is_set(),
+            "title" => self.title.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
     fn columns() -> &'static [ColumnDef] {
         &[
             ColumnDef{
-                name: "title",
+                name: "uuid",
                 nullable: false,
-                default: None,
+                default: Some("gen_random_uuid()"),
                 is_unique: false,
-                is_primary: false,
+                is_primary: true,
             },
             ColumnDef{
                 name: "work_category",
@@ -81,11 +92,11 @@ impl TableSelector for ActiveWorks {
                 is_primary: false,
             },
             ColumnDef{
-                name: "uuid",
+                name: "title",
                 nullable: false,
                 default: None,
                 is_unique: false,
-                is_primary: true,
+                is_primary: false,
             },
         ]
     }
@@ -126,9 +137,9 @@ impl ModelOps<sqlx::Postgres> for ActiveWorks
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
-        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
@@ -245,9 +256,9 @@ impl ModelOps<sqlx::MySql> for ActiveWorks
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
-        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     
@@ -364,9 +375,9 @@ impl ModelOps<sqlx::Sqlite> for ActiveWorks
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
-        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
+        if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
     }
     

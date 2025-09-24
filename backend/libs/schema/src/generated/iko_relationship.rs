@@ -6,92 +6,87 @@ use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
 
-impl Attachments {
-    pub fn into_active(self) -> ActiveAttachments {
-        ActiveAttachments {
-            original_filename: Set(self.original_filename),
+impl IkoRelationship {
+    pub fn into_active(self) -> ActiveIkoRelationship {
+        ActiveIkoRelationship {
+            project: Set(self.project),
+            user_uuid: Set(self.user_uuid),
             uuid: Set(self.uuid),
-            base_entity_uuid: Set(self.base_entity_uuid),
-            file_uuid: Set(self.file_uuid),
-            content_type: Set(self.content_type),
         }
     }
 }
 
 #[cfg(not(feature="serde"))]
 #[derive(Clone, Debug, FromRow)]
-pub struct Attachments {
-    pub original_filename: String,
+pub struct IkoRelationship {
+    pub project: uuid::Uuid,
+    pub user_uuid: Option<uuid::Uuid>,
     pub uuid: uuid::Uuid,
-    pub base_entity_uuid: uuid::Uuid,
-    pub file_uuid: uuid::Uuid,
-    pub content_type: Option<String>,
 }
 
 #[cfg(feature="serde")]
 #[derive(serde::Serialize, serde::Deserialize)]
 #[derive(Clone, Debug, FromRow)]
-pub struct Attachments {
-    pub original_filename: String,
+pub struct IkoRelationship {
+    pub project: uuid::Uuid,
+    pub user_uuid: Option<uuid::Uuid>,
     pub uuid: uuid::Uuid,
-    pub base_entity_uuid: uuid::Uuid,
-    pub file_uuid: uuid::Uuid,
-    pub content_type: Option<String>,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
-pub struct ActiveAttachments {
-    pub original_filename: Optional<String>,
+pub struct ActiveIkoRelationship {
+    pub project: Optional<uuid::Uuid>,
+    pub user_uuid: Optional<Option<uuid::Uuid>>,
     pub uuid: Optional<uuid::Uuid>,
-    pub base_entity_uuid: Optional<uuid::Uuid>,
-    pub file_uuid: Optional<uuid::Uuid>,
-    pub content_type: Optional<Option<String>>,
 }
 
-impl ActiveAttachments {
-    pub fn into_attachments(self) -> Option<Attachments> {
-        Some(Attachments {
-            original_filename: self.original_filename.into_option()?,
+impl ActiveIkoRelationship {
+    pub fn into_iko_relationship(self) -> Option<IkoRelationship> {
+        Some(IkoRelationship {
+            project: self.project.into_option()?,
+            user_uuid: self.user_uuid.into_option()?,
             uuid: self.uuid.into_option()?,
-            base_entity_uuid: self.base_entity_uuid.into_option()?,
-            file_uuid: self.file_uuid.into_option()?,
-            content_type: self.content_type.into_option()?,
         })
     }
 }
 
-pub trait OrmAttachments<DB: OrmDB> {
-    fn attachments<'e>(&'e self) -> DBSelector<'e, DB, Pool<DB>, ActiveAttachments>
+pub trait OrmIkoRelationship<DB: OrmDB> {
+    fn iko_relationship<'e>(&'e self) -> DBSelector<'e, DB, Pool<DB>, ActiveIkoRelationship>
     where 
         &'e Pool<DB>: Executor<'e, Database = DB>;
 }
 
-pub trait OrmTXAttachments<'c, DB: OrmDB> {
-    fn attachments(&'c mut self) -> TxSelector<'c, DB, ActiveAttachments>;
+pub trait OrmTXIkoRelationship<'c, DB: OrmDB> {
+    fn iko_relationship(&'c mut self) -> TxSelector<'c, DB, ActiveIkoRelationship>;
 }
 
-impl TableSelector for ActiveAttachments {
-    const TABLE_NAME: &'static str = "attachments";
-    const TABLE_SCHEMA: &'static str = "attachment";
+impl TableSelector for ActiveIkoRelationship {
+    const TABLE_NAME: &'static str = "iko_relationship";
+    const TABLE_SCHEMA: &'static str = "project";
     type TypePK = uuid::Uuid;
     fn pk_column() -> &'static str {
         "uuid"
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
-            "original_filename" => self.original_filename.is_set(),
+            "project" => self.project.is_set(),
+            "user_uuid" => self.user_uuid.is_set(),
             "uuid" => self.uuid.is_set(),
-            "base_entity_uuid" => self.base_entity_uuid.is_set(),
-            "file_uuid" => self.file_uuid.is_set(),
-            "content_type" => self.content_type.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
     fn columns() -> &'static [ColumnDef] {
         &[
             ColumnDef{
-                name: "original_filename",
+                name: "project",
                 nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "user_uuid",
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
@@ -103,35 +98,14 @@ impl TableSelector for ActiveAttachments {
                 is_unique: false,
                 is_primary: true,
             },
-            ColumnDef{
-                name: "base_entity_uuid",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "file_uuid",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "content_type",
-                nullable: true,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
         ]
     }
 }
 
 #[cfg(feature="postgres")]
-impl OrmAttachments<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
+impl OrmIkoRelationship<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
 {
-    fn attachments<'e>(&'e self) -> DBSelector<'e, sqlx::Postgres, Pool<sqlx::Postgres>, ActiveAttachments>
+    fn iko_relationship<'e>(&'e self) -> DBSelector<'e, sqlx::Postgres, Pool<sqlx::Postgres>, ActiveIkoRelationship>
     where 
         &'e Pool<sqlx::Postgres>: Executor<'e, Database = sqlx::Postgres>
     {
@@ -140,18 +114,18 @@ impl OrmAttachments<sqlx::Postgres> for Orm<Pool<sqlx::Postgres>>
 }
 
 #[cfg(feature="postgres")]
-impl<'c> OrmTXAttachments<'c, sqlx::Postgres> for OrmTX<sqlx::Postgres>
+impl<'c> OrmTXIkoRelationship<'c, sqlx::Postgres> for OrmTX<sqlx::Postgres>
 {
-    fn attachments(&'c mut self) -> TxSelector<'c, sqlx::Postgres, ActiveAttachments>
+    fn iko_relationship(&'c mut self) -> TxSelector<'c, sqlx::Postgres, ActiveIkoRelationship>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="postgres")]
-impl ModelOps<sqlx::Postgres> for ActiveAttachments 
+impl ModelOps<sqlx::Postgres> for ActiveIkoRelationship 
 {
-    type NonActive = Attachments;
+    type NonActive = IkoRelationship;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::Postgres> ,for<'q> <sqlx::Postgres as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::Postgres>  {
         match mode {
@@ -163,11 +137,9 @@ impl ModelOps<sqlx::Postgres> for ActiveAttachments
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
+        if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
+        if let Set(v) = &self.user_uuid {tracing::debug!("Binded user_uuid"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         q
     }
     
@@ -250,9 +222,9 @@ impl ModelOps<sqlx::Postgres> for ActiveAttachments
 }
 
 #[cfg(feature="mysql")]
-impl OrmAttachments<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
+impl OrmIkoRelationship<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
 {
-    fn attachments<'e>(&'e self) -> DBSelector<'e, sqlx::MySql, Pool<sqlx::MySql>, ActiveAttachments>
+    fn iko_relationship<'e>(&'e self) -> DBSelector<'e, sqlx::MySql, Pool<sqlx::MySql>, ActiveIkoRelationship>
     where 
         &'e Pool<sqlx::MySql>: Executor<'e, Database = sqlx::MySql>
     {
@@ -261,18 +233,18 @@ impl OrmAttachments<sqlx::MySql> for Orm<Pool<sqlx::MySql>>
 }
 
 #[cfg(feature="mysql")]
-impl<'c> OrmTXAttachments<'c, sqlx::MySql> for OrmTX<sqlx::MySql>
+impl<'c> OrmTXIkoRelationship<'c, sqlx::MySql> for OrmTX<sqlx::MySql>
 {
-    fn attachments(&'c mut self) -> TxSelector<'c, sqlx::MySql, ActiveAttachments>
+    fn iko_relationship(&'c mut self) -> TxSelector<'c, sqlx::MySql, ActiveIkoRelationship>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="mysql")]
-impl ModelOps<sqlx::MySql> for ActiveAttachments 
+impl ModelOps<sqlx::MySql> for ActiveIkoRelationship 
 {
-    type NonActive = Attachments;
+    type NonActive = IkoRelationship;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::MySql> ,for<'q> <sqlx::MySql as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::MySql>  {
         match mode {
@@ -284,11 +256,9 @@ impl ModelOps<sqlx::MySql> for ActiveAttachments
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
+        if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
+        if let Set(v) = &self.user_uuid {tracing::debug!("Binded user_uuid"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         q
     }
     
@@ -371,9 +341,9 @@ impl ModelOps<sqlx::MySql> for ActiveAttachments
 }
 
 #[cfg(feature="sqlite")]
-impl OrmAttachments<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
+impl OrmIkoRelationship<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
 {
-    fn attachments<'e>(&'e self) -> DBSelector<'e, sqlx::Sqlite, Pool<sqlx::Sqlite>, ActiveAttachments>
+    fn iko_relationship<'e>(&'e self) -> DBSelector<'e, sqlx::Sqlite, Pool<sqlx::Sqlite>, ActiveIkoRelationship>
     where 
         &'e Pool<sqlx::Sqlite>: Executor<'e, Database = sqlx::Sqlite>
     {
@@ -382,18 +352,18 @@ impl OrmAttachments<sqlx::Sqlite> for Orm<Pool<sqlx::Sqlite>>
 }
 
 #[cfg(feature="sqlite")]
-impl<'c> OrmTXAttachments<'c, sqlx::Sqlite> for OrmTX<sqlx::Sqlite>
+impl<'c> OrmTXIkoRelationship<'c, sqlx::Sqlite> for OrmTX<sqlx::Sqlite>
 {
-    fn attachments(&'c mut self) -> TxSelector<'c, sqlx::Sqlite, ActiveAttachments>
+    fn iko_relationship(&'c mut self) -> TxSelector<'c, sqlx::Sqlite, ActiveIkoRelationship>
     {
         TxSelector::new(self.get_inner())
     }
 }
 
 #[cfg(feature="sqlite")]
-impl ModelOps<sqlx::Sqlite> for ActiveAttachments 
+impl ModelOps<sqlx::Sqlite> for ActiveIkoRelationship 
 {
-    type NonActive = Attachments;
+    type NonActive = IkoRelationship;
     async fn save<'e,E>(self, exec: E, mode: SaveMode) -> Result<Option<Self::NonActive>, anyhow::Error> 
     where E: Executor<'e, Database = sqlx::Sqlite> ,for<'q> <sqlx::Sqlite as sqlx::Database>::Arguments<'q> :Default+sqlx::IntoArguments<'q, sqlx::Sqlite>  {
         match mode {
@@ -405,11 +375,9 @@ impl ModelOps<sqlx::Sqlite> for ActiveAttachments
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
+        if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
+        if let Set(v) = &self.user_uuid {tracing::debug!("Binded user_uuid"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         q
     }
     

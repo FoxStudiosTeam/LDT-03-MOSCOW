@@ -1,71 +1,90 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
 
-#[derive(Clone, Debug, FromRow)]
-pub struct ProjectScheduleItems {
-    pub is_draft: bool,
-    pub updated_by: uuid::Uuid,
-    pub is_completed: bool,
-    pub created_by: uuid::Uuid,
-    pub target_volume: f64,
-    pub work_uuid: uuid::Uuid,
-    pub uuid: uuid::Uuid,
-    pub end_date: chrono::NaiveDate,
-    pub start_date: chrono::NaiveDate,
-    pub project_schedule_uuid: uuid::Uuid,
-    pub is_deleted: bool,
-}
-
 impl ProjectScheduleItems {
     pub fn into_active(self) -> ActiveProjectScheduleItems {
         ActiveProjectScheduleItems {
-            is_draft: Set(self.is_draft),
-            updated_by: Set(self.updated_by),
-            is_completed: Set(self.is_completed),
-            created_by: Set(self.created_by),
-            target_volume: Set(self.target_volume),
-            work_uuid: Set(self.work_uuid),
-            uuid: Set(self.uuid),
-            end_date: Set(self.end_date),
-            start_date: Set(self.start_date),
             project_schedule_uuid: Set(self.project_schedule_uuid),
+            created_by: Set(self.created_by),
+            is_completed: Set(self.is_completed),
+            uuid: Set(self.uuid),
+            work_uuid: Set(self.work_uuid),
+            start_date: Set(self.start_date),
+            end_date: Set(self.end_date),
+            target_volume: Set(self.target_volume),
+            updated_by: Set(self.updated_by),
+            is_draft: Set(self.is_draft),
             is_deleted: Set(self.is_deleted),
         }
     }
 }
 
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct ProjectScheduleItems {
+    pub project_schedule_uuid: uuid::Uuid,
+    pub created_by: uuid::Uuid,
+    pub is_completed: bool,
+    pub uuid: uuid::Uuid,
+    pub work_uuid: uuid::Uuid,
+    pub start_date: chrono::NaiveDate,
+    pub end_date: chrono::NaiveDate,
+    pub target_volume: f64,
+    pub updated_by: Option<uuid::Uuid>,
+    pub is_draft: bool,
+    pub is_deleted: bool,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct ProjectScheduleItems {
+    pub project_schedule_uuid: uuid::Uuid,
+    pub created_by: uuid::Uuid,
+    pub is_completed: bool,
+    pub uuid: uuid::Uuid,
+    pub work_uuid: uuid::Uuid,
+    pub start_date: chrono::NaiveDate,
+    pub end_date: chrono::NaiveDate,
+    pub target_volume: f64,
+    pub updated_by: Option<uuid::Uuid>,
+    pub is_draft: bool,
+    pub is_deleted: bool,
+}
+
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveProjectScheduleItems {
-    pub is_draft: Optional<bool>,
-    pub updated_by: Optional<uuid::Uuid>,
-    pub is_completed: Optional<bool>,
-    pub created_by: Optional<uuid::Uuid>,
-    pub target_volume: Optional<f64>,
-    pub work_uuid: Optional<uuid::Uuid>,
-    pub uuid: Optional<uuid::Uuid>,
-    pub end_date: Optional<chrono::NaiveDate>,
-    pub start_date: Optional<chrono::NaiveDate>,
     pub project_schedule_uuid: Optional<uuid::Uuid>,
+    pub created_by: Optional<uuid::Uuid>,
+    pub is_completed: Optional<bool>,
+    pub uuid: Optional<uuid::Uuid>,
+    pub work_uuid: Optional<uuid::Uuid>,
+    pub start_date: Optional<chrono::NaiveDate>,
+    pub end_date: Optional<chrono::NaiveDate>,
+    pub target_volume: Optional<f64>,
+    pub updated_by: Optional<Option<uuid::Uuid>>,
+    pub is_draft: Optional<bool>,
     pub is_deleted: Optional<bool>,
 }
 
 impl ActiveProjectScheduleItems {
     pub fn into_project_schedule_items(self) -> Option<ProjectScheduleItems> {
         Some(ProjectScheduleItems {
-            is_draft: self.is_draft.into_option()?,
-            updated_by: self.updated_by.into_option()?,
-            is_completed: self.is_completed.into_option()?,
-            created_by: self.created_by.into_option()?,
-            target_volume: self.target_volume.into_option()?,
-            work_uuid: self.work_uuid.into_option()?,
-            uuid: self.uuid.into_option()?,
-            end_date: self.end_date.into_option()?,
-            start_date: self.start_date.into_option()?,
             project_schedule_uuid: self.project_schedule_uuid.into_option()?,
+            created_by: self.created_by.into_option()?,
+            is_completed: self.is_completed.into_option()?,
+            uuid: self.uuid.into_option()?,
+            work_uuid: self.work_uuid.into_option()?,
+            start_date: self.start_date.into_option()?,
+            end_date: self.end_date.into_option()?,
+            target_volume: self.target_volume.into_option()?,
+            updated_by: self.updated_by.into_option()?,
+            is_draft: self.is_draft.into_option()?,
             is_deleted: self.is_deleted.into_option()?,
         })
     }
@@ -90,16 +109,16 @@ impl TableSelector for ActiveProjectScheduleItems {
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
-            "is_draft" => self.is_draft.is_set(),
-            "updated_by" => self.updated_by.is_set(),
-            "is_completed" => self.is_completed.is_set(),
-            "created_by" => self.created_by.is_set(),
-            "target_volume" => self.target_volume.is_set(),
-            "work_uuid" => self.work_uuid.is_set(),
-            "uuid" => self.uuid.is_set(),
-            "end_date" => self.end_date.is_set(),
-            "start_date" => self.start_date.is_set(),
             "project_schedule_uuid" => self.project_schedule_uuid.is_set(),
+            "created_by" => self.created_by.is_set(),
+            "is_completed" => self.is_completed.is_set(),
+            "uuid" => self.uuid.is_set(),
+            "work_uuid" => self.work_uuid.is_set(),
+            "start_date" => self.start_date.is_set(),
+            "end_date" => self.end_date.is_set(),
+            "target_volume" => self.target_volume.is_set(),
+            "updated_by" => self.updated_by.is_set(),
+            "is_draft" => self.is_draft.is_set(),
             "is_deleted" => self.is_deleted.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
@@ -107,21 +126,7 @@ impl TableSelector for ActiveProjectScheduleItems {
     fn columns() -> &'static [ColumnDef] {
         &[
             ColumnDef{
-                name: "is_draft",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "updated_by",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "is_completed",
+                name: "project_schedule_uuid",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -135,14 +140,7 @@ impl TableSelector for ActiveProjectScheduleItems {
                 is_primary: false,
             },
             ColumnDef{
-                name: "target_volume",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "work_uuid",
+                name: "is_completed",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -151,12 +149,12 @@ impl TableSelector for ActiveProjectScheduleItems {
             ColumnDef{
                 name: "uuid",
                 nullable: false,
-                default: None,
+                default: Some("gen_random_uuid()"),
                 is_unique: false,
                 is_primary: true,
             },
             ColumnDef{
-                name: "end_date",
+                name: "work_uuid",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -170,7 +168,28 @@ impl TableSelector for ActiveProjectScheduleItems {
                 is_primary: false,
             },
             ColumnDef{
-                name: "project_schedule_uuid",
+                name: "end_date",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "target_volume",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "updated_by",
+                nullable: true,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "is_draft",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -222,16 +241,16 @@ impl ModelOps<sqlx::Postgres> for ActiveProjectScheduleItems
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.is_draft {tracing::debug!("Binded is_draft"); q = q.bind(v);}
-        if let Set(v) = &self.updated_by {tracing::debug!("Binded updated_by"); q = q.bind(v);}
-        if let Set(v) = &self.is_completed {tracing::debug!("Binded is_completed"); q = q.bind(v);}
-        if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
-        if let Set(v) = &self.target_volume {tracing::debug!("Binded target_volume"); q = q.bind(v);}
-        if let Set(v) = &self.work_uuid {tracing::debug!("Binded work_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
-        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
         if let Set(v) = &self.project_schedule_uuid {tracing::debug!("Binded project_schedule_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
+        if let Set(v) = &self.is_completed {tracing::debug!("Binded is_completed"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.work_uuid {tracing::debug!("Binded work_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
+        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
+        if let Set(v) = &self.target_volume {tracing::debug!("Binded target_volume"); q = q.bind(v);}
+        if let Set(v) = &self.updated_by {tracing::debug!("Binded updated_by"); q = q.bind(v);}
+        if let Set(v) = &self.is_draft {tracing::debug!("Binded is_draft"); q = q.bind(v);}
         if let Set(v) = &self.is_deleted {tracing::debug!("Binded is_deleted"); q = q.bind(v);}
         q
     }
@@ -349,16 +368,16 @@ impl ModelOps<sqlx::MySql> for ActiveProjectScheduleItems
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.is_draft {tracing::debug!("Binded is_draft"); q = q.bind(v);}
-        if let Set(v) = &self.updated_by {tracing::debug!("Binded updated_by"); q = q.bind(v);}
-        if let Set(v) = &self.is_completed {tracing::debug!("Binded is_completed"); q = q.bind(v);}
-        if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
-        if let Set(v) = &self.target_volume {tracing::debug!("Binded target_volume"); q = q.bind(v);}
-        if let Set(v) = &self.work_uuid {tracing::debug!("Binded work_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
-        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
         if let Set(v) = &self.project_schedule_uuid {tracing::debug!("Binded project_schedule_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
+        if let Set(v) = &self.is_completed {tracing::debug!("Binded is_completed"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.work_uuid {tracing::debug!("Binded work_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
+        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
+        if let Set(v) = &self.target_volume {tracing::debug!("Binded target_volume"); q = q.bind(v);}
+        if let Set(v) = &self.updated_by {tracing::debug!("Binded updated_by"); q = q.bind(v);}
+        if let Set(v) = &self.is_draft {tracing::debug!("Binded is_draft"); q = q.bind(v);}
         if let Set(v) = &self.is_deleted {tracing::debug!("Binded is_deleted"); q = q.bind(v);}
         q
     }
@@ -476,16 +495,16 @@ impl ModelOps<sqlx::Sqlite> for ActiveProjectScheduleItems
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.is_draft {tracing::debug!("Binded is_draft"); q = q.bind(v);}
-        if let Set(v) = &self.updated_by {tracing::debug!("Binded updated_by"); q = q.bind(v);}
-        if let Set(v) = &self.is_completed {tracing::debug!("Binded is_completed"); q = q.bind(v);}
-        if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
-        if let Set(v) = &self.target_volume {tracing::debug!("Binded target_volume"); q = q.bind(v);}
-        if let Set(v) = &self.work_uuid {tracing::debug!("Binded work_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
-        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
         if let Set(v) = &self.project_schedule_uuid {tracing::debug!("Binded project_schedule_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
+        if let Set(v) = &self.is_completed {tracing::debug!("Binded is_completed"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
+        if let Set(v) = &self.work_uuid {tracing::debug!("Binded work_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
+        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
+        if let Set(v) = &self.target_volume {tracing::debug!("Binded target_volume"); q = q.bind(v);}
+        if let Set(v) = &self.updated_by {tracing::debug!("Binded updated_by"); q = q.bind(v);}
+        if let Set(v) = &self.is_draft {tracing::debug!("Binded is_draft"); q = q.bind(v);}
         if let Set(v) = &self.is_deleted {tracing::debug!("Binded is_deleted"); q = q.bind(v);}
         q
     }

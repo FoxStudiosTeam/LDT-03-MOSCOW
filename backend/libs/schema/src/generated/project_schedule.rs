@@ -1,42 +1,54 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
 
-#[derive(Clone, Debug, FromRow)]
-pub struct ProjectSchedule {
-    pub uuid: uuid::Uuid,
-    pub start_date: chrono::NaiveDate,
-    pub end_date: chrono::NaiveDate,
-    pub project_uuid: uuid::Uuid,
-}
-
 impl ProjectSchedule {
     pub fn into_active(self) -> ActiveProjectSchedule {
         ActiveProjectSchedule {
-            uuid: Set(self.uuid),
             start_date: Set(self.start_date),
+            uuid: Set(self.uuid),
             end_date: Set(self.end_date),
             project_uuid: Set(self.project_uuid),
         }
     }
 }
 
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct ProjectSchedule {
+    pub start_date: Option<chrono::NaiveDate>,
+    pub uuid: uuid::Uuid,
+    pub end_date: Option<chrono::NaiveDate>,
+    pub project_uuid: uuid::Uuid,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct ProjectSchedule {
+    pub start_date: Option<chrono::NaiveDate>,
+    pub uuid: uuid::Uuid,
+    pub end_date: Option<chrono::NaiveDate>,
+    pub project_uuid: uuid::Uuid,
+}
+
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveProjectSchedule {
+    pub start_date: Optional<Option<chrono::NaiveDate>>,
     pub uuid: Optional<uuid::Uuid>,
-    pub start_date: Optional<chrono::NaiveDate>,
-    pub end_date: Optional<chrono::NaiveDate>,
+    pub end_date: Optional<Option<chrono::NaiveDate>>,
     pub project_uuid: Optional<uuid::Uuid>,
 }
 
 impl ActiveProjectSchedule {
     pub fn into_project_schedule(self) -> Option<ProjectSchedule> {
         Some(ProjectSchedule {
-            uuid: self.uuid.into_option()?,
             start_date: self.start_date.into_option()?,
+            uuid: self.uuid.into_option()?,
             end_date: self.end_date.into_option()?,
             project_uuid: self.project_uuid.into_option()?,
         })
@@ -62,8 +74,8 @@ impl TableSelector for ActiveProjectSchedule {
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
-            "uuid" => self.uuid.is_set(),
             "start_date" => self.start_date.is_set(),
+            "uuid" => self.uuid.is_set(),
             "end_date" => self.end_date.is_set(),
             "project_uuid" => self.project_uuid.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
@@ -72,22 +84,22 @@ impl TableSelector for ActiveProjectSchedule {
     fn columns() -> &'static [ColumnDef] {
         &[
             ColumnDef{
-                name: "uuid",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: true,
-            },
-            ColumnDef{
                 name: "start_date",
-                nullable: false,
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
             },
             ColumnDef{
-                name: "end_date",
+                name: "uuid",
                 nullable: false,
+                default: Some("gen_random_uuid()"),
+                is_unique: false,
+                is_primary: true,
+            },
+            ColumnDef{
+                name: "end_date",
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
@@ -138,8 +150,8 @@ impl ModelOps<sqlx::Postgres> for ActiveProjectSchedule
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
         q
@@ -258,8 +270,8 @@ impl ModelOps<sqlx::MySql> for ActiveProjectSchedule
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
         q
@@ -378,8 +390,8 @@ impl ModelOps<sqlx::Sqlite> for ActiveProjectSchedule
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
+        if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
         q
