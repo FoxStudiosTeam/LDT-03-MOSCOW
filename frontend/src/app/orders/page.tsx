@@ -20,7 +20,7 @@ const ordersData: Order[] = [
 
 export default function Orders() {
     return (
-        <div className="flex justify-center min-h-screen bg-[#D0D0D0] mt-[50px]">
+        <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />
             <main className="w-[80%] bg-white px-8 py-6">
                 <table className="w-full border-collapse text-left">
