@@ -20,13 +20,13 @@ impl RegulationDocs {
 #[derive(Clone, Debug, FromRow)]
 pub struct RegulationDocs {
     pub uuid: uuid::Uuid,
-    pub title: Option<String>,
+    pub title: String,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveRegulationDocs {
     pub uuid: Optional<uuid::Uuid>,
-    pub title: Optional<Option<String>>,
+    pub title: Optional<String>,
 }
 
 impl ActiveRegulationDocs {
@@ -73,7 +73,7 @@ impl TableSelector for ActiveRegulationDocs {
             },
             ColumnDef{
                 name: "title",
-                nullable: true,
+                nullable: false,
                 default: None,
                 is_unique: false,
                 is_primary: false,

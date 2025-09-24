@@ -6,8 +6,6 @@ tables:
     type: integer
   - name: polygon
     type: jsonb
-    nullable: true
-    default: null
   - name: uuid
     type: uuid
     isPrimary: true
@@ -18,8 +16,6 @@ tables:
     default: null
   - name: address
     type: text
-    nullable: true
-    default: null
   - name: ssk
     type: uuid
     nullable: true

@@ -1,12 +1,8 @@
-use anyhow::Ok;
 use axum::{extract::State, http::StatusCode, response::{IntoResponse, Response}, Json};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 use shared::prelude::{AppErr, IntoAppErr};
 use tracing::info;
-use tracing_subscriber::field::debug;
-use utoipa_axum::{router::OpenApiRouter, routes};
 use schema::prelude::*;
-use uuid::Uuid;
 use crate::AppState;
 
 #[utoipa::path(
@@ -15,7 +11,7 @@ use crate::AppState;
     tag = crate::MAIN_TAG,
     summary = "Get all punishments in project",
     responses(
-        (status = 200, description = "Punishments fetched", body=Vec<PunishmentsRequest>),
+        (status = 200, description = "Punishments fetched", body=Vec<Punishment>),
     )
 )]
 
@@ -26,7 +22,7 @@ pub async fn get_punishments(
     info!("{:?}", r);
     let result = app.orm.punishment().select("where project = $1").bind(&r.project).fetch().await.into_app_err()?;
     tracing::info!("Result: {:?}", result.len());
-    Ok((StatusCode::OK, Json(result)).into_response()).into_app_err()
+    Ok((StatusCode::OK, Json(result)).into_response())
 }
 
 #[derive(utoipa::ToSchema, Deserialize, Debug)]

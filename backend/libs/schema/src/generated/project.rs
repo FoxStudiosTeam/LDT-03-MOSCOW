@@ -24,20 +24,20 @@ impl Project {
 #[derive(Clone, Debug, FromRow)]
 pub struct Project {
     pub status: i32,
-    pub polygon: Option<serde_json::Value>,
+    pub polygon: serde_json::Value,
     pub uuid: uuid::Uuid,
     pub foreman: Option<uuid::Uuid>,
-    pub address: Option<String>,
+    pub address: String,
     pub ssk: Option<uuid::Uuid>,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveProject {
     pub status: Optional<i32>,
-    pub polygon: Optional<Option<serde_json::Value>>,
+    pub polygon: Optional<serde_json::Value>,
     pub uuid: Optional<uuid::Uuid>,
     pub foreman: Optional<Option<uuid::Uuid>>,
-    pub address: Optional<Option<String>>,
+    pub address: Optional<String>,
     pub ssk: Optional<Option<uuid::Uuid>>,
 }
 
@@ -93,7 +93,7 @@ impl TableSelector for ActiveProject {
             },
             ColumnDef{
                 name: "polygon",
-                nullable: true,
+                nullable: false,
                 default: None,
                 is_unique: false,
                 is_primary: false,
@@ -114,7 +114,7 @@ impl TableSelector for ActiveProject {
             },
             ColumnDef{
                 name: "address",
-                nullable: true,
+                nullable: false,
                 default: None,
                 is_unique: false,
                 is_primary: false,
