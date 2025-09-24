@@ -35,8 +35,16 @@ tbody th, td {
     padding: 10px 8px 10px 8px;
 }
 
+textarea {
+    caret-color: black;
+}
+
 input {
     caret-color: black;
+}
+
+button {
+    cursor: pointer;
 }
 
 main {
