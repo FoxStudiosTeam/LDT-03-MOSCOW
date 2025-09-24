@@ -13,9 +13,7 @@ schema ={ workspace = true }
 shared = { workspace = true }
 # git
 orm = { workspace = true }
-schema_reader = { workspace = true }
 utils = { workspace = true }
-di = { workspace = true }
 auth_jwt = { workspace = true, features = ["utoipa", "into_response", "middleware", "certs_in_env"] }
 # crates
 anyhow = "1.0.99"
@@ -48,5 +46,6 @@ futures-util = "0.3.31"
 bytes = "1.10.1"
 aws-smithy-types = { version = "1.3.2", features = ["byte-stream-poll-next", "http-body-0-4-x", "rt-tokio"] }
 tokio-util = { version = "0.7.16", features = ["io"] }
-http-body = "0.4.6"
+http-body = "1.0.1"
 http = "1.3.1"
+paste = "1.0.15"

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: attachmentproxy-deployment
+  labels:
+    app: attachmentproxy-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: attachmentproxy-app
+  template:
+    metadata:
+      labels:
+        app: attachmentproxy-app
+    spec:
+      containers:
+        - name: attachmentproxy-container
+          image: 88ba0664-nimble-raven.registry.twcstorage.ru/attachmentproxy/attachmentproxy:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4000
+          envFrom:
+            - configMapRef:
+               name: attachmentproxy-app-config
+            - secretRef:
+               name: attachmentproxy-app-secrets
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "150m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+      imagePullSecrets:
+        - name: registry-secret

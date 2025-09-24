@@ -5,9 +5,9 @@ use axum::{Json, response::Response};
 use axum::extract::{Query, State};
 use orm::prelude::*;
 use schema::prelude::{ActiveMaterials, Materials, OrmMaterials};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 use shared::prelude::*;
-use utoipa::{PartialSchema, ToSchema};
+use utoipa::{ToSchema};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::AppState;
@@ -20,33 +20,14 @@ pub fn router(state: AppState) -> OpenApiRouter {
             update,
             delete,
             get,
-            get_by_project_schedule_item
+        ))
+        .routes(routes!(
+            get_by_project_schedule_item,
         ))
         .with_state(state)
         .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator))
         .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
 }
-
-struct TestReq {
-    volume: f64,
-    project_schedule_item: uuid::Uuid,
-}
-
-impl PartialSchema for TestReq {
-    fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
-        // utoipa::openapi::Schema::Object(
-        //     utoipa::openapi::schema::ObjectBuilder::new()
-        //         .property("volume", utoipa::openapi::Schema::Object(utoipa::openapi::schema::SchemaType::Number))
-        //         .property("project_schedule_item", Schema::new(SchemaType::String))
-        //         .required(vec!["volume".into(), "project_schedule_item".into()])
-        //         .build()
-        // )
-        // .into()
-        todo!()
-    }
-}
-
-impl ToSchema for TestReq {}
 
 #[derive(Deserialize, ToSchema)]
 pub struct MaterialInsertRequest {
@@ -163,42 +144,13 @@ pub async fn delete(
     Ok((StatusCode::OK, Json(r.uuid)).into_response())  
 }
 
-#[derive(ToSchema, Serialize)]
-pub struct Material {
-    #[schema(example = 1.0)]
-    volume: f64,
-    #[schema(example = "a1b15396-7f4a-40e0-8afd-2785a0460d33")]
-    uuid: uuid::Uuid,
-    #[schema(example = "a1b15396-7f4a-40e0-8afd-2785a0460d33")]
-    project_schedule_item: uuid::Uuid,
-    #[schema(example = "2023-01-01")]
-    delivery_date: chrono::NaiveDate,
-    #[schema(example = 1)]
-    measurement: i32,
-    #[schema(example = "Material 1")]
-    title: String,
-}
-
-impl Material {
-    fn from_dto(material: Materials) -> Material {
-        Material {
-            volume: material.volume,
-            uuid: material.uuid,
-            project_schedule_item: material.project_schedule_item,
-            delivery_date: material.delivery_date,
-            measurement: material.measurement,
-            title: material.title
-        }
-    }
-}
-
 #[utoipa::path(
     get,
     path = "/material/{id}",
     tag = crate::MAIN_TAG,
     summary = "Update a material",
     responses(
-        (status = 200, description = "Success", body = Material),
+        (status = 200, description = "Success", body = Materials),
         (status = 404, description = "Material with id not found"),
     )
 )]
@@ -218,7 +170,7 @@ pub async fn get(
     tag = crate::MAIN_TAG,
     summary = "Update a material",
     responses(
-        (status = 200, description = "Success", body = Vec<Material>),
+        (status = 200, description = "Success", body = Vec<Materials>),
     )
 )]
 pub async fn get_by_project_schedule_item(
@@ -226,5 +178,5 @@ pub async fn get_by_project_schedule_item(
     Query(s) : Query<uuid::Uuid>
 ) -> Result<Response, AppErr> {
     let r = app.orm.materials().select("where project_schedule_item = $1").bind(&s).fetch().await.into_app_err()?;
-    Ok((StatusCode::OK, Json(r.into_iter().map(|v| Material::from_dto(v)).collect::<Vec<_>>())).into_response())  
+    Ok((StatusCode::OK, Json(r)).into_response())
 }

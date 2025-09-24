@@ -1,32 +1,97 @@
 use aws_config::{BehaviorVersion, Region};
-use aws_sdk_s3::{config::{Credentials, SharedCredentialsProvider}};
-use axum::http::StatusCode;
-use axum::routing::get;
+use axum::{
+    body::Body,
+    extract::{Path, Query, State},
+    http::{HeaderMap, StatusCode},
+    response::IntoResponse,
+    routing::get,
+};
+use aws_sdk_s3::{Client, config::{Credentials, SharedCredentialsProvider}};
 use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Basic;
 use axum_prometheus::PrometheusMetricLayer;
-use sqlx::Postgres;
-use tower::ServiceBuilder;
-use tracing::*;
-use utils::env_config;
-use utoipa::OpenApi;
-use utoipa_axum::router::{OpenApiRouter};
-
-mod api;
-mod multipart;
-mod state;
-
-// Some useful things
 use shared::prelude::*;
+use tokio_util::io::ReaderStream;
+use tower::ServiceBuilder;
+use tracing::info;
+use utils::env_config;
+use utoipa::*;
 use utoipa_scalar::{Scalar, Servable};
+use std::sync::Arc;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
-use crate::state::AppState;
 
-// Hover to see docs
+#[derive(Clone)]
+struct AppState {
+    s3: Client,
+}
+
+// Example role checker
+fn check_role(headers: &HeaderMap) -> bool {
+    if let Some(val) = headers.get("x-role") {
+        return val == "allowed";
+    }
+    false
+}
+
+
+#[derive(IntoParams, ToSchema, serde::Deserialize)]
+pub struct RequestParams {
+    pub file_id: uuid::Uuid,
+    pub resource_id: uuid::Uuid
+}
+
+#[utoipa::path(
+    post,
+    path = "/file/",
+    params(RequestParams),
+    tag = crate::MAIN_TAG,
+    request_body(description = "Multipart file", content_type = "multipart/form-data"),
+    responses(
+        (status = 200, description = "Success"),
+        (status = 401, description = "Unauthorized"),
+        (status = 404, description = "Not Found"),
+    )
+)]
+async fn proxy_file(
+    State(state): State<Arc<AppState>>,
+    Query(RequestParams{resource_id, file_id}): Query<RequestParams>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if !check_role(&headers) {
+        return (StatusCode::FORBIDDEN, "forbidden").into_response();
+    }
+
+    let resp = match state.s3.get_object().bucket(&ENV.S3_BUCKET).key(&format!("attachments/{}/{}", resource_id, file_id)).send().await {
+        Ok(r) => r,
+        Err(_e) => {
+            return (StatusCode::NOT_FOUND, "not found").into_response();
+        }
+    };
+
+    let byte_stream = resp.body;
+
+    let async_read = byte_stream.into_async_read();
+    let reader_stream = ReaderStream::new(async_read);
+
+    let body = Body::from_stream(reader_stream);
+
+
+    let mut response = (StatusCode::OK, body).into_response();
+
+    if let Some(ct) = resp.content_type {
+        if let Ok(header_val) = ct.parse() {
+            response.headers_mut().insert("content-type", header_val);
+        }
+    }
+
+    response
+}
+
+
 env_config!(
     ".env" => pub(crate) ENV = pub(crate) Env {
-        DB_URL: String,
         METRICS_USERNAME: String,
         METRICS_PASSWORD: String,
         S3_URL: String,
@@ -35,11 +100,11 @@ env_config!(
         S3_BUCKET: String
     }
     ".cfg" => pub(crate) CFG = pub(crate) Cfg {
-        PORT: u16 = 4001,
+        PORT: u16 = 4000,
     }
 );
 
-pub const MAIN_TAG: &str = "attachment";
+pub const MAIN_TAG: &str = "attachment proxy";
 
 #[derive(OpenApi)]
 #[openapi(
@@ -48,11 +113,7 @@ pub const MAIN_TAG: &str = "attachment";
         (name = MAIN_TAG, description = "API"),
     )
 )]
-
 struct ApiDoc;
-
-pub type DB = Postgres;
-pub type Orm = orm::prelude::Orm<sqlx::Pool<DB>>;
 
 
 #[tokio::main]
@@ -60,14 +121,6 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::new("debug"))
         .init();
-
-    info!("Connecting to DB");
-    let pg = sqlx::postgres::PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&ENV.DB_URL)
-        .await
-        .inspect_err(|e| info!("Can't connect to db: {e}"))?;
-    info!("Connected to DB");
 
     info!("Connecting to s3");
     let creds = SharedCredentialsProvider::new(Credentials::new(
@@ -87,8 +140,7 @@ async fn main() -> anyhow::Result<()> {
 
     let client = aws_sdk_s3::Client::new(&config);
 
-    let orm = orm::prelude::Orm::new(pg);
-    let state = AppState{orm, s3: client};
+    let state = AppState{s3: client};
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
@@ -110,7 +162,8 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .nest("/api", api::router(state))
+        .routes(routes!(proxy_file))
+        .with_state(Arc::new(state))
         .split_for_parts();
     
     let app = axum::Router::new()
