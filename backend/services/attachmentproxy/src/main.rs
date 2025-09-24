@@ -27,15 +27,6 @@ struct AppState {
     s3: Client,
 }
 
-// Example role checker
-fn check_role(headers: &HeaderMap) -> bool {
-    if let Some(val) = headers.get("x-role") {
-        return val == "allowed";
-    }
-    false
-}
-
-
 #[derive(IntoParams, ToSchema, serde::Deserialize)]
 pub struct RequestParams {
     pub file_id: uuid::Uuid,
@@ -59,10 +50,6 @@ async fn proxy_file(
     Query(RequestParams{resource_id, file_id}): Query<RequestParams>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if !check_role(&headers) {
-        return (StatusCode::FORBIDDEN, "forbidden").into_response();
-    }
-
     let resp = match state.s3.get_object().bucket(&ENV.S3_BUCKET).key(&format!("attachments/{}/{}", resource_id, file_id)).send().await {
         Ok(r) => r,
         Err(_e) => {
@@ -170,7 +157,9 @@ async fn main() -> anyhow::Result<()> {
         .merge(Scalar::with_url("/docs/scalar", api))
         .merge(api_router)
         .merge(metrics)
-        .layer(default_layers);
+        .layer(default_layers)
+        
+        ;
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", CFG.PORT)).await
         .inspect_err(|err| tracing::error!("Failed to bind to port {}: {}", CFG.PORT, err))?;
