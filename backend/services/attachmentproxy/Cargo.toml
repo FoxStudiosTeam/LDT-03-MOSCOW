@@ -3,6 +3,10 @@ name = "attachmentproxy"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = []
+certs_in_env = [] # dummy; needed for workflow
+
 [dependencies]
 axum = { version = "0.8.1", features = ["macros", "multipart"] }
 anyhow = "1.0.99"
