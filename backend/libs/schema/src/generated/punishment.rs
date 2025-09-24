@@ -17,17 +17,8 @@ impl Punishment {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct Punishment {
-    pub custom_number: Option<String>,
-    pub project: uuid::Uuid,
-    pub punish_datetime: chrono::NaiveDateTime,
-    pub uuid: uuid::Uuid,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct Punishment {
     pub custom_number: Option<String>,

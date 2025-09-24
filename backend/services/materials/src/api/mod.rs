@@ -7,7 +7,7 @@ use orm::prelude::*;
 use schema::prelude::{ActiveMaterials, Materials, OrmMaterials};
 use serde::{Deserialize, Serialize};
 use shared::prelude::*;
-use utoipa::ToSchema;
+use utoipa::{PartialSchema, ToSchema};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::AppState;
@@ -27,7 +27,26 @@ pub fn router(state: AppState) -> OpenApiRouter {
         .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
 }
 
+struct TestReq {
+    volume: f64,
+    project_schedule_item: uuid::Uuid,
+}
 
+impl PartialSchema for TestReq {
+    fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
+        // utoipa::openapi::Schema::Object(
+        //     utoipa::openapi::schema::ObjectBuilder::new()
+        //         .property("volume", utoipa::openapi::Schema::Object(utoipa::openapi::schema::SchemaType::Number))
+        //         .property("project_schedule_item", Schema::new(SchemaType::String))
+        //         .required(vec!["volume".into(), "project_schedule_item".into()])
+        //         .build()
+        // )
+        // .into()
+        todo!()
+    }
+}
+
+impl ToSchema for TestReq {}
 
 #[derive(Deserialize, ToSchema)]
 pub struct MaterialInsertRequest {
