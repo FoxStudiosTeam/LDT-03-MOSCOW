@@ -3,6 +3,10 @@ name = "schema_gen"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = []
+utoipa_gen = []
+
 [dependencies]
 schema_reader.workspace = true
 orm.workspace = true

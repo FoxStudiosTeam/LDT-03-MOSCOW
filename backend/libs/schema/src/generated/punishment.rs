@@ -11,27 +11,20 @@ impl Punishment {
         ActivePunishment {
             custom_number: Set(self.custom_number),
             project: Set(self.project),
+            punishment_status: Set(self.punishment_status),
             punish_datetime: Set(self.punish_datetime),
             uuid: Set(self.uuid),
         }
     }
 }
 
-#[cfg(not(feature="serde"))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct Punishment {
     pub custom_number: Option<String>,
     pub project: uuid::Uuid,
-    pub punish_datetime: chrono::NaiveDateTime,
-    pub uuid: uuid::Uuid,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, Debug, FromRow)]
-pub struct Punishment {
-    pub custom_number: Option<String>,
-    pub project: uuid::Uuid,
+    pub punishment_status: uuid::Uuid,
     pub punish_datetime: chrono::NaiveDateTime,
     pub uuid: uuid::Uuid,
 }
@@ -40,6 +33,7 @@ pub struct Punishment {
 pub struct ActivePunishment {
     pub custom_number: Optional<Option<String>>,
     pub project: Optional<uuid::Uuid>,
+    pub punishment_status: Optional<uuid::Uuid>,
     pub punish_datetime: Optional<chrono::NaiveDateTime>,
     pub uuid: Optional<uuid::Uuid>,
 }
@@ -49,6 +43,7 @@ impl ActivePunishment {
         Some(Punishment {
             custom_number: self.custom_number.into_option()?,
             project: self.project.into_option()?,
+            punishment_status: self.punishment_status.into_option()?,
             punish_datetime: self.punish_datetime.into_option()?,
             uuid: self.uuid.into_option()?,
         })
@@ -76,6 +71,7 @@ impl TableSelector for ActivePunishment {
         match field_name {
             "custom_number" => self.custom_number.is_set(),
             "project" => self.project.is_set(),
+            "punishment_status" => self.punishment_status.is_set(),
             "punish_datetime" => self.punish_datetime.is_set(),
             "uuid" => self.uuid.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
@@ -92,6 +88,13 @@ impl TableSelector for ActivePunishment {
             },
             ColumnDef{
                 name: "project",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "punishment_status",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -152,6 +155,7 @@ impl ModelOps<sqlx::Postgres> for ActivePunishment
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.custom_number {tracing::debug!("Binded custom_number"); q = q.bind(v);}
         if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
+        if let Set(v) = &self.punishment_status {tracing::debug!("Binded punishment_status"); q = q.bind(v);}
         if let Set(v) = &self.punish_datetime {tracing::debug!("Binded punish_datetime"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         q
@@ -272,6 +276,7 @@ impl ModelOps<sqlx::MySql> for ActivePunishment
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.custom_number {tracing::debug!("Binded custom_number"); q = q.bind(v);}
         if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
+        if let Set(v) = &self.punishment_status {tracing::debug!("Binded punishment_status"); q = q.bind(v);}
         if let Set(v) = &self.punish_datetime {tracing::debug!("Binded punish_datetime"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         q
@@ -392,6 +397,7 @@ impl ModelOps<sqlx::Sqlite> for ActivePunishment
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.custom_number {tracing::debug!("Binded custom_number"); q = q.bind(v);}
         if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
+        if let Set(v) = &self.punishment_status {tracing::debug!("Binded punishment_status"); q = q.bind(v);}
         if let Set(v) = &self.punish_datetime {tracing::debug!("Binded punish_datetime"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         q

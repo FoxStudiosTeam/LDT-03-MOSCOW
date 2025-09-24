@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+env:
+  CARGO_HOME: /mnt/shared/solution/cargo
+  CARGO_TARGET_DIR: /mnt/shared/solution/target
+
 jobs:
   lint-and-test:
     runs-on: self-hosted
@@ -31,15 +35,15 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     strategy:
       matrix:
-        service: [attachment, materials, project, punishment]
-    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.25
+        service: [attachment, materials, project, punishment, attachmentproxy]
+    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.27
     with:
       image-name: ${{ matrix.service }}/${{ matrix.service }}
       namespace: solution
       workdir: './backend'
       context: './'
       manifest-files-path-root: ./backend/.deployment/${{ matrix.service }}
-      version-dir: ./backend/.deployment/${{ matrix.service }}
+      version_path: ./backend/services/${{ matrix.service }}/Cargo.toml
       service-name: ${{ matrix.service }}
       shared_cache: /mnt/shared
       shared_cache_key: ${{ matrix.service }}

@@ -102,8 +102,6 @@ tables:
     default: "gen_random_uuid()"
   - name: title
     type: text
-    nullable: true
-    default: null
 - name: punishment_statuses
   schema: norm
   fields:

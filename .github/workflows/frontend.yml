@@ -30,13 +30,14 @@ jobs:
   build-and-deploy:
     needs: lint-and-test
     if: ${{ github.ref == 'refs/heads/main' }}
-    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.25
+    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.26
     with:
       image-name: frontend/frontend
       namespace: solution
       workdir: './frontend'
       context: './'
       manifest-files-path-root: ./frontend/.deployment
+      version-dir: ./frontend/.deployment
       service-name: frontend
       shared_cache: /mnt/shared
       shared_cache_key: frontend

@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: punishment-app
+    release: kube-prometheus-stack
+  name: punishment-app-monitor
+  namespace: solution
+spec:
+  endpoints:
+    - basicAuth:
+        password:
+          key: password
+          name: punishment-metrics-auth
+        username:
+          key: username
+          name: punishment-metrics-auth
+      interval: 15s
+      path: /metrics
+      port: http
+  namespaceSelector:
+    matchNames:
+      - punishment
+  selector:
+    matchLabels:
+      app: punishment-app

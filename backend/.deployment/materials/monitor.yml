@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: materials-app
+    release: kube-prometheus-stack
+  name: materials-app-monitor
+  namespace: solution
+spec:
+  endpoints:
+    - basicAuth:
+        password:
+          key: password
+          name: materials-metrics-auth
+        username:
+          key: username
+          name: materials-metrics-auth
+      interval: 15s
+      path: /metrics
+      port: http
+  namespaceSelector:
+    matchNames:
+      - materials
+  selector:
+    matchLabels:
+      app: materials-app

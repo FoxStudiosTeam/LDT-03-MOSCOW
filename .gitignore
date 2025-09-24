@@ -6,3 +6,4 @@
 refinery.toml
 /.idea
 package-lock.json
+.vscode
