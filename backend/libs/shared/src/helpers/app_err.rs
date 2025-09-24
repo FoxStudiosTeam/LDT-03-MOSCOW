@@ -1,6 +1,7 @@
 use axum::{http::StatusCode, response::{IntoResponse, Response}, Json};
 use tracing::error;
 use serde::Serialize;
+use utoipa::ToSchema;
 
 pub struct AppErr(pub anyhow::Error, pub Option<StatusCode>, pub Option<Response>);
 
@@ -30,8 +31,12 @@ impl AppErr {
         self.1 = Some(status);
         self
     }
-    pub fn with_response(mut self, response: Response) -> Self {
-        self.2 = Some(response);
+    pub fn with_response(mut self, response: impl IntoResponse) -> Self {
+        self.2 = Some(response.into_response());
+        self
+    }
+    pub fn with_err_response(mut self, msg: &str) -> Self {
+        self.2 = Some((StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorWrapper{message : msg.to_string()})).into_response());
         self
     }
 }
@@ -43,30 +48,14 @@ impl IntoResponse for AppErr {
         error!("{}", self.0);
         (
             self.1.unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
-            self.2.unwrap_or(ErrorWrapper{message : "Internal server error :P".to_string()}.into_response()),
+            self.2.unwrap_or((StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorWrapper{message : "Internal server error :P".to_string()})).into_response()),
         ).into_response()
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct ErrorWrapper {
     message : String
-}
-
-impl IntoResponse for ErrorWrapper {
-    fn into_response(self) -> Response {
-        (
-            Json(self),
-        ).into_response()
-    }
-}
-
-impl ErrorWrapper {
-    pub fn new(message : String) -> Self {
-        return Self {
-            message: message
-        }
-    }
 }
 
 impl<E> From<E> for AppErr
