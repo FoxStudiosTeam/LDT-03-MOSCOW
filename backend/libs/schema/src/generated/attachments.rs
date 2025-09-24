@@ -18,18 +18,8 @@ impl Attachments {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct Attachments {
-    pub original_filename: String,
-    pub uuid: uuid::Uuid,
-    pub base_entity_uuid: uuid::Uuid,
-    pub file_uuid: uuid::Uuid,
-    pub content_type: Option<String>,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct Attachments {
     pub original_filename: String,

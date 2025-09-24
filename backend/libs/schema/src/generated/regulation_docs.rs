@@ -15,15 +15,8 @@ impl RegulationDocs {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct RegulationDocs {
-    pub uuid: uuid::Uuid,
-    pub title: Option<String>,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct RegulationDocs {
     pub uuid: uuid::Uuid,

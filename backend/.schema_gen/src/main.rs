@@ -1,7 +1,9 @@
 use schema_reader::prelude::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        // .with_env_filter(tracing_subscriber::EnvFilter::new("debug"))
+        .init();
     let schema = Schema::from_dir("./backend/.schema")?;
     tracing::info!("Schema with {} tables and {} types loaded from dir!", schema.get_tables().len(), schema.get_types().len());
     let rust_path = "./backend/libs/schema/src/generated";

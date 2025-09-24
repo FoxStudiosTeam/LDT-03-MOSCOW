@@ -19,19 +19,8 @@ impl Materials {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct Materials {
-    pub volume: f64,
-    pub uuid: uuid::Uuid,
-    pub project_schedule_item: uuid::Uuid,
-    pub delivery_date: chrono::NaiveDate,
-    pub measurement: i32,
-    pub title: String,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct Materials {
     pub volume: f64,
