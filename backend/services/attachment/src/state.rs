@@ -1,91 +1,89 @@
-// use std::{pin::Pin, task::{Context, Poll}};
+use std::collections::HashSet;
 
-// use aws_sdk_s3::primitives::ByteStream;
-// use aws_smithy_types::body::SdkBody;
-// use axum::{
-//     extract::{Multipart, multipart::Field}, response::IntoResponse
-// };
-// use bytes::Bytes;
-// use futures_util::{StreamExt, TryStreamExt, stream};
-// use http_body::{Body, Frame, SizeHint};
-// use crate::ENV;
+use axum::{Json, extract::Multipart, response::{IntoResponse, Response}};
+use futures_util::{AsyncReadExt, TryStreamExt};
+use http::StatusCode;
+use orm::prelude::{Optional::Set, SaveMode::Insert};
+use schema::prelude::{ActiveAttachments, OrmAttachments};
+use shared::prelude::{AppErr, IntoAppErr};
+use tracing::info;
 
-// async fn upload(mut multipart: Multipart, s3: aws_sdk_s3::Client) -> Result<String, String> {
-//     while let Some(field) = multipart.next_field().await.unwrap() {
-//         if field.name() == Some("file") {
-//             let filename = field.file_name().unwrap_or("upload.bin").to_string();
+use crate::{ENV, Orm, api::AttachmentParams};
 
-//             // let stream = field.map(|result| {
-//             //     result
-//             //         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
-//             // });
+#[derive(Clone)]
+pub struct AppState {
+    pub orm: Orm,
+    pub s3: aws_sdk_s3::Client
+}
 
-//             // let reader = tokio_util::io::StreamReader::new(field.map_err(|multipart_error| {
-//             //     std::io::Error::new(std::io::ErrorKind::Other, multipart_error)
-//             // }));
-//             let body = SdkBody::from_body_1_x(field);
-//             // let byte_stream = aws_sdk_s3::primitives::ByteStream::new(body);
-//             // let resp = s3.put_object()
-//                 // .bucket(&ENV.S3_BUCKET)
-//                 // .key(&filename)
-//                 // .body(byte_stream)
-//                 // .send()
-//                 // .await;
+pub enum FileType {
+    Image,
+    Pdf,
+    Document
+}
 
-//             // if let Ok(resp) = resp {
-//                 // return Ok(resp.e_tag.unwrap().to_string());
-//             // }
-//             todo!()
-//         }
-//     }
+impl AppState {
+    pub async fn upload(&self, params: AttachmentParams, mut multipart: Multipart) -> Result<Response, AppErr> {
+        let allowed_mimes = HashSet::from([
+            "application/pdf",
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            // .doc
+            "application/msword",
+            // .docx
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ]);
 
-//     // "No file field found".to_string()
-//     todo!()
-// }
+        while let Some(field) = multipart.next_field().await.into_app_err()? {
+            let name = field.name().unwrap_or("unknown").to_string();
+            let file_name = field.file_name().unwrap_or("file").to_string();
+            let content_type = field.content_type().map(|ct| ct.to_string());
 
+            tracing::info!("Received field: {} (filename: {})", name, file_name);
 
+            // Check MIME type if present
+            if let Some(mime) = &content_type {
+                if !allowed_mimes.contains(mime.as_str()) {
+                    return Ok((StatusCode::NOT_FOUND, format!("Invalid MIME type: {}", mime)).into_response());
+                }
+            } else {
+                // Optionally, reject if MIME type is missing
+                return Ok((StatusCode::NOT_FOUND, "Missing Content-Type header".to_string()).into_response());
+            }
 
+            let mut data = Vec::new();
+            let mut field_data = field.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e)).into_async_read();
+            field_data.read_to_end(&mut data).await.into_app_err()?;
 
+            tracing::info!("File {} is valid, size: {} bytes", file_name, data.len());
 
+            let file_id = uuid::Uuid::new_v4();
 
-// // async fn bebra(b: Body, s3: aws_sdk_s3::Client) {
-// //     let body = SdkBody::from_body_1_x(b);
-// // }
+            let r = self.s3.put_object()
+                .bucket(&ENV.S3_BUCKET)
+                .key(&format!("attachments/{}/{}", params.id, file_id))
+                .body(aws_sdk_s3::primitives::ByteStream::new(data.into()))
+                .send()
+                .await
+                .into_app_err()
+                ?;
+            info!("Uploaded to s3: {:#?}", r);
 
+            let res = self.orm.attachments().save(ActiveAttachments{
+                original_filename: Set(file_name),
+                uuid: Set(file_id),
+                base_entity_uuid: Set(params.id),
+                file_uuid: Set(file_id),
+                content_type: Set(Some(content_type.unwrap_or("application/octet-stream".to_string()))),
+            }, Insert).await?;
 
-
-// pub struct FieldBody<'a> {
-//     field: Field<'a>,
-// }
-
-// impl<'a> Body for FieldBody<'a> {
-//     type Data = Bytes;
-//     type Error = anyhow::Error;
-
-//     fn poll_data(
-//         mut self: Pin<&mut Self>,
-//         cx: &mut Context<'_>,
-//     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
-//         let fut = self.field.next();
-//         tokio::pin!(fut);
-
-//         match fut.poll(cx) {
-//             Poll::Ready(Some(Ok(chunk))) => {
-//                 Poll::Ready(Some(Ok(Frame::data(chunk))))
-//             }
-//             Poll::Ready(Some(Err(e))) => {
-//                 Poll::Ready(Some(Err(anyhow::anyhow!(std::io::Error::new(std::io::ErrorKind::Other, e)))))
-//             }
-//             Poll::Ready(None) => Poll::Ready(None),
-//             Poll::Pending => Poll::Pending,
-//         }
-//     }
-
-//     fn is_end_stream(&self) -> bool {
-//         false // Field stream doesn’t provide exact end info synchronously
-//     }
-
-//     fn size_hint(&self) -> SizeHint {
-//         SizeHint::default()
-//     }
-// }
+            return if let Some(attachment) = res {
+                Ok((StatusCode::OK, Json(attachment)).into_response())
+            } else {
+                Ok((StatusCode::NOT_MODIFIED, "Attachment not found (unreachable?)".to_string()).into_response())
+            }
+        }
+        Ok((StatusCode::BAD_REQUEST, "Missing file".to_string()).into_response())
+    }
+}

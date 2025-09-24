@@ -1,0 +1,26 @@
+[package]
+name = "attachmentproxy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = { version = "0.8.1", features = ["macros", "multipart"] }
+anyhow = "1.0.99"
+shared = { workspace = true }
+utils = { workspace = true }
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+uuid = { version = "1.18.1", features = ["serde", "v4"] }
+serde = { version = "1.0.219", features = ["derive"] }
+utoipa = { version = "5.4.0", features = ["axum_extras", "chrono", "uuid"] }
+aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
+aws-sdk-s3 = { version = "1.106.0", features = ["rt-tokio"] }
+tokio-util = { version = "0.7.16", features = ["io"] }
+futures-util = "0.3.31"
+tracing = "0.1.41"
+utoipa-scalar = { version = "0.3.0", features = ["axum"] }
+utoipa-axum = "0.2.0"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+axum-prometheus = "0.9.0"
+tower = "0.5.2"
+tower-http = { version = "0.6.6", features = ["catch-panic"] }
+axum-extra = { version = "0.10.1", features = ["cookie", "typed-header"] }
