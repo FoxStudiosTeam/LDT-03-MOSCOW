@@ -127,7 +127,9 @@ async fn main() -> anyhow::Result<()> {
         // )
         .routes(
             routes!(
-                controllers::handle_get_project
+                controllers::handle_get_project,
+                controllers::handle_create_project,
+                controllers::handle_update_project
             )
         )
         .with_state(state)
