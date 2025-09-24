@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Header } from "@/app/components/header";
+import Image from "next/image";
 
 interface Project {
     id: number;
@@ -256,7 +257,7 @@ export default function ProjectsPage() {
     };
 
     return (
-        <div className="flex justify-center min-h-screen bg-[#D0D0D0]">
+        <div className="flex justify-center bg-[#D0D0D0]">
             <Header />
 
             <main className="w-[60%] bg-white px-8 pt-2">
@@ -305,10 +306,12 @@ export default function ProjectsPage() {
                                         <p>Ответственный инспектор: {project.inspector}</p>
                                     )}
                                     {project.mapUrl && (
-                                        <img
+                                        <Image
                                             src={project.mapUrl}
                                             alt="Карта"
                                             className="w-full h-64 object-cover rounded-md"
+                                            width={50}
+                                            height={50}
                                         />
                                     )}
                                     {project.coordinates && (
