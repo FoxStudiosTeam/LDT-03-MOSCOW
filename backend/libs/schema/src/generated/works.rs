@@ -1,16 +1,10 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
+#![allow(unused)]
 use sqlx::{Executor, FromRow};
 use sqlx::query::QueryAs;
 use orm::prelude::*;
 use sqlx::Pool;
 use sqlx::types::*;
-
-#[derive(Clone, Debug, FromRow)]
-pub struct Works {
-    pub uuid: uuid::Uuid,
-    pub work_category: uuid::Uuid,
-    pub title: String,
-}
 
 impl Works {
     pub fn into_active(self) -> ActiveWorks {
@@ -20,6 +14,23 @@ impl Works {
             title: Set(self.title),
         }
     }
+}
+
+#[cfg(not(feature="serde"))]
+#[derive(Clone, Debug, FromRow)]
+pub struct Works {
+    pub uuid: uuid::Uuid,
+    pub work_category: uuid::Uuid,
+    pub title: String,
+}
+
+#[cfg(feature="serde")]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, FromRow)]
+pub struct Works {
+    pub uuid: uuid::Uuid,
+    pub work_category: uuid::Uuid,
+    pub title: String,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
