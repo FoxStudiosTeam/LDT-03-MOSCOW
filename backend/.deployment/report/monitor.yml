@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: report-app
+    release: kube-prometheus-stack
+  name: report-app-monitor
+  namespace: solution
+spec:
+  endpoints:
+    - basicAuth:
+        password:
+          key: password
+          name: report-metrics-auth
+        username:
+          key: username
+          name: report-metrics-auth
+      interval: 15s
+      path: /metrics
+      port: http
+  namespaceSelector:
+    matchNames:
+      - report
+  selector:
+    matchLabels:
+      app: report-app
