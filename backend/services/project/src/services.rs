@@ -3,10 +3,11 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use axum::response::IntoResponse;
 use axum::{Json, http::StatusCode, response::Response};
-use orm::prelude::Optional::{Set};
-use schema::prelude::{ActiveProject, OrmProject, Project};
-use shared::prelude::{AppErr, ErrorWrapper};
+use orm::prelude::Optional::Set;
+use schema::prelude::{ActiveProject, OrmProject};
 use shared::prelude::IntoAppErr;
+use shared::prelude::{AppErr};
+use uuid::Uuid;
 
 use crate::AppState;
 use crate::entities::*;
@@ -28,161 +29,125 @@ impl IProjectService for ProjectService {
     async fn get_project(&self, r: GetProjectRequest) -> Result<Response, AppErr> {
         let (offset, limit) = r.pagination.map(|p| (p.offset, p.limit)).unwrap_or((0, 0));
 
-        let address = r.address.map(|addr| (addr)).unwrap_or("".to_string());
+        let address = r.address.map(|addr| (addr)).ok_or(
+            AppErr::default()
+                .with_err_response("address is empty")
+                .with_status(StatusCode::BAD_REQUEST),
+        )?;
 
-        let mut row: Vec<Project> = Vec::new();
-
-        match self
+        let row = self
             .state
             .orm()
             .project()
-            .select("select * from project.project p where p.address = $1 offset $2 limit $3")
-            .bind(&address)
+            .select("select * from project.project p where p.address like $1 offset $2 limit $3")
+            .bind(format!("%{}%", address))
             .bind(offset)
             .bind(limit)
             .fetch()
             .await
-            .into_app_err()
-        {
-            Ok(res) => {
-                row = res;
-            }
-            Err(e) => return Err(e.with_status(StatusCode::INTERNAL_SERVER_ERROR)),
-        }
+            .into_app_err()?;
 
-        let total: (i32,) =
-            sqlx::query_as::<_, (i32,)>("SELECT COUNT(*) FROM project.project WHERE address = $1")
-                .bind(address)
-                .fetch_one(self.state.orm().get_executor())
-                .await?;
+        let total: (i64,) = sqlx::query_as::<_, (i64,)>(
+            "SELECT COUNT(*) FROM project.project WHERE address like $1",
+        )
+        .bind(format!("%{}%", address))
+        .fetch_one(self.state.orm().get_executor())
+        .await
+        .into_app_err()?;
 
         let result = GetProjectResult {
             result: row,
             total: total.0,
         };
+
         return Ok((StatusCode::OK, Json(result)).into_response());
     }
 
     async fn create_project(&self, r: CreateProjectRequest) -> Result<Response, AppErr> {
         let mut project = ActiveProject::default();
-        project.uuid = Set(uuid::Uuid::new_v4());
 
-        if let Some(addr) = r.address {
-            if addr.is_empty() {
-                return Err(AppErr::default().with_err_response("address is empty")
-                    .with_status(StatusCode::BAD_REQUEST));
-            }
-            project.address = Set(addr);
-        }
+        let addr = r.address.map(|addr| (addr)).ok_or(
+            AppErr::default()
+                .with_err_response("address is empty")
+                .with_status(StatusCode::BAD_REQUEST),
+        )?;
+        project.address = Set(addr);
 
-        if let Some(polygon) = r.polygon {
-            if polygon.is_empty() {
-                return Err(AppErr::default().with_err_response("polygon is empty")
-                    .with_status(StatusCode::BAD_REQUEST));
-            }
-            let raw = serde_json::from_str(&polygon).into_app_err();
-            match raw {
-                Ok(json_value) => {
-                    project.polygon = Set(json_value);
-                }
-                Err(_) => {
-                    return Err(AppErr::default().with_err_response("polygon is incorrect")
-                        .with_status(StatusCode::BAD_REQUEST));
-                }
-            }
-        }
+        let polygon = r
+            .polygon
+            .map(|poly| serde_json::from_str(&poly).into_app_err())
+            .ok_or(
+                AppErr::default()
+                    .with_err_response("polygon is uncorrected value")
+                    .with_status(StatusCode::BAD_REQUEST),
+            )?;
+        project.polygon = Set(polygon?);
 
-        match r.ssk {
-            Some(ssk) => {
-                if ssk.is_empty() {
-                    return Err(AppErr::default().with_err_response("ssk field is empty"));
-                }
-
-                match uuid::Uuid::parse_str(&ssk).into_app_err() {
-                    Ok(id) => project.uuid = Set(id),
-                    Err(er) => {
-                        return Err(er.with_status(StatusCode::BAD_REQUEST));
-                    }
-                }
-            }
-            None => {
-                return Err(AppErr::default().with_err_response("ssk field is empty"));
-            }
-        }
+        let ssk = r.ssk.and_then(|sk| uuid::Uuid::parse_str(&sk).ok()).ok_or(
+            AppErr::default()
+                .with_err_response("ssk is invalid uuid")
+                .with_status(StatusCode::BAD_REQUEST),
+        )?;
+        project.ssk = Set(Some(ssk));
 
         project.status = Set(0);
 
-        match self
+        let res = self
             .state
             .orm()
             .project()
             .save(project, orm::prelude::SaveMode::Insert)
             .await
-            .into_app_err()
-        {
-            Ok(res) => {
-                if let Some(project) = res {
-                    return Ok((StatusCode::OK, Json(project)).into_response());
-                }
-                return Err(AppErr::default().with_status(StatusCode::INTERNAL_SERVER_ERROR).with_err_response("empty result while create project"))
-            }
-            Err(err) => return Err(err.with_status(StatusCode::INTERNAL_SERVER_ERROR).with_err_response("some error while create project")),
-        }
+            .into_app_err()?
+            .and_then(|res| Some(res))
+            .ok_or(
+                AppErr::default()
+                    .with_err_response("internal database error")
+                    .with_status(StatusCode::INTERNAL_SERVER_ERROR),
+            )?;
+        return Ok((StatusCode::OK, Json(res)).into_response());
     }
 
     async fn update_project(&self, r: UpdateProjectRequest) -> Result<Response, AppErr> {
         let mut project = ActiveProject::default();
 
-        if let Some(foreman) = r.foreman {
-            match uuid::Uuid::parse_str(&foreman).into_app_err() {
-                Ok(forman_uuid) => {
-                    project.foreman = Set(Some(forman_uuid));
-                }
-                Err(er) => {
-                    return Err(er.with_status(StatusCode::BAD_REQUEST).with_err_response("foreman is empty"));
+        r.foreman.and_then(|foreman| {
+            Some(uuid::Uuid::parse_str(&foreman).and_then(|f| Ok(project.foreman = Set(Some(f)))))
+        });
+
+        match r.status {
+            Some(raw_status) => {
+                match ProjectStatus::try_from(raw_status) {
+                    Ok(
+                        s @ ProjectStatus::New
+                        | s @ ProjectStatus::InActive
+                        | s @ ProjectStatus::Suspend
+                        | s @ ProjectStatus::Normal
+                        | s @ ProjectStatus::LowPunishment
+                        | s @ ProjectStatus::NormalPunishment
+                        | s @ ProjectStatus::HighPunishment
+                        | s @ ProjectStatus::SomeWarnings,
+                    ) => Some(s),
+                    Err(_) => {
+                        return Err(AppErr::default()
+                            .with_err_response("unsupported status number")
+                            .with_status(StatusCode::BAD_REQUEST));
+                    }
                 }
             }
-        }
+            None => None,
+        }.and_then(|status| Some(project.status = Set(status as i32)));
 
-        if let Some(st) = r.status {
-            ProjectStatus::try_from(st)
-                .ok()
-                .filter(|s| {
-                    matches!(
-                        s,
-                        ProjectStatus::New
-                            | ProjectStatus::InActive
-                            | ProjectStatus::Suspend
-                            | ProjectStatus::Normal
-                            | ProjectStatus::LowPunishment
-                            | ProjectStatus::NormalPunishment
-                            | ProjectStatus::HighPunishment
-                            | ProjectStatus::SomeWarnings
-                    )
-                })
-                .ok_or_else(|| {
-                    AppErr::default().with_err_response("unsupported status number")
-                        .with_status(StatusCode::BAD_REQUEST)
-                })?;
-            project.status = Set(st);
-        }
+        Uuid::parse_str(&r.uuid).and_then(|guid| Ok(project.uuid = Set(guid))).map_err(|e| AppErr::default().with_err_response(e.to_string().as_str()))?;
 
-        match self
-            .state
-            .orm()
-            .project()
-            .save(project, orm::prelude::SaveMode::Update)
-            .await
-            .into_app_err()
-        {
-            Ok(res) => {
-                if let Some(project) = res {
-                    return Ok((StatusCode::OK, Json(project)).into_response());
-                }
-                return Err(AppErr::default().with_status(StatusCode::INTERNAL_SERVER_ERROR));
-            }
-            Err(err) => return Err(err.with_status(StatusCode::INTERNAL_SERVER_ERROR)),
-        }
+        let res = self.state.orm().project().save(project, orm::prelude::SaveMode::Update).await.into_app_err()?.and_then(|res| Some(res))
+            .ok_or(
+                AppErr::default()
+                    .with_err_response("internal database error")
+                    .with_status(StatusCode::INTERNAL_SERVER_ERROR),
+            )?;
+
+        return Ok((StatusCode::OK, Json(res)).into_response());   
     }
 }
 

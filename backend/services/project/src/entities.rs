@@ -1,7 +1,5 @@
-use axum::{http::{Response, StatusCode}, response::IntoResponse};
 use schema::prelude::Project;
 use serde::{Deserialize, Serialize};
-use shared::prelude::AppErr;
 use utoipa::ToSchema;
 
 #[derive(ToSchema, Deserialize)]
@@ -19,7 +17,8 @@ pub struct CreateProjectRequest {
 #[derive(ToSchema, Deserialize)]
 pub struct UpdateProjectRequest {
     pub foreman : Option<String>,
-    pub status : Option<i32>
+    pub status : Option<i32>,
+    pub uuid: String
 }
 
 #[derive(ToSchema, Deserialize)]
@@ -63,5 +62,5 @@ impl TryFrom<i32> for ProjectStatus {
 #[derive(ToSchema, Serialize)]
 pub struct GetProjectResult {
     pub result : Vec<Project>,
-    pub total: i32
+    pub total: i64
 }
