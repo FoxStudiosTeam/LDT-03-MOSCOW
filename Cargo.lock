@@ -2207,6 +2207,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=250427e)",
+ "utoipa",
  "uuid",
 ]
 
