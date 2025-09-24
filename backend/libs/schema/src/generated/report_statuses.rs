@@ -15,15 +15,8 @@ impl ReportStatuses {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct ReportStatuses {
-    pub title: String,
-    pub id: i32,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct ReportStatuses {
     pub title: String,

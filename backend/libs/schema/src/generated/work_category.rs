@@ -17,17 +17,8 @@ impl WorkCategory {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct WorkCategory {
-    pub kpgz: i32,
-    pub id: Option<i32>,
-    pub uuid: uuid::Uuid,
-    pub title: String,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct WorkCategory {
     pub kpgz: i32,

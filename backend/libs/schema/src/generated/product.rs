@@ -18,18 +18,8 @@ impl Product {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct Product {
-    pub title: String,
-    pub guid: uuid::Uuid,
-    pub updated_at: chrono::NaiveDateTime,
-    pub created_at: chrono::NaiveDateTime,
-    pub count: i32,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct Product {
     pub title: String,

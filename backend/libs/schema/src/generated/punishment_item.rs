@@ -25,25 +25,8 @@ impl PunishmentItem {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct PunishmentItem {
-    pub punishment: uuid::Uuid,
-    pub uuid: uuid::Uuid,
-    pub correction_date_fact: Option<chrono::NaiveDate>,
-    pub correction_date_info: Option<String>,
-    pub is_suspend: bool,
-    pub comment: Option<String>,
-    pub punish_datetime: chrono::NaiveDateTime,
-    pub regulation_doc: Option<uuid::Uuid>,
-    pub correction_date_plan: chrono::NaiveDate,
-    pub title: String,
-    pub punishment_item_status: i32,
-    pub place: String,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct PunishmentItem {
     pub punishment: uuid::Uuid,
