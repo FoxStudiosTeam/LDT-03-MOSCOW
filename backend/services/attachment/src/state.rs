@@ -35,7 +35,7 @@ impl AppState {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ]);
 
-        while let Some(field) = multipart.next_field().await.into_app_err()? {
+        if let Some(field) = multipart.next_field().await.into_app_err()? {
             let name = field.name().unwrap_or("unknown").to_string();
             let file_name = field.file_name().unwrap_or("file").to_string();
             let content_type = field.content_type().map(|ct| ct.to_string());
