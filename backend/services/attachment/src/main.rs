@@ -68,7 +68,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .inspect_err(|e| info!("Can't connect to db: {e}"))?;
     info!("Connected to DB");
-
+    
     info!("Connecting to s3");
     let creds = SharedCredentialsProvider::new(Credentials::new(
         &ENV.S3_KEY,
