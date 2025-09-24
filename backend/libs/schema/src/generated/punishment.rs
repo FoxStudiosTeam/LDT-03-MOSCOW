@@ -24,7 +24,7 @@ impl Punishment {
 pub struct Punishment {
     pub custom_number: Option<String>,
     pub project: uuid::Uuid,
-    pub punishment_status: uuid::Uuid,
+    pub punishment_status: i32,
     pub punish_datetime: chrono::NaiveDateTime,
     pub uuid: uuid::Uuid,
 }
@@ -33,7 +33,7 @@ pub struct Punishment {
 pub struct ActivePunishment {
     pub custom_number: Optional<Option<String>>,
     pub project: Optional<uuid::Uuid>,
-    pub punishment_status: Optional<uuid::Uuid>,
+    pub punishment_status: Optional<i32>,
     pub punish_datetime: Optional<chrono::NaiveDateTime>,
     pub uuid: Optional<uuid::Uuid>,
 }

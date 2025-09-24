@@ -46,7 +46,7 @@ tables:
   - name: project
     type: uuid
   - name: punishment_status
-    type: uuid
+    type: integer
   - name: punish_datetime
     type: timestamp
   - name: uuid
