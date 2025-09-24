@@ -1,6 +1,7 @@
 'use client';
 
 import { Header } from "@/app/components/header";
+import Image from "next/image";
 
 interface Project {
     id: number;
@@ -49,10 +50,12 @@ export default function ObjectDetail() {
 
                 <div className="space-y-4">
                     {project.mapUrl && (
-                        <img
+                        <Image
                             src={project.mapUrl}
                             alt="Карта"
                             className="w-full h-64 object-cover rounded-md"
+                            width={50}
+                            height={50}
                         />
                     )}
                     {project.coordinates && (
