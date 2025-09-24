@@ -256,7 +256,7 @@ export default function ProjectsPage() {
     };
 
     return (
-        <div className="flex justify-center min-h-screen bg-[#D0D0D0]">
+        <div className="flex justify-center bg-[#D0D0D0]">
             <Header />
 
             <main className="w-[60%] bg-white px-8 pt-2">

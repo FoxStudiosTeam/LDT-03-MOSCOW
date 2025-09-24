@@ -4,7 +4,7 @@ import { Header } from "@/app/components/header";
 
 export default function SecondStep() {
     return (
-        <div className="flex justify-center min-h-screen bg-[#D0D0D0] mt-[50px]">
+        <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />
             <main className="w-[80%] bg-white px-8 flex flex-col items-center gap-4 ">
                 <div className="w-full flex flex-row justify-between">

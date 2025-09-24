@@ -39,6 +39,10 @@ input {
     caret-color: black;
 }
 
+main {
+    min-height: calc(100vh - 50px);
+}
+
 body {
   background: var(--background);
   color: black;
