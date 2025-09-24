@@ -69,7 +69,7 @@ impl IProjectService for ProjectService {
 
         if let Some(addr) = r.address {
             if addr.is_empty() {
-                return Err(AppErr::default().with_response(ErrorWrapper::new("address is empty".to_string()).into_response())
+                return Err(AppErr::default().with_err_response("address is empty")
                     .with_status(StatusCode::BAD_REQUEST));
             }
             project.address = Set(addr);
@@ -77,7 +77,7 @@ impl IProjectService for ProjectService {
 
         if let Some(polygon) = r.polygon {
             if polygon.is_empty() {
-                return Err(AppErr::default().with_response(ErrorWrapper::new("polygon is empty".to_string()).into_response())
+                return Err(AppErr::default().with_err_response("polygon is empty")
                     .with_status(StatusCode::BAD_REQUEST));
             }
             let raw = serde_json::from_str(&polygon).into_app_err();
@@ -86,7 +86,7 @@ impl IProjectService for ProjectService {
                     project.polygon = Set(json_value);
                 }
                 Err(_) => {
-                    return Err(AppErr::default().with_response(ErrorWrapper::new("polygon is incorrect".to_string()).into_response())
+                    return Err(AppErr::default().with_err_response("polygon is incorrect")
                         .with_status(StatusCode::BAD_REQUEST));
                 }
             }
@@ -95,7 +95,7 @@ impl IProjectService for ProjectService {
         match r.ssk {
             Some(ssk) => {
                 if ssk.is_empty() {
-                    return Err(AppErr::default().with_response(ErrorWrapper::new("ssk field is empty".to_string()).into_response()));
+                    return Err(AppErr::default().with_err_response("ssk field is empty"));
                 }
 
                 match uuid::Uuid::parse_str(&ssk).into_app_err() {
@@ -106,7 +106,7 @@ impl IProjectService for ProjectService {
                 }
             }
             None => {
-                return Err(AppErr::default().with_response(ErrorWrapper::new("ssk field is empty".to_string()).into_response()));
+                return Err(AppErr::default().with_err_response("ssk field is empty"));
             }
         }
 
@@ -124,9 +124,9 @@ impl IProjectService for ProjectService {
                 if let Some(project) = res {
                     return Ok((StatusCode::OK, Json(project)).into_response());
                 }
-                return Err(AppErr::default().with_status(StatusCode::INTERNAL_SERVER_ERROR).with_response(ErrorWrapper::new("empty result while create project".to_string()).into_response()));
+                return Err(AppErr::default().with_status(StatusCode::INTERNAL_SERVER_ERROR).with_err_response("empty result while create project"))
             }
-            Err(err) => return Err(err.with_status(StatusCode::INTERNAL_SERVER_ERROR).with_response(ErrorWrapper::new("some error while create project".to_string()).into_response())),
+            Err(err) => return Err(err.with_status(StatusCode::INTERNAL_SERVER_ERROR).with_err_response("some error while create project")),
         }
     }
 
@@ -139,7 +139,7 @@ impl IProjectService for ProjectService {
                     project.foreman = Set(Some(forman_uuid));
                 }
                 Err(er) => {
-                    return Err(er.with_status(StatusCode::BAD_REQUEST).with_response(ErrorWrapper::new("foreman is empty".to_string()).into_response()));
+                    return Err(er.with_status(StatusCode::BAD_REQUEST).with_err_response("foreman is empty"));
                 }
             }
         }
@@ -161,7 +161,7 @@ impl IProjectService for ProjectService {
                     )
                 })
                 .ok_or_else(|| {
-                    AppErr::default().with_response(ErrorWrapper::new("unsupported status number".to_string()).into_response())
+                    AppErr::default().with_err_response("unsupported status number")
                         .with_status(StatusCode::BAD_REQUEST)
                 })?;
             project.status = Set(st);
