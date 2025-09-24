@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: report-deployment
+  labels:
+    app: report-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: report-app
+  template:
+    metadata:
+      labels:
+        app: report-app
+    spec:
+      containers:
+        - name: report-container
+          image: 88ba0664-nimble-raven.registry.twcstorage.ru/report/report:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4000
+          envFrom:
+            - configMapRef:
+               name: report-app-config
+            - secretRef:
+               name: report-app-secrets
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "150m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+      imagePullSecrets:
+        - name: registry-secret
