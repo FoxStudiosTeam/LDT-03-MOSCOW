@@ -13,6 +13,7 @@
     "next": "15.5.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "uuid": "^13.0.0",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
