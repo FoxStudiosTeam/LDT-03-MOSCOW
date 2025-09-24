@@ -12,8 +12,6 @@ use utils::env_config;
 use utoipa::OpenApi;
 use utoipa_axum::router::{OpenApiRouter};
 
-
-use orm::prelude::*;
 // Some useful things
 use shared::prelude::*;
 use utoipa_axum::routes;
@@ -128,7 +126,15 @@ async fn main() -> anyhow::Result<()> {
         .routes(
             routes!(
                 controllers::handle_get_project,
-                controllers::handle_create_project,
+            )
+        )
+         .routes(
+            routes!(
+                controllers::handle_create_project
+            )
+        )
+         .routes(
+            routes!(
                 controllers::handle_update_project
             )
         )
@@ -152,32 +158,3 @@ async fn main() -> anyhow::Result<()> {
     axum::serve(listener, app.into_make_service()).await?;
     Ok(())
 }
-
-
-// #[utoipa::path(
-//     get,
-//     path = "/secured",
-//     tag = crate::MAIN_TAG,
-//     summary = "Secured route. Any authorized user can access it",
-//     responses(
-//         (status = 200, description = "You passed!"),
-//         (status = 401, description = "Unauthorized"),
-//     )
-// )]
-// async fn secured_route() -> String {
-//     "Hello from secured!".to_string()
-// }
-
-// #[utoipa::path(
-//     get,
-//     path = "/specific_role",
-//     tag = crate::MAIN_TAG,
-//     summary = "Secured route. Only users with Operator or Inspector role can access it. Admin can access any route secured with this middleware",
-//     responses(
-//         (status = 200, description = "You passed!"),
-//         (status = 401, description = "Unauthorized"),
-//     )
-// )]
-// async fn role_secured_route() -> String {
-//     "Hello from secured!".to_string()
-// }
