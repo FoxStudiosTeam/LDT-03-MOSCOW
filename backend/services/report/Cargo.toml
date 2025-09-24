@@ -1,0 +1,43 @@
+[package]
+name = "report"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = []
+certs_in_env = ["auth_jwt/certs_in_env"]
+
+[dependencies]
+# local
+schema ={ workspace = true }
+shared = { workspace = true }
+# git
+orm = { workspace = true }
+schema_reader = { workspace = true }
+utils = { workspace = true }
+di = { workspace = true }
+auth_jwt = { workspace = true, features = ["utoipa", "into_response", "middleware", "certs_in_env"] }
+# crates
+anyhow = "1.0.99"
+tower = "0.5.2"
+tower-http = { version = "0.6.6", features = ["catch-panic"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+bb8 = "0.9.0"
+bb8-redis = "0.24.0"
+chrono = { version = "0.4.41", features = ["serde"] }
+bigdecimal = "0.4.8"
+sqlx = { version = "0.8.6", features = ["uuid"] }
+once_cell = "1.21.3"
+jsonwebtoken = "9.3.1"
+axum = { version = "0.8.1", features = ["macros"] }
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+uuid = { version = "1.18.1", features = ["serde", "v4"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.143"
+async-trait = "0.1.89"
+axum-extra = { version = "0.10.1", features = ["cookie", "typed-header"] }
+utoipa = { version = "5.4.0", features = ["axum_extras", "chrono", "uuid"] }
+utoipa-scalar = { version = "0.3.0", features = ["axum"] }
+utoipa-axum = "0.2.0"
+axum-prometheus = "0.9.0"

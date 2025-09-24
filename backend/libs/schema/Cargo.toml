@@ -3,11 +3,19 @@ name = "schema"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = ["postgres", "serde"]
+postgres = []
+mysql = []
+sqlite = []
+serde = []
+
 [dependencies]
 anyhow = "1.0.99"
-chrono = "0.4.41"
+chrono = { version = "0.4.41", features = ["serde"] }
 orm = { workspace = true }
 schema_reader = { workspace = true }
+serde = { version = "1.0.226", features = ["derive"] }
 serde_json = "1.0.145"
 sqlx = "0.8.6"
 tracing = "0.1.41"

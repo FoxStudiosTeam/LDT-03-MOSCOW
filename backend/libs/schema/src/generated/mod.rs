@@ -1,6 +1,8 @@
 // THIS FILE IS GENERATED, NOT FOR MANUAL EDIT
 pub mod attachments;
 pub use attachments::*;
+pub mod iko_relationship;
+pub use iko_relationship::*;
 pub mod kpgz;
 pub use kpgz::*;
 pub mod materials;
@@ -23,6 +25,12 @@ pub mod punishment_item;
 pub use punishment_item::*;
 pub mod punishment_statuses;
 pub use punishment_statuses::*;
+pub mod regulation_docs;
+pub use regulation_docs::*;
+pub mod report_statuses;
+pub use report_statuses::*;
+pub mod reports;
+pub use reports::*;
 pub mod work_category;
 pub use work_category::*;
 pub mod works;
