@@ -3,7 +3,7 @@ use serde::{Deserialize};
 use shared::prelude::{AppErr};
 use tracing::info;
 use schema::prelude::*;
-use crate::AppState;
+use crate::{AppState, api::ErrorExample};
 
 #[utoipa::path(
     post,
@@ -12,6 +12,7 @@ use crate::AppState;
     summary = "Get all punishments in project",
     responses(
         (status = 200, description = "Punishments fetched", body=Vec<Punishment>),
+        (status = 404, description = "Project not found", body=ErrorExample),
     )
 )]
 
