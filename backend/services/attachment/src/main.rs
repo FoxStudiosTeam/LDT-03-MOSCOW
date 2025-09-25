@@ -98,12 +98,6 @@ async fn main() -> anyhow::Result<()> {
         .layer(prometheus_layer)
         .layer(tower_http::catch_panic::CatchPanicLayer::new());
 
-    let cors = tower_http::cors::CorsLayer::new()
-        .allow_origin("http://localhost:3000".parse::<axum::http::HeaderValue>().unwrap())
-        .allow_methods(tower_http::cors::Any)
-        .allow_headers(tower_http::cors::Any)
-        .max_age(std::time::Duration::from_secs(3600));
-
     let metrics = axum::Router::new().route(
         "/metrics",
         get(move |TypedHeader(auth): TypedHeader<Authorization<Basic>>| async move {
@@ -123,7 +117,7 @@ async fn main() -> anyhow::Result<()> {
         .merge(Scalar::with_url("/docs/scalar", api))
         .merge(api_router)
         .merge(metrics)
-        .layer(cors)
+        .layer(shared::helpers::cors::cors_layer())
         .layer(default_layers);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", CFG.PORT)).await

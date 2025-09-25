@@ -1,3 +1,4 @@
+pub mod cors;
 pub mod logging_middleware;
 pub mod app_err;
 pub mod router;
