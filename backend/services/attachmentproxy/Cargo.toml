@@ -1,6 +1,6 @@
 [package]
 name = "attachmentproxy"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 
 [dependencies]
@@ -22,5 +22,5 @@ utoipa-axum = "0.2.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 axum-prometheus = "0.9.0"
 tower = "0.5.2"
-tower-http = { version = "0.6.6", features = ["catch-panic"] }
+tower-http = { version = "0.6.6", features = ["catch-panic", "cors"] }
 axum-extra = { version = "0.10.1", features = ["cookie", "typed-header"] }

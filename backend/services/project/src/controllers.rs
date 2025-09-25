@@ -12,7 +12,7 @@ use crate::entities::{ActivateProjectRequest, AddIkoToProjectRequest, AddWorkToS
     tag = crate::MAIN_TAG,
     summary = "Get project.",
     responses(
-        (status = 200, description = "Project finded."),
+        (status = 200, description = "Project found."),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -145,9 +145,9 @@ pub async fn handle_update_works_in_schedule(State(state) : State<AppState>, Jso
     post,
     path = "/get-project-schedule",
     tag = crate::MAIN_TAG,
-    summary = "Get project schdule by uuid.",
+    summary = "Get project schedule by uuid.",
     responses(
-        (status = 200, description = "Get project schdule by uuid."),
+        (status = 200, description = "Get project schedule by uuid."),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )

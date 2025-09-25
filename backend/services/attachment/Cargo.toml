@@ -1,6 +1,6 @@
 [package]
 name = "attachment"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 
 [features]
@@ -18,7 +18,7 @@ auth_jwt = { workspace = true, features = ["utoipa", "into_response", "middlewar
 # crates
 anyhow = "1.0.99"
 tower = "0.5.2"
-tower-http = { version = "0.6.6", features = ["catch-panic"] }
+tower-http = { version = "0.6.6", features = ["catch-panic", "cors"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 bb8 = "0.9.0"
