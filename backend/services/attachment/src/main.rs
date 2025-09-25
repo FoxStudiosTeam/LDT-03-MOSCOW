@@ -35,7 +35,7 @@ env_config!(
         S3_BUCKET: String
     }
     ".cfg" => pub(crate) CFG = pub(crate) Cfg {
-        PORT: u16 = 4001,
+        PORT: u16 = 4000,
     }
 );
 

@@ -19,7 +19,6 @@ use crate::{AppState};
         (status = 404, description = "Project not found", body=str, example="Project not found"),
     )
 )]
-
 pub async fn create_punishment(
     State(app): State<AppState>,
     Json(r): Json<PunishmentCreateRequest>,
