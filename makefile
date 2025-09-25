@@ -19,10 +19,13 @@ migrate_norm:
 migrate_product:
 	refinery migrate -p ./backend/.migrations/product --table-name refinery_product_history
 migrate_project:
-	refinery migrate -p ./backend/.migrations/project --table-name refinery_project_history 
+	refinery migrate -p ./backend/.migrations/project --table-name refinery_project_history
+migrate_fk:
+	refinery migrate -p ./backend/.migrations/fk --table-name refinery_fk_history
 migrate:
 	make migrate_attachment
 	make migrate_journal
 	make migrate_norm
 	make migrate_product
 	make migrate_project
+	make migrate_fk

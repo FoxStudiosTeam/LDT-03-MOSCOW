@@ -11,7 +11,6 @@ use utils::env_config;
 use utoipa::OpenApi;
 use utoipa_axum::router::{OpenApiRouter};
 mod api;
-mod helpers;
 
 use orm::prelude::*;
 // Some useful things

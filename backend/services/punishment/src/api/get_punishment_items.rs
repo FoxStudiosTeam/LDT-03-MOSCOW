@@ -21,8 +21,11 @@ pub async fn get_punishment_items(
     Json(r): Json<PunishmentItemsRequest>,
 ) -> Result<Response, AppErr> {
     info!("{:?}", r);
+    app.orm.punishment().select_by_pk(&r.punishment).await?
+    .ok_or_else(|| AppErr::default()
+    .with_status(StatusCode::NOT_FOUND)
+    .with_err_response("Punishment not found"))?;
     let result = app.orm.punishment_item().select("where punishment = $1").bind(&r.punishment).fetch().await.into_app_err()?;
-    
     tracing::info!("Result: {:?}", result.len());
 
     Ok((StatusCode::OK, Json(result)).into_response())

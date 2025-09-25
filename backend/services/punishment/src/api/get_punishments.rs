@@ -1,6 +1,6 @@
 use axum::{extract::State, http::StatusCode, response::{IntoResponse, Response}, Json};
 use serde::{Deserialize};
-use shared::prelude::{AppErr, IntoAppErr};
+use shared::prelude::{AppErr};
 use tracing::info;
 use schema::prelude::*;
 use crate::AppState;
@@ -20,7 +20,10 @@ pub async fn get_punishments(
     Json(r): Json<PunishmentsRequest>,
 ) -> Result<Response, AppErr> {
     info!("{:?}", r);
-    let result = app.orm.punishment().select("where project = $1").bind(&r.project).fetch().await.into_app_err()?;
+    app.orm.project().select_by_pk(&r.project).await?.ok_or_else(|| AppErr::default()
+    .with_status(StatusCode::NOT_FOUND)
+    .with_err_response("Project not found"))?;
+    let result = app.orm.punishment().select("where project = $1").bind(&r.project).fetch().await?;
     tracing::info!("Result: {:?}", result.len());
     Ok((StatusCode::OK, Json(result)).into_response())
 }
