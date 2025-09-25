@@ -17,7 +17,7 @@ use shared::prelude::*;
 use utoipa_axum::routes;
 use utoipa_scalar::{Scalar, Servable};
 
-use crate::services::IProjectService;
+use crate::services::{IProjectScheduleService, IProjectService};
 
 mod controllers;
 mod services;
@@ -54,7 +54,8 @@ pub type Orm = orm::prelude::Orm<sqlx::Pool<DB>>;
 #[derive(Default, Clone)]
 struct AppState {
     orm: Option<Orm>,
-    project_service: Option<Arc<dyn IProjectService>>
+    project_service: Option<Arc<dyn IProjectService>>,
+    project_schedule_service: Option<Arc<dyn IProjectScheduleService>>
 } 
 
 impl AppState {
@@ -67,9 +68,10 @@ impl AppState {
     fn project_service(&self) -> &Arc<dyn IProjectService> {
         self.project_service.as_ref().expect("Project Service is not initialized")
     }
-    
+    fn project_schedule_service(&self) -> &Arc<dyn IProjectScheduleService> {
+        self.project_schedule_service.as_ref().expect("ProjectScheduleService is not intialized")
+    }
 }
-
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -91,6 +93,9 @@ async fn main() -> anyhow::Result<()> {
     let project_service = services::new_project_service(state.clone());
     state.project_service = Some(project_service);
     
+    let project_schedule_service = services::new_project_schedule_service(state.clone());
+    state.project_schedule_service = Some(project_schedule_service);
+
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
     let default_layers = ServiceBuilder::new()
@@ -133,9 +138,44 @@ async fn main() -> anyhow::Result<()> {
                 controllers::handle_create_project
             )
         )
-         .routes(
+        .routes(
             routes!(
                 controllers::handle_update_project
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_activate_project
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_add_iko_to_project
+            )
+        )
+         .routes(
+            routes!(
+                controllers::handle_create_project_schedule
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_add_work_to_schedule
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_update_work_schedule
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_update_works_in_schedule
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_get_project_schedule
             )
         )
         .with_state(state)

@@ -1,6 +1,7 @@
 use schema::prelude::Project;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use uuid::Uuid;
 
 #[derive(ToSchema, Deserialize)]
 pub struct GetProjectRequest {
@@ -25,6 +26,67 @@ pub struct UpdateProjectRequest {
 pub struct Pagination {
     pub offset : i32,
     pub limit : i32
+}
+
+#[derive(ToSchema,Deserialize)]
+pub struct ActivateProjectRequest {
+    pub uuid : Uuid
+}
+#[derive(ToSchema, Deserialize)]
+pub struct AddIkoToProjectRequest {
+    pub project_uuid : Uuid,
+    pub iko_uuid : Uuid
+}
+
+#[derive(ToSchema, Deserialize)]
+pub struct CreateProjectScheduleRequest {
+    pub start_date : chrono::NaiveDate,
+    pub end_date :  chrono::NaiveDate,
+    pub project_uuid : Uuid
+}
+
+#[derive(ToSchema, Deserialize)]
+pub struct AddWorkToScheduleRequest {
+    pub created_by : Uuid,
+    pub work_uuid : Uuid, 
+    pub start_date : chrono::NaiveDate,
+    pub end_date : chrono::NaiveDate,
+    pub target_volume : f64,
+    pub is_draft : bool
+}
+
+#[derive(ToSchema, Deserialize)]
+pub struct UpdateWorkScheduleRequest {
+    pub items : Vec<UpdateWorksInScheduleRequest>
+}
+
+#[derive(ToSchema,Deserialize)]
+pub struct UpdateWorksInScheduleRequest {
+    pub start_date : chrono::NaiveDate,
+    pub end_date : chrono::NaiveDate,
+    pub uuid : Uuid
+}
+
+#[derive(ToSchema, Deserialize)]
+pub struct GetProjectScheduleRequest{
+    pub uuid : Uuid
+}
+#[derive(ToSchema, Serialize)]
+pub struct GetProjectScheduleResponse {
+    pub items : Vec<ProjectScheduleCategoryPartResponse>
+}
+
+#[derive(ToSchema, Serialize)]
+pub struct ProjectScheduleCategoryPartResponse {
+    pub title: String,
+    pub items: Option<Vec<ProjectScheduleItemResponse>>,
+}
+
+#[derive(ToSchema, Serialize)]
+pub struct ProjectScheduleItemResponse {
+    pub title: String,
+    pub start_date: chrono::NaiveDate,
+    pub end_date: chrono::NaiveDate,
 }
 
 // ProjectStatus - таблица статусов проекта.
