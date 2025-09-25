@@ -20,6 +20,10 @@ tables:
     type: uuid
     nullable: true
     default: null
+  - name: is_active
+    type: boolean
+    nullable: false
+    default: false  
 - name: iko_relationship
   schema: project
   fields:
