@@ -36,7 +36,7 @@ jobs:
     strategy:
       matrix:
         service: [attachment, materials, project, punishment, attachmentproxy, report]
-    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.27
+    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.29
     with:
       image-name: ${{ matrix.service }}/${{ matrix.service }}
       namespace: solution
@@ -47,6 +47,7 @@ jobs:
       service-name: ${{ matrix.service }}
       shared_cache: /mnt/shared
       shared_cache_key: ${{ matrix.service }}
+      restart-deployment: true
     secrets:
       DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
