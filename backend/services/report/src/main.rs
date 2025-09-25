@@ -86,18 +86,12 @@ async fn main() -> anyhow::Result<()> {
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .nest("/api/report", api::make_router(state.clone()))
         .split_for_parts();
-
-    let cors = tower_http::cors::CorsLayer::new()
-        .allow_origin("http://localhost:3000".parse::<axum::http::HeaderValue>()?)
-        .allow_methods(tower_http::cors::Any)
-        .allow_headers(tower_http::cors::Any)
-        .max_age(std::time::Duration::from_secs(3600));
     
     let app = axum::Router::new()
         .merge(Scalar::with_url("/docs/scalar", api))
         .merge(metrics)
         .merge(api_router)
-        .layer(cors)
+        .layer(shared::helpers::cors::cors_layer())
         .layer(default_layers);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", CFG.PORT)).await
