@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::response::IntoResponse;
@@ -5,7 +6,7 @@ use async_trait::async_trait;
 use axum::{Json, http::StatusCode, response::Response};
 use orm::prelude::Optional::Set;
 use orm::prelude::SaveMode::{Insert, Update};
-use schema::prelude::{ActiveIkoRelationship, ActiveProject, ActiveProjectSchedule, ActiveProjectScheduleItems, OrmIkoRelationship, OrmProject, OrmProjectSchedule, OrmProjectScheduleItems, OrmWorkCategory, ProjectScheduleItems};
+use schema::prelude::{ActiveIkoRelationship, ActiveProject, ActiveProjectSchedule, ActiveProjectScheduleItems, Attachments, OrmIkoRelationship, OrmProject, OrmProjectSchedule, OrmProjectScheduleItems, OrmWorkCategory, Project, ProjectScheduleItems};
 use shared::prelude::IntoAppErr;
 use shared::prelude::{AppErr};
 use uuid::Uuid;
@@ -38,29 +39,57 @@ impl IProjectService for ProjectService {
                 .with_status(StatusCode::BAD_REQUEST),
         )?;
 
-        let row = self
-            .state
-            .orm()
-            .project()
-            .select("select * from project.project p where p.address like $1 offset $2 limit $3")
+        if limit <= 0 {
+            let total: (i64,) = sqlx::query_as::<_, (i64,)>(
+                "SELECT COUNT(*) FROM project.project WHERE address like $1",
+            )
+            .bind(format!("%{}%", address))
+            .fetch_one(self.state.orm().get_executor())
+            .await
+            .into_app_err()?;
+            return Ok((StatusCode::OK, Json(GetProjectResult {
+                result: vec![],
+                total: total.0,
+            })).into_response());
+        }
+
+        let rows = sqlx::query_as::<_, RowProjectWithAttachment>("
+            SELECT p.*, 
+            a.uuid AS attachment_uuid,
+            a.original_filename,
+            a.base_entity_uuid,
+            a.file_uuid,
+            a.content_type,
+            COUNT(*) OVER() AS total_count
+            FROM project.project p 
+            LEFT JOIN attachment.attachments a ON a.base_entity_uuid = p.uuid
+            WHERE p.address like $1 offset $2 limit $3
+        ")
             .bind(format!("%{}%", address))
             .bind(offset)
             .bind(limit)
-            .fetch()
+            .fetch_all(self.state.orm().get_executor())
             .await
             .into_app_err()?;
 
-        let total: (i64,) = sqlx::query_as::<_, (i64,)>(
-            "SELECT COUNT(*) FROM project.project WHERE address like $1",
-        )
-        .bind(format!("%{}%", address))
-        .fetch_one(self.state.orm().get_executor())
-        .await
-        .into_app_err()?;
-
-        let result = GetProjectResult {
-            result: row,
-            total: total.0,
+        let mut hm = HashMap::new();
+        let mut total = 0;
+        for row in rows {
+            let a = row.attachment.into_attachments();
+            total = row.total_count;
+            let e = &mut hm.entry(row.project.uuid.clone())
+                .or_insert_with(|| ProjectWithAttachments {
+                    attachments: vec![], 
+                    project: row.project
+                })
+                .attachments;
+            let Some(a) = a else {continue};
+            e.push(a);  
+        }
+       
+        let result = GetProjectWithAttachmentResult {
+            result: hm.into_values().collect::<Vec<_>>(),
+            total: total,
         };
 
         return Ok((StatusCode::OK, Json(result)).into_response());
@@ -290,75 +319,75 @@ impl IProjectScheduleService for ProjectScheduleService {
     
     async fn get_project_schedule(&self, r : GetProjectScheduleRequest) -> Result<Response,AppErr>{
         // Получаем график проекта
-    let raw = self
-        .state
-        .orm()
-        .project_schedule()
-        .select("SELECT * FROM project_schedule WHERE project_uuid = $1 LIMIT 1")
-        .bind(r.uuid)
-        .fetch()
-        .await?;
+        let raw = self
+            .state
+            .orm()
+            .project_schedule()
+            .select("SELECT * FROM project_schedule WHERE project_uuid = $1 LIMIT 1")
+            .bind(r.uuid)
+            .fetch()
+            .await?;
 
-    let project_schedule = raw
-        .get(0)
-        .ok_or_else(|| AppErr::default()
-            .with_err_response("internal database error")
-            .with_status(StatusCode::INTERNAL_SERVER_ERROR))?;
+        let project_schedule = raw
+            .get(0)
+            .ok_or_else(|| AppErr::default()
+                .with_err_response("internal database error")
+                .with_status(StatusCode::INTERNAL_SERVER_ERROR))?;
 
-    // Загружаем все категории за один раз
-    let categories = self
-        .state
-        .orm()
-        .work_category()
-        .select("SELECT * FROM work_category")
-        .fetch()
-        .await?;
+        // Загружаем все категории за один раз
+        let categories = self
+            .state
+            .orm()
+            .work_category()
+            .select("SELECT * FROM work_category")
+            .fetch()
+            .await?;
 
-    use std::collections::HashMap;
-    let mut category_map: HashMap<Uuid, String> = HashMap::new();
-    for cat in categories {
-        category_map.insert(cat.uuid, cat.title);
-    }
+        use std::collections::HashMap;
+        let mut category_map: HashMap<Uuid, String> = HashMap::new();
+        for cat in categories {
+            category_map.insert(cat.uuid, cat.title);
+        }
 
-    let project_schedule_items = self
-        .state
-        .orm()
-        .project_schedule_items()
-        .select("SELECT * FROM project_schedule_items WHERE project_schedule_uuid = $1")
-        .bind(project_schedule.uuid)
-        .fetch()
-        .await?;
+        let project_schedule_items = self
+            .state
+            .orm()
+            .project_schedule_items()
+            .select("SELECT * FROM project_schedule_items WHERE project_schedule_uuid = $1")
+            .bind(project_schedule.uuid)
+            .fetch()
+            .await?;
 
-    let mut grouped: HashMap<String, Vec<ProjectScheduleItemResponse>> = HashMap::new();
+        let mut grouped: HashMap<String, Vec<ProjectScheduleItemResponse>> = HashMap::new();
 
-    for item in project_schedule_items {
-        let category_title = category_map
-            .get(&item.work_uuid)
-            .cloned()
-            .unwrap_or_else(|| "Без категории".to_string());
+        for item in project_schedule_items {
+            let category_title = category_map
+                .get(&item.work_uuid)
+                .cloned()
+                .unwrap_or_else(|| "Без категории".to_string());
 
-        let entry = grouped.entry(category_title).or_insert_with(Vec::new);
+            let entry = grouped.entry(category_title).or_insert_with(Vec::new);
 
-        entry.push(ProjectScheduleItemResponse {
-            //title: item.title.clone(),
-            title: "".to_string(),
-            start_date: item.start_date,
-            end_date: item.end_date,
-        });
-    }
+            entry.push(ProjectScheduleItemResponse {
+                //title: item.title.clone(),
+                title: "".to_string(),
+                start_date: item.start_date,
+                end_date: item.end_date,
+            });
+        }
 
-    // Собираем финальный результат
-    let mut result_items: Vec<ProjectScheduleCategoryPartResponse> = Vec::new();
+        // Собираем финальный результат
+        let mut result_items: Vec<ProjectScheduleCategoryPartResponse> = Vec::new();
 
-    for (title, items) in grouped {
-        result_items.push(ProjectScheduleCategoryPartResponse {
-            title,
-            items: Some(items),
-        });
-    }
-    let result = GetProjectScheduleResponse{items: result_items};
+        for (title, items) in grouped {
+            result_items.push(ProjectScheduleCategoryPartResponse {
+                title,
+                items: Some(items),
+            });
+        }
+        let result = GetProjectScheduleResponse{items: result_items};
 
-    return Ok((StatusCode::OK, Json(result)).into_response())
+        return Ok((StatusCode::OK, Json(result)).into_response())
     }
 }
 

@@ -1,10 +1,10 @@
-
 use axum::Json;
 use axum::{extract::State, response::Response};
-use shared::prelude::AppErr;
+use schema::prelude::*;
+use shared::prelude::*;
 
-use crate::{AppState};
-use crate::entities::{ActivateProjectRequest, AddIkoToProjectRequest, AddWorkToScheduleRequest, CreateProjectRequest, CreateProjectScheduleRequest, GetProjectRequest, GetProjectScheduleRequest, UpdateProjectRequest, UpdateWorkScheduleRequest, UpdateWorksInScheduleRequest};
+use crate::AppState;
+use crate::entities::*;
 
 #[utoipa::path(
     post,
@@ -12,7 +12,7 @@ use crate::entities::{ActivateProjectRequest, AddIkoToProjectRequest, AddWorkToS
     tag = crate::MAIN_TAG,
     summary = "Get project.",
     responses(
-        (status = 200, description = "Project found."),
+        (status = 200, description = "Project found.", body = GetProjectWithAttachmentResult),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -27,7 +27,7 @@ pub async fn handle_get_project(State(state) : State<AppState>, Json(r) : Json<G
     tag = crate::MAIN_TAG,
     summary = "Create project. Only users with SSK role can access it.",
     responses(
-        (status = 200, description = "Project created."),
+        (status = 200, description = "Project created.", body = Project),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -42,7 +42,7 @@ pub async fn handle_create_project(State(state) : State<AppState>, Json(r) : Jso
     tag = crate::MAIN_TAG,
     summary = "Update project.",
     responses(
-        (status = 200, description = "Project created."),
+        (status = 200, description = "Project created.", body = Project),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -57,7 +57,7 @@ pub async fn handle_update_project(State(state) : State<AppState>, Json(r) : Jso
     tag = crate::MAIN_TAG,
     summary = "Activate project.",
     responses(
-        (status = 200, description = "Project Activated."),
+        (status = 200, description = "Project Activated.", body = Project),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -72,7 +72,7 @@ pub async fn handle_activate_project(State(state) : State<AppState>, Json(r) : J
     tag = crate::MAIN_TAG,
     summary = "Add IKO into project.",
     responses(
-        (status = 200, description = "IKO added into project."),
+        (status = 200, description = "IKO added into project.", body = IkoRelationship),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -87,7 +87,7 @@ pub async fn handle_add_iko_to_project(State(state) : State<AppState>, Json(r) :
     tag = crate::MAIN_TAG,
     summary = "Create project schedule.",
     responses(
-        (status = 200, description = "project schedule was created in project."),
+        (status = 200, description = "project schedule was created in project.", body = ProjectSchedule),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -102,7 +102,7 @@ pub async fn handle_create_project_schedule(State(state) : State<AppState>, Json
     tag = crate::MAIN_TAG,
     summary = "Add work to schedule.",
     responses(
-        (status = 200, description = "work was added into schedule."),
+        (status = 200, description = "work was added into schedule.", body = ProjectScheduleItems),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -117,7 +117,7 @@ pub async fn handle_add_work_to_schedule(State(state) : State<AppState>, Json(r)
     tag = crate::MAIN_TAG,
     summary = "Update single work in schedule",
     responses(
-        (status = 200, description = "single work in schedule was updated."),
+        (status = 200, description = "single work in schedule was updated.", body = ProjectScheduleItems),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -132,7 +132,7 @@ pub async fn handle_update_work_schedule(State(state) : State<AppState>, Json(r)
     tag = crate::MAIN_TAG,
     summary = "Update group of works in schedule",
     responses(
-        (status = 200, description = "group of works in schedule was updated."),
+        (status = 200, description = "group of works in schedule was updated.", body = ProjectScheduleItems),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -147,7 +147,7 @@ pub async fn handle_update_works_in_schedule(State(state) : State<AppState>, Jso
     tag = crate::MAIN_TAG,
     summary = "Get project schedule by uuid.",
     responses(
-        (status = 200, description = "Get project schedule by uuid."),
+        (status = 200, description = "Get project schedule by uuid.", body = GetProjectScheduleResponse),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
