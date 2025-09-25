@@ -1,4 +1,4 @@
-use auth_jwt::prelude::Role;
+// use auth_jwt::prelude::Role;
 use axum::http::StatusCode;
 use axum::routing::get;
 use axum_extra::TypedHeader;
@@ -10,13 +10,12 @@ use tower::ServiceBuilder;
 use tracing::*;
 use utils::env_config;
 use utoipa::OpenApi;
-use utoipa_axum::router::{OpenApiRouter, UtoipaMethodRouterExt};
+use utoipa_axum::router::{OpenApiRouter};
 mod api;
 
 use orm::prelude::*;
 // Some useful things
 use shared::prelude::*;
-use utoipa_axum::routes;
 use utoipa_scalar::{Scalar, Servable};
 
 // Hover to see docs

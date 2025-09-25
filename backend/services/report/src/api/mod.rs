@@ -1,11 +1,8 @@
-use std::ops::Add;
-
 use axum::{extract::{Path, State}, http::StatusCode, response::{IntoResponse, Response}, Json};
 use orm::prelude::Optional::{NotSet, Set};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 use shared::prelude::{AppErr, IntoAppErr};
 use tracing::info;
-use tracing_subscriber::field::debug;
 use utoipa_axum::{router::OpenApiRouter, routes};
 use schema::prelude::*;
 use uuid::Uuid;
@@ -25,17 +22,20 @@ pub fn make_router(state: AppState) -> OpenApiRouter {
         .routes(routes!(
             update_report
         ))
+        .routes(routes!(
+            get_reports
+        ))
         .with_state(state)
 }
 //-----ADD REPORT-----
 
 #[utoipa::path(
     post,
-    path = "/report",
+    path = "/create_report",
     tag = crate::MAIN_TAG,
     summary = "Add report",
     responses(
-        (status = 200, description = "Report added!", body=Uuid),
+        (status = 200, description = "Report added!", body=Reports),
         (status = 409, description = "Schema already exist"),
     )
 )]
@@ -44,6 +44,8 @@ async fn add_report(
     Json(r): Json<AddReport>,
 ) -> Result<Response, AppErr> {
     info!("{:?}", r);
+    app.orm.project_schedule_items().select_by_pk(&r.project_schedule_item).await?
+    .ok_or_else(|| AppErr::default().with_status(StatusCode::BAD_REQUEST).with_err_response("Project schedule item not found"))?;
     let report = ActiveReports { 
         check_date: Set(r.check_date),
         report_date: Set(r.report_date),
@@ -55,7 +57,7 @@ async fn add_report(
     let Some(v) = result else {
         return Ok((StatusCode::CONFLICT).into_response());
     };
-    Ok((StatusCode::OK, Json(v.uuid)).into_response())
+    Ok((StatusCode::OK, Json(v)).into_response())
 }
 #[derive(utoipa::ToSchema, Deserialize, Debug)]
 pub struct AddReport{
@@ -128,12 +130,9 @@ pub struct ErrorResponse {
 
 #[utoipa::path(
     get,
-    path = "/report/{uuid}",
+    path = "/get_report",
     tag = crate::MAIN_TAG,
     summary = "Get report",
-    params(
-        ("uuid" = Uuid, Path, description = "UUID of the report to fetch")
-    ),
     responses(
         (status = 200, description = "Report found", body = ReportResponse),
         (status = 404, description = "Report not found", body = ErrorResponse),
@@ -141,11 +140,11 @@ pub struct ErrorResponse {
 )]
 async fn get_report(
     State(app): State<AppState>,
-    Path(uuid): Path<uuid::Uuid>,
+    Json(r): Json<ReportRequest>,
 ) -> Result<Response, AppErr> {
-    info!("Fetching report with UUID: {}", uuid);
+    info!("Fetching report with UUID: {}", r.uuid);
 
-    let result = app.orm.reports().select_by_pk(&uuid).await.into_app_err()?;
+    let result = app.orm.reports().select_by_pk(&r.uuid).await?;
 
     match result {
         Some(report) => Ok((
@@ -169,6 +168,12 @@ async fn get_report(
     }
 }
 
+#[derive(serde::Deserialize, utoipa::ToSchema)]
+pub struct ReportRequest {
+    #[schema(example=Uuid::new_v4)]
+    pub uuid: uuid::Uuid,
+}
+
 #[derive(serde::Serialize, utoipa::ToSchema)]
 pub struct ReportResponse {
     pub uuid: uuid::Uuid,
@@ -183,12 +188,9 @@ pub struct ReportResponse {
 
 #[utoipa::path(
     put,
-    path = "/report/{uuid}",
+    path = "/upd_report",
     tag = crate::MAIN_TAG,
     summary = "Update report",
-    params(
-        ("uuid" = Uuid, Path, description = "UUID of the report to update")
-    ),
     request_body = UpdateReport,
     responses(
         (status = 200, description = "Report updated", body = ReportResponse),
@@ -197,12 +199,11 @@ pub struct ReportResponse {
 )]
 async fn update_report(
     State(app): State<AppState>,
-    Path(uuid): Path<uuid::Uuid>,
     Json(r): Json<UpdateReport>,
 ) -> Result<Response, AppErr> {
-    info!("Updating report with UUID: {}", uuid);
+    info!("Updating report with UUID: {}", r.uuid);
 
-    let existing = app.orm.reports().select_by_pk(&uuid).await.into_app_err()?;
+    let existing = app.orm.reports().select_by_pk(&r.uuid).await.into_app_err()?;
     if existing.is_none() {
         return Ok((
             StatusCode::NOT_FOUND,
@@ -214,7 +215,7 @@ async fn update_report(
     }
 
     let report = ActiveReports {
-    uuid: Set(uuid),
+    uuid: Set(r.uuid),
     check_date: Set(r.check_date), 
     report_date: r.report_date.map(Set).unwrap_or(NotSet),
     project_schedule_item: r.project_schedule_item.map(Set).unwrap_or(NotSet),
@@ -251,8 +252,13 @@ async fn update_report(
         .into_response())
 }
 
+//-----GET REPORTS-----
+
 #[derive(serde::Deserialize, utoipa::ToSchema, Debug)]
-pub struct UpdateReport {
+pub struct UpdateReport { 
+    #[schema(example=Uuid::new_v4)]
+    pub uuid: Uuid,
+
     #[schema(example = "2023-08-16")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub check_date: Option<chrono::NaiveDate>,
@@ -268,4 +274,34 @@ pub struct UpdateReport {
     #[schema(example = 3)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<i32>,
+}
+
+#[utoipa::path(
+    get,
+    path = "/get_reports",
+    tag = crate::MAIN_TAG,
+    summary = "Get reports",
+    responses(
+        (status = 200, description = "Reports found", body = Vec<ReportResponse>),
+        (status = 400, description = "Project schedule ton found", body=ErrorResponse)
+    )
+)]
+async fn get_reports(
+    State(app): State<AppState>,
+    Json(r): Json<ReportsRequest>,
+) -> Result<Response, AppErr> {
+    info!("Fetching report with UUID: {}", r.project_schedule_item);
+
+    app.orm.project_schedule_items().select_by_pk(&r.project_schedule_item).await?
+    .ok_or_else(|| AppErr::default().with_status(StatusCode::BAD_REQUEST).with_err_response("Project schedule item not found"))?;
+
+    let result = app.orm.reports().select("Where project_schedule_item = $1").bind(&r.project_schedule_item).fetch().await?;
+
+    Ok((StatusCode::OK, Json(result)).into_response())
+}
+
+#[derive(serde::Deserialize, utoipa::ToSchema)]
+pub struct ReportsRequest {
+    #[schema(example=Uuid::new_v4)]
+    pub project_schedule_item: uuid::Uuid,
 }
