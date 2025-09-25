@@ -145,23 +145,33 @@ async fn get_report(
     Query(r): Query<ReportRequest>,
 ) -> Result<Response, AppErr> {
     info!("Fetching report with UUID: {}", r.report_id);
+    let rows = sqlx::query_as::<_, ReportWithAttachmentsRecord>("
+        SELECT re.*, 
+        a.uuid AS attachment_uuid,
+        a.original_filename,
+        a.base_entity_uuid,
+        a.file_uuid,
+        a.content_type
+        FROM norm.reports re
+        LEFT JOIN attachment.attachments a ON a.base_entity_uuid = re.uuid
+        WHERE re.uuid = $1;
+    ").bind(r.report_id).fetch_all(app.orm.get_executor()).await.into_app_err()?;
+    if rows.is_empty() {return Ok((StatusCode::NOT_FOUND, Json(ErrorResponse { message: "Report not found".to_string() })).into_response())};
+    let mut hm = HashMap::new();
 
-    let result = app.orm.reports().select_by_pk(&r.report_id).await?;
-
-    match result {
-        Some(report) => Ok((
-            StatusCode::OK,
-            Json(report),
-        )
-        .into_response()),
-        None => Ok((
-            StatusCode::NOT_FOUND,
-            Json(ErrorResponse {
-                message: "Report not found".to_string(),
-            }),
-        )
-        .into_response()),
+    for row in rows {
+        let a = row.attachments.into_attachments();
+        let e = &mut hm.entry(row.report.uuid.clone())
+            .or_insert_with(|| ReportWithAttachments {
+                attachments: vec![], 
+                report: row.report
+            })
+            .attachments;
+        let Some(a) = a else {continue};
+        e.push(a);  
     }
+    let v = hm.into_values().collect::<Vec<_>>();
+    Ok((StatusCode::OK, Json(v)).into_response())
 }
 
 #[derive(serde::Deserialize, utoipa::ToSchema, IntoParams)]
