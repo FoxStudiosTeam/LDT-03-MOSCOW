@@ -15,6 +15,7 @@ impl Project {
             foreman: Set(self.foreman),
             address: Set(self.address),
             ssk: Set(self.ssk),
+            is_active: Set(self.is_active),
         }
     }
 }
@@ -29,6 +30,7 @@ pub struct Project {
     pub foreman: Option<uuid::Uuid>,
     pub address: String,
     pub ssk: Option<uuid::Uuid>,
+    pub is_active: bool,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
@@ -39,6 +41,7 @@ pub struct ActiveProject {
     pub foreman: Optional<Option<uuid::Uuid>>,
     pub address: Optional<String>,
     pub ssk: Optional<Option<uuid::Uuid>>,
+    pub is_active: Optional<bool>,
 }
 
 impl ActiveProject {
@@ -50,6 +53,7 @@ impl ActiveProject {
             foreman: self.foreman.into_option()?,
             address: self.address.into_option()?,
             ssk: self.ssk.into_option()?,
+            is_active: self.is_active.into_option()?,
         })
     }
 }
@@ -79,6 +83,7 @@ impl TableSelector for ActiveProject {
             "foreman" => self.foreman.is_set(),
             "address" => self.address.is_set(),
             "ssk" => self.ssk.is_set(),
+            "is_active" => self.is_active.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
@@ -123,6 +128,13 @@ impl TableSelector for ActiveProject {
                 name: "ssk",
                 nullable: true,
                 default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "is_active",
+                nullable: false,
+                default: Some("false"),
                 is_unique: false,
                 is_primary: false,
             },
@@ -171,6 +183,7 @@ impl ModelOps<sqlx::Postgres> for ActiveProject
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
         if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
+        if let Set(v) = &self.is_active {tracing::debug!("Binded is_active"); q = q.bind(v);}
         q
     }
     
@@ -293,6 +306,7 @@ impl ModelOps<sqlx::MySql> for ActiveProject
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
         if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
+        if let Set(v) = &self.is_active {tracing::debug!("Binded is_active"); q = q.bind(v);}
         q
     }
     
@@ -415,6 +429,7 @@ impl ModelOps<sqlx::Sqlite> for ActiveProject
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
         if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
+        if let Set(v) = &self.is_active {tracing::debug!("Binded is_active"); q = q.bind(v);}
         q
     }
     

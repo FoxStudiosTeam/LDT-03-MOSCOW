@@ -1,4 +1,5 @@
-use auth_jwt::prelude::Role;
+use std::sync::Arc;
+
 use axum::http::StatusCode;
 use axum::routing::get;
 use axum_extra::TypedHeader;
@@ -9,14 +10,18 @@ use tower::ServiceBuilder;
 use tracing::*;
 use utils::env_config;
 use utoipa::OpenApi;
-use utoipa_axum::router::{OpenApiRouter, UtoipaMethodRouterExt};
+use utoipa_axum::router::{OpenApiRouter};
 
-
-use orm::prelude::*;
 // Some useful things
 use shared::prelude::*;
 use utoipa_axum::routes;
 use utoipa_scalar::{Scalar, Servable};
+
+use crate::services::{IProjectScheduleService, IProjectService};
+
+mod controllers;
+mod services;
+mod entities;
 
 // Hover to see docs
 env_config!(
@@ -42,9 +47,30 @@ pub const MAIN_TAG: &str = "project";
 
 struct ApiDoc;
 
-#[derive(Clone)]
-pub struct AppState<DB> where DB: Clone {
-    pub orm: Orm<DB>,
+pub type DB = sqlx::Postgres;
+pub type Orm = orm::prelude::Orm<sqlx::Pool<DB>>;
+
+
+#[derive(Default, Clone)]
+struct AppState {
+    orm: Option<Orm>,
+    project_service: Option<Arc<dyn IProjectService>>,
+    project_schedule_service: Option<Arc<dyn IProjectScheduleService>>
+} 
+
+impl AppState {
+    fn orm(&self) -> &Orm {
+        self.orm.as_ref().expect("Orm is not initialized")
+    }
+    fn orm_mut(&mut self) -> &mut Orm {
+        self.orm.as_mut().expect("Orm is not initialized")
+    }
+    fn project_service(&self) -> &Arc<dyn IProjectService> {
+        self.project_service.as_ref().expect("Project Service is not initialized")
+    }
+    fn project_schedule_service(&self) -> &Arc<dyn IProjectScheduleService> {
+        self.project_schedule_service.as_ref().expect("ProjectScheduleService is not initialized")
+    }
 }
 
 #[tokio::main]
@@ -60,8 +86,15 @@ async fn main() -> anyhow::Result<()> {
         .inspect_err(|e| info!("Can't connect to db: {e}"))?;
     info!("Connected to DB");
 
-    let orm = orm::prelude::Orm::new(pg);
-    let state = AppState{orm};
+    let mut state = AppState::default();
+    let orm = Orm::new(pg);
+    state.orm = Some(orm);
+
+    let project_service = services::new_project_service(state.clone());
+    state.project_service = Some(project_service);
+    
+    let project_schedule_service = services::new_project_schedule_service(state.clone());
+    state.project_schedule_service = Some(project_schedule_service);
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
@@ -70,7 +103,7 @@ async fn main() -> anyhow::Result<()> {
         .layer(axum::middleware::from_fn(logging_middleware))
         .layer(prometheus_layer)
         .layer(tower_http::catch_panic::CatchPanicLayer::new());
-
+    
     let metrics = axum::Router::new().route(
         "/metrics",
         get(move |TypedHeader(auth): TypedHeader<Authorization<Basic>>| async move {
@@ -83,28 +116,82 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .routes(routes!(
-            demo_route
-        ))
+        // .routes(
+        //     routes!(
+        //         secured_route
+        //     ).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        // )
+        // .routes(
+        //     routes!(
+        //         role_secured_route
+        //     )
+        //     .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::Inspector))
+        //     .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        // )
         .routes(
             routes!(
-                secured_route
-            ).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+                controllers::handle_get_project,
+            )
+        )
+         .routes(
+            routes!(
+                controllers::handle_create_project
+            )
         )
         .routes(
             routes!(
-                role_secured_route
+                controllers::handle_update_project
             )
-            .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::Inspector))
-            .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        )
+        .routes(
+            routes!(
+                controllers::handle_activate_project
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_add_iko_to_project
+            )
+        )
+         .routes(
+            routes!(
+                controllers::handle_create_project_schedule
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_add_work_to_schedule
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_update_work_schedule
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_update_works_in_schedule
+            )
+        )
+        .routes(
+            routes!(
+                controllers::handle_get_project_schedule
+            )
         )
         .with_state(state)
         .split_for_parts();
+    
+    let cors = tower_http::cors::CorsLayer::new()
+        .allow_origin("http://localhost:3000".parse::<axum::http::HeaderValue>()?)
+        .allow_methods(tower_http::cors::Any)
+        .allow_headers(tower_http::cors::Any)
+        .max_age(std::time::Duration::from_secs(3600));
     
     let app = axum::Router::new()
         .merge(Scalar::with_url("/docs/scalar", api))
         .merge(metrics)
         .merge(api_router)
+        .layer(cors)
         .layer(default_layers);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", CFG.PORT)).await
@@ -117,47 +204,4 @@ async fn main() -> anyhow::Result<()> {
     );
     axum::serve(listener, app.into_make_service()).await?;
     Ok(())
-}
-
-
-#[utoipa::path(
-    get,
-    path = "/hello_world",
-    tag = crate::MAIN_TAG,
-    summary = "Hello world",
-    responses(
-        (status = 200, description = "Hello world!"),
-    )
-)]
-async fn demo_route() -> String {
-    "Hello from project!".to_string()
-}
-
-
-#[utoipa::path(
-    get,
-    path = "/secured",
-    tag = crate::MAIN_TAG,
-    summary = "Secured route. Any authorized user can access it",
-    responses(
-        (status = 200, description = "You passed!"),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-async fn secured_route() -> String {
-    "Hello from secured!".to_string()
-}
-
-#[utoipa::path(
-    get,
-    path = "/specific_role",
-    tag = crate::MAIN_TAG,
-    summary = "Secured route. Only users with Operator or Inspector role can access it. Admin can access any route secured with this middleware",
-    responses(
-        (status = 200, description = "You passed!"),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-async fn role_secured_route() -> String {
-    "Hello from secured!".to_string()
 }
