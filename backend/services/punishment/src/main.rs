@@ -58,6 +58,7 @@ async fn main() -> anyhow::Result<()> {
         .connect(&ENV.DB_URL)
         .await
         .inspect_err(|e| info!("Can't connect to db: {e}"))?;
+    
     info!("Connected to DB");
 
     let orm = orm::prelude::Orm::new(pg);
