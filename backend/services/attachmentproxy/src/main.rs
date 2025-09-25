@@ -34,7 +34,7 @@ pub struct RequestParams {
 }
 
 #[utoipa::path(
-    post,
+    get,
     path = "/file/",
     params(RequestParams),
     tag = crate::MAIN_TAG,

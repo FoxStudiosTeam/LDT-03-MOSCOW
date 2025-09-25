@@ -4,7 +4,7 @@ use axum::response::IntoResponse;
 use axum::{Json, response::Response};
 use axum::extract::{Query, State};
 use orm::prelude::*;
-use schema::prelude::{ActiveMaterials, Materials, OrmMaterials};
+use schema::prelude::{ActiveMaterials, Attachments, Materials, OrmMaterials};
 use serde::{Deserialize};
 use shared::prelude::*;
 use utoipa::{ToSchema};
@@ -25,7 +25,7 @@ pub fn router(state: AppState) -> OpenApiRouter {
             get_by_project_schedule_item,
         ))
         .with_state(state)
-        .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator))
+        // .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator))
         .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
 }
 
@@ -144,13 +144,25 @@ pub async fn delete(
     Ok((StatusCode::OK, Json(r.uuid)).into_response())  
 }
 
+
+#[derive(Clone, Debug, ToSchema)]
+pub struct MaterialsResponse {
+    pub volume: f64,
+    pub uuid: uuid::Uuid,
+    pub project_schedule_item: uuid::Uuid,
+    pub delivery_date: chrono::NaiveDate,
+    pub measurement: i32,
+    pub title: String,
+    pub attachments: Vec<Attachments>,
+}
+
 #[utoipa::path(
     get,
     path = "/material/{id}",
     tag = crate::MAIN_TAG,
     summary = "Update a material",
     responses(
-        (status = 200, description = "Success", body = Materials),
+        (status = 200, description = "Success", body = MaterialsResponse),
         (status = 404, description = "Material with id not found"),
     )
 )]
@@ -170,7 +182,7 @@ pub async fn get(
     tag = crate::MAIN_TAG,
     summary = "Update a material",
     responses(
-        (status = 200, description = "Success", body = Vec<Materials>),
+        (status = 200, description = "Success", body = Vec<MaterialsResponse>),
     )
 )]
 pub async fn get_by_project_schedule_item(

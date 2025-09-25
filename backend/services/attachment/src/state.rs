@@ -42,13 +42,11 @@ impl AppState {
 
             tracing::info!("Received field: {} (filename: {})", name, file_name);
 
-            // Check MIME type if present
             if let Some(mime) = &content_type {
                 if !allowed_mimes.contains(mime.as_str()) {
                     return Ok((StatusCode::NOT_FOUND, format!("Invalid MIME type: {}", mime)).into_response());
                 }
             } else {
-                // Optionally, reject if MIME type is missing
                 return Ok((StatusCode::NOT_FOUND, "Missing Content-Type header".to_string()).into_response());
             }
 
