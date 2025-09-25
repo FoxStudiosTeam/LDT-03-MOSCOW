@@ -1,8 +1,11 @@
-use axum::{extract::{Path, State}, http::StatusCode, response::{IntoResponse, Response}, Json};
+use std::collections::HashMap;
+
+use axum::{Json, extract::{Path, Query, State}, http::StatusCode, response::{IntoResponse, Response}};
 use orm::prelude::Optional::{NotSet, Set};
 use serde::{Deserialize};
 use shared::prelude::{AppErr, IntoAppErr};
 use tracing::info;
+use utoipa::IntoParams;
 use utoipa_axum::{router::OpenApiRouter, routes};
 use schema::prelude::*;
 use uuid::Uuid;
@@ -79,9 +82,7 @@ pub struct AddReport{
     path = "/report/{uuid}",
     tag = crate::MAIN_TAG,
     summary = "Delete report",
-    params(
-        ("uuid" = Uuid, Path, description = "UUID of the report to delete")
-    ),
+    params(ReportRequest),
     responses(
         (status = 200, description = "Report deleted!", body = DeleteResponse),
         (status = 404, description = "Report not found", body = ErrorResponse),
@@ -89,11 +90,11 @@ pub struct AddReport{
 )]
 async fn delete_report(
     State(app): State<AppState>,
-    Path(uuid): Path<uuid::Uuid>,
+    Query(ReportRequest{report_id}): Query<ReportRequest>,
 ) -> Result<Response, AppErr> {
-    info!("Deleting report with UUID: {}", uuid);
+    info!("Deleting report with UUID: {}", report_id);
     
-    let result = app.orm.reports().delete_by_pk(&uuid).await.into_app_err()?;
+    let result = app.orm.reports().delete_by_pk(&report_id).await.into_app_err()?;
     
     match result {
         Some(report) => Ok((
@@ -132,57 +133,42 @@ pub struct ErrorResponse {
     get,
     path = "/get_report",
     tag = crate::MAIN_TAG,
+    params(ReportRequest),
     summary = "Get report",
     responses(
-        (status = 200, description = "Report found", body = ReportResponse),
+        (status = 200, description = "Report found", body = Reports),
         (status = 404, description = "Report not found", body = ErrorResponse),
     )
 )]
 async fn get_report(
     State(app): State<AppState>,
-    Json(r): Json<ReportRequest>,
+    Query(r): Query<ReportRequest>,
 ) -> Result<Response, AppErr> {
-    info!("Fetching report with UUID: {}", r.uuid);
+    info!("Fetching report with UUID: {}", r.report_id);
 
-    let result = app.orm.reports().select_by_pk(&r.uuid).await?;
+    let result = app.orm.reports().select_by_pk(&r.report_id).await?;
 
     match result {
         Some(report) => Ok((
             StatusCode::OK,
-            Json(ReportResponse {
-                uuid: report.uuid,
-                check_date: report.check_date,
-                report_date: report.report_date,
-                project_schedule_item: report.project_schedule_item,
-                status: report.status,
-            }),
+            Json(report),
         )
-            .into_response()),
+        .into_response()),
         None => Ok((
             StatusCode::NOT_FOUND,
             Json(ErrorResponse {
                 message: "Report not found".to_string(),
             }),
         )
-            .into_response()),
+        .into_response()),
     }
 }
 
-#[derive(serde::Deserialize, utoipa::ToSchema)]
+#[derive(serde::Deserialize, utoipa::ToSchema, IntoParams)]
 pub struct ReportRequest {
     #[schema(example=Uuid::new_v4)]
-    pub uuid: uuid::Uuid,
+    pub report_id: uuid::Uuid,
 }
-
-#[derive(serde::Serialize, utoipa::ToSchema)]
-pub struct ReportResponse {
-    pub uuid: uuid::Uuid,
-    pub check_date: Option<chrono::NaiveDate>,
-    pub report_date: chrono::NaiveDate,
-    pub project_schedule_item: uuid::Uuid,
-    pub status: i32,
-}
-
 
 //-----UPDATE REPORT-----
 
@@ -193,7 +179,7 @@ pub struct ReportResponse {
     summary = "Update report",
     request_body = UpdateReport,
     responses(
-        (status = 200, description = "Report updated", body = ReportResponse),
+        (status = 200, description = "Report updated", body = Reports),
         (status = 404, description = "Report not found", body = ErrorResponse),
     )
 )]
@@ -211,7 +197,7 @@ async fn update_report(
                 message: "Report not found".to_string(),
             }),
         )
-            .into_response());
+        .into_response());
     }
 
     let report = ActiveReports {
@@ -241,13 +227,7 @@ async fn update_report(
 
     Ok((
         StatusCode::OK,
-        Json(ReportResponse {
-            uuid: updated.uuid,
-            check_date: updated.check_date,
-            report_date: updated.report_date,
-            project_schedule_item: updated.project_schedule_item,
-            status: updated.status,
-        }),
+        Json(updated),
     )
         .into_response())
 }
@@ -276,31 +256,94 @@ pub struct UpdateReport {
     pub status: Option<i32>,
 }
 
+
+#[derive(serde::Serialize, utoipa::ToSchema)]
+pub struct ReportWithAttachments {
+    report: Reports,
+    attachments: Vec<Attachments>,
+}
+
+#[derive(sqlx::FromRow)]
+pub struct ReportWithAttachmentsRecord {
+    #[sqlx(flatten)]
+    report: Reports,
+    #[sqlx(flatten)]
+    attachments: OptionalAttachments,
+}
+
+
+
+#[derive(sqlx::FromRow, Default, Debug)]
+pub struct OptionalAttachments {
+    pub original_filename: Option<String>,
+    pub attachment_uuid: Option<uuid::Uuid>,
+    pub base_entity_uuid: Option<uuid::Uuid>,
+    pub file_uuid: Option<uuid::Uuid>,
+    pub content_type: Option<String>,
+}
+
+impl OptionalAttachments {
+    fn into_attachments(self) -> Option<Attachments> {
+        Some(Attachments {
+            original_filename: self.original_filename?,
+            uuid: self.attachment_uuid?,
+            base_entity_uuid: self.base_entity_uuid?,
+            file_uuid: self.file_uuid?,
+            content_type: self.content_type,
+        })
+    }
+}
+
+
+
 #[utoipa::path(
     get,
     path = "/get_reports",
     tag = crate::MAIN_TAG,
     summary = "Get reports",
+    params(ReportsRequest),
     responses(
-        (status = 200, description = "Reports found", body = Vec<ReportResponse>),
+        (status = 200, description = "Reports found", body = Vec<ReportWithAttachments>),
         (status = 400, description = "Project schedule ton found", body=ErrorResponse)
     )
 )]
 async fn get_reports(
     State(app): State<AppState>,
-    Json(r): Json<ReportsRequest>,
+    Query(r): Query<ReportsRequest>,
 ) -> Result<Response, AppErr> {
     info!("Fetching report with UUID: {}", r.project_schedule_item);
 
-    app.orm.project_schedule_items().select_by_pk(&r.project_schedule_item).await?
-    .ok_or_else(|| AppErr::default().with_status(StatusCode::BAD_REQUEST).with_err_response("Project schedule item not found"))?;
 
-    let result = app.orm.reports().select("Where project_schedule_item = $1").bind(&r.project_schedule_item).fetch().await?;
+    let rows = sqlx::query_as::<_, ReportWithAttachmentsRecord>("
+        SELECT re.*, 
+        a.uuid AS attachment_uuid,
+        a.original_filename,
+        a.base_entity_uuid,
+        a.file_uuid,
+        a.content_type
+        FROM norm.reports re
+        LEFT JOIN attachment.attachments a ON a.base_entity_uuid = re.uuid
+        WHERE re.project_schedule_item = $1;
+    ").bind(r.project_schedule_item).fetch_all(app.orm.get_executor()).await.into_app_err()?;
 
-    Ok((StatusCode::OK, Json(result)).into_response())
+    let mut hm = HashMap::new();
+
+    for row in rows {
+        let a = row.attachments.into_attachments();
+        let e = &mut hm.entry(row.report.uuid.clone())
+            .or_insert_with(|| ReportWithAttachments {
+                attachments: vec![], 
+                report: row.report
+            })
+            .attachments;
+        let Some(a) = a else {continue};
+        e.push(a);  
+    }
+    let v = hm.into_values().collect::<Vec<_>>();
+    Ok((StatusCode::OK, Json(v)).into_response())
 }
 
-#[derive(serde::Deserialize, utoipa::ToSchema)]
+#[derive(serde::Deserialize, utoipa::ToSchema, IntoParams)]
 pub struct ReportsRequest {
     #[schema(example=Uuid::new_v4)]
     pub project_schedule_item: uuid::Uuid,
