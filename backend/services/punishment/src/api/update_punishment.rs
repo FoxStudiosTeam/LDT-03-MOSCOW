@@ -28,14 +28,14 @@ pub async fn update_punishment(
 
     let ext_p = app.orm.punishment().select_by_pk(&r.uuid).await?.ok_or_else(|| AppErr::default()
     .with_status(StatusCode::NOT_FOUND)
-    .with_response("Punishment not found".into_response()))?;
+    .with_err_response("Punishment not found"))?;
 
     match r.project {
         Some(p) => app.orm.project().select_by_pk(&p).await?,
         None => app.orm.project().select_by_pk(&ext_p.project).await?,
     }.ok_or_else(|| AppErr::default()
         .with_status(StatusCode::NOT_FOUND)
-        .with_response("Punishment not found".into_response()))?;         
+        .with_err_response("Punishment not found"))?;         
 
     let status = match &r.items {
         Some(items) => {
@@ -65,7 +65,7 @@ pub async fn update_punishment(
     };
     let raw_punishment = app.orm.punishment().save(record, Update).await?.ok_or_else(|| AppErr::default()
     .with_status(StatusCode::INTERNAL_SERVER_ERROR)
-    .with_response("Punishment not recorded".into_response()))?;
+    .with_err_response("Punishment not recorded"))?;
     info!("{:?}", raw_punishment);
     tracing::info!("Result: {:?}", raw_punishment);
     
@@ -75,11 +75,11 @@ pub async fn update_punishment(
                 app.orm.punishment_item().select_by_pk(&item.uuid).await?
                 .ok_or_else(|| AppErr::default()
                 .with_status(StatusCode::NOT_FOUND)
-                .with_response("Punishment item not found".into_response()))?;
+                .with_err_response("Punishment item not found"))?;
                 app.orm.punishment_item().save(item.into_active(), Update).await?
                 .ok_or_else(|| AppErr::default()
                 .with_status(StatusCode::INTERNAL_SERVER_ERROR)
-                .with_response("Punishment item not recorded".into_response()))?;
+                .with_err_response("Punishment item not recorded"))?;
                 ()
             }
         },

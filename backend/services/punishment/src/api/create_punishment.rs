@@ -39,12 +39,12 @@ pub async fn create_punishment(
         let punishment_datetime = *dates.iter().min()
                 .ok_or_else(|| AppErr::default()
                 .with_status(StatusCode::BAD_REQUEST)
-                .with_response("Incorrect dates".into_response()))?;
+                .with_err_response("Incorrect dates"))?;
 
         let status = *statuses.iter().max()
                 .ok_or_else(|| AppErr::default()
                 .with_status(StatusCode::BAD_REQUEST)
-                .with_response("Incorrect statuses".into_response()))?;
+                .with_err_response("Incorrect statuses"))?;
         
         let uuid = Uuid::new_v4();
         let record = ActivePunishment{
@@ -60,7 +60,7 @@ pub async fn create_punishment(
 
         let mut result = !(raw_punishment.ok_or_else(|| AppErr::default()
         .with_status(StatusCode::BAD_REQUEST)
-        .with_response("Punishment not recorded".into_response()))?
+        .with_err_response("Punishment not recorded"))?
         .project.to_string().is_empty());
         
         let punishment = app.orm.punishment().select_by_pk(&uuid).await?;
@@ -83,14 +83,14 @@ pub async fn create_punishment(
                 tracing::info!("Result: {:?}", raw_item);
                 result = !(raw_item.ok_or_else(|| AppErr::default()
                 .with_status(StatusCode::BAD_REQUEST)
-                .with_response("Result not recorded".into_response()))?
+                .with_err_response("Result not recorded"))?
                 .title.to_string().is_empty());
             };
         }
         Ok((StatusCode::OK, Json(result)).into_response())
     }
     else {
-        Err(AppErr::default().with_status(StatusCode::NOT_FOUND).with_response("Project not found".into_response()))
+        Err(AppErr::default().with_status(StatusCode::NOT_FOUND).with_err_response("Project not found"))
     }
 }
 
