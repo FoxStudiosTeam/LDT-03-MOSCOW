@@ -91,7 +91,7 @@ async fn main() -> anyhow::Result<()> {
         .merge(Scalar::with_url("/docs/scalar", api))
         .merge(metrics)
         .merge(api_router)
-        
+        .layer(shared::helpers::cors::cors_layer())
         .layer(default_layers);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", CFG.PORT)).await

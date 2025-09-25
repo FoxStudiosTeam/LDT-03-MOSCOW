@@ -24,24 +24,8 @@ impl ProjectScheduleItems {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct ProjectScheduleItems {
-    pub project_schedule_uuid: uuid::Uuid,
-    pub created_by: uuid::Uuid,
-    pub is_completed: bool,
-    pub uuid: uuid::Uuid,
-    pub work_uuid: uuid::Uuid,
-    pub start_date: chrono::NaiveDate,
-    pub end_date: chrono::NaiveDate,
-    pub target_volume: f64,
-    pub updated_by: Option<uuid::Uuid>,
-    pub is_draft: bool,
-    pub is_deleted: bool,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct ProjectScheduleItems {
     pub project_schedule_uuid: uuid::Uuid,

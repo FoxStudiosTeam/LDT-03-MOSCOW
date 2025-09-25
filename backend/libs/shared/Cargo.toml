@@ -6,6 +6,8 @@ edition = "2024"
 [dependencies]
 anyhow = "*"
 axum = "*"
+serde = "1.0.226"
+tower-http = { version = "0.6.6", features = ["cors"] }
 tracing = "*"
 utoipa = "*"
 uuid = "*"
