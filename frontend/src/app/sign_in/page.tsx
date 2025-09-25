@@ -6,6 +6,7 @@ import {useState} from "react";
 import {useForm} from "react-hook-form";
 import {LoginFormData} from "@/models";
 import {AuthUser} from "@/app/Api/Api";
+import {useUserStore} from "@/storage/userstore";
 
 const validationSchema = Yup.object().shape({
     email: Yup.string()
@@ -22,13 +23,15 @@ export default function SignIn() {
     const {register, handleSubmit, formState: {errors}} = useForm({
         resolver: yupResolver(validationSchema)
     })
+    const setUserData = useUserStore((state)=>state.setUserData);
 
     const onSubmit = async (data: LoginFormData) => {
         try {
-            const {success, message} = await AuthUser(data.email, data.password);
-            if (success) {
-
-
+            const {success, message, decoded} = await AuthUser(data.email, data.password);
+            if (success && decoded) {
+                console.log(decoded)
+                setUserData({role:decoded.role, org:decoded.org})
+                window.location.href = '/list_objects/';
             } else {
                 setMessage(message || "Ошибка авторизации");
             }
@@ -71,8 +74,10 @@ export default function SignIn() {
                     >
                         Войти
                     </button>
+
                     {message && <p className="w-full text-center text-red-600 mt-2">{message}</p>}
                 </form>
+
             </div>
         </div>
     );

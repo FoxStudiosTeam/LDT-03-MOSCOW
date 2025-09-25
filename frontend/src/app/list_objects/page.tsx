@@ -49,204 +49,7 @@ const projects: Project[] = [
         mapUrl:
             "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/640px-World_map_blank_without_borders.svg.png",
     },
-        {
-        id: 1,
-        address: "ул. Волковское шоссе, д. 12",
-        status: "В работе",
-        customer: "ГКУ МСК Представитель: Иванов И.И.",
-        contractor: "ООО СтройГрад Исполнитель: Сидоров И.И.",
-        inspector: "Петров П.П.",
-        coordinates: { x: -123, y: 45, z: -999 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Openstreetmap_map.png/640px-Openstreetmap_map.png",
-    },
-    {
-        id: 2,
-        address: "ул. Флотская, д. 54, 58к1",
-        status: "В норме",
-        customer: "ГУП МОСИНЖПРОЕКТ Представитель: Смирнов А.А.",
-        contractor: "ООО Мир Пива Исполнитель: Сидоров И.И.",
-        inspector: "Бугалин И.И.",
-        coordinates: { x: -1230, y: 68, z: -99993 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/OpenStreetMap_logo.svg/512px-OpenStreetMap_logo.svg.png",
-    },
-    {
-        id: 3,
-        address: "пр-т Мира, д. 150",
-        status: "На проверке",
-        customer: "ГКУ МосАвтоДор Представитель: Васильев В.В.",
-        contractor: "АО ИнжСтрой Исполнитель: Кузнецов К.К.",
-        inspector: "Фёдоров Ф.Ф.",
-        coordinates: { x: 100, y: -50, z: 2500 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/640px-World_map_blank_without_borders.svg.png",
-    },
-        {
-        id: 1,
-        address: "ул. Волковское шоссе, д. 12",
-        status: "В работе",
-        customer: "ГКУ МСК Представитель: Иванов И.И.",
-        contractor: "ООО СтройГрад Исполнитель: Сидоров И.И.",
-        inspector: "Петров П.П.",
-        coordinates: { x: -123, y: 45, z: -999 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Openstreetmap_map.png/640px-Openstreetmap_map.png",
-    },
-    {
-        id: 2,
-        address: "ул. Флотская, д. 54, 58к1",
-        status: "В норме",
-        customer: "ГУП МОСИНЖПРОЕКТ Представитель: Смирнов А.А.",
-        contractor: "ООО Мир Пива Исполнитель: Сидоров И.И.",
-        inspector: "Бугалин И.И.",
-        coordinates: { x: -1230, y: 68, z: -99993 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/OpenStreetMap_logo.svg/512px-OpenStreetMap_logo.svg.png",
-    },
-    {
-        id: 3,
-        address: "пр-т Мира, д. 150",
-        status: "На проверке",
-        customer: "ГКУ МосАвтоДор Представитель: Васильев В.В.",
-        contractor: "АО ИнжСтрой Исполнитель: Кузнецов К.К.",
-        inspector: "Фёдоров Ф.Ф.",
-        coordinates: { x: 100, y: -50, z: 2500 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/640px-World_map_blank_without_borders.svg.png",
-    },
-        {
-        id: 1,
-        address: "ул. Волковское шоссе, д. 12",
-        status: "В работе",
-        customer: "ГКУ МСК Представитель: Иванов И.И.",
-        contractor: "ООО СтройГрад Исполнитель: Сидоров И.И.",
-        inspector: "Петров П.П.",
-        coordinates: { x: -123, y: 45, z: -999 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Openstreetmap_map.png/640px-Openstreetmap_map.png",
-    },
-    {
-        id: 2,
-        address: "ул. Флотская, д. 54, 58к1",
-        status: "В норме",
-        customer: "ГУП МОСИНЖПРОЕКТ Представитель: Смирнов А.А.",
-        contractor: "ООО Мир Пива Исполнитель: Сидоров И.И.",
-        inspector: "Бугалин И.И.",
-        coordinates: { x: -1230, y: 68, z: -99993 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/OpenStreetMap_logo.svg/512px-OpenStreetMap_logo.svg.png",
-    },
-    {
-        id: 3,
-        address: "пр-т Мира, д. 150",
-        status: "На проверке",
-        customer: "ГКУ МосАвтоДор Представитель: Васильев В.В.",
-        contractor: "АО ИнжСтрой Исполнитель: Кузнецов К.К.",
-        inspector: "Фёдоров Ф.Ф.",
-        coordinates: { x: 100, y: -50, z: 2500 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/640px-World_map_blank_without_borders.svg.png",
-    },
-        {
-        id: 1,
-        address: "ул. Волковское шоссе, д. 12",
-        status: "В работе",
-        customer: "ГКУ МСК Представитель: Иванов И.И.",
-        contractor: "ООО СтройГрад Исполнитель: Сидоров И.И.",
-        inspector: "Петров П.П.",
-        coordinates: { x: -123, y: 45, z: -999 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Openstreetmap_map.png/640px-Openstreetmap_map.png",
-    },
-    {
-        id: 2,
-        address: "ул. Флотская, д. 54, 58к1",
-        status: "В норме",
-        customer: "ГУП МОСИНЖПРОЕКТ Представитель: Смирнов А.А.",
-        contractor: "ООО Мир Пива Исполнитель: Сидоров И.И.",
-        inspector: "Бугалин И.И.",
-        coordinates: { x: -1230, y: 68, z: -99993 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/OpenStreetMap_logo.svg/512px-OpenStreetMap_logo.svg.png",
-    },
-    {
-        id: 3,
-        address: "пр-т Мира, д. 150",
-        status: "На проверке",
-        customer: "ГКУ МосАвтоДор Представитель: Васильев В.В.",
-        contractor: "АО ИнжСтрой Исполнитель: Кузнецов К.К.",
-        inspector: "Фёдоров Ф.Ф.",
-        coordinates: { x: 100, y: -50, z: 2500 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/640px-World_map_blank_without_borders.svg.png",
-    },
-        {
-        id: 1,
-        address: "ул. Волковское шоссе, д. 12",
-        status: "В работе",
-        customer: "ГКУ МСК Представитель: Иванов И.И.",
-        contractor: "ООО СтройГрад Исполнитель: Сидоров И.И.",
-        inspector: "Петров П.П.",
-        coordinates: { x: -123, y: 45, z: -999 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Openstreetmap_map.png/640px-Openstreetmap_map.png",
-    },
-    {
-        id: 2,
-        address: "ул. Флотская, д. 54, 58к1",
-        status: "В норме",
-        customer: "ГУП МОСИНЖПРОЕКТ Представитель: Смирнов А.А.",
-        contractor: "ООО Мир Пива Исполнитель: Сидоров И.И.",
-        inspector: "Бугалин И.И.",
-        coordinates: { x: -1230, y: 68, z: -99993 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/OpenStreetMap_logo.svg/512px-OpenStreetMap_logo.svg.png",
-    },
-    {
-        id: 3,
-        address: "пр-т Мира, д. 150",
-        status: "На проверке",
-        customer: "ГКУ МосАвтоДор Представитель: Васильев В.В.",
-        contractor: "АО ИнжСтрой Исполнитель: Кузнецов К.К.",
-        inspector: "Фёдоров Ф.Ф.",
-        coordinates: { x: 100, y: -50, z: 2500 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/640px-World_map_blank_without_borders.svg.png",
-    },
-        {
-        id: 1,
-        address: "ул. Волковское шоссе, д. 12",
-        status: "В работе",
-        customer: "ГКУ МСК Представитель: Иванов И.И.",
-        contractor: "ООО СтройГрад Исполнитель: Сидоров И.И.",
-        inspector: "Петров П.П.",
-        coordinates: { x: -123, y: 45, z: -999 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Openstreetmap_map.png/640px-Openstreetmap_map.png",
-    },
-    {
-        id: 2,
-        address: "ул. Флотская, д. 54, 58к1",
-        status: "В норме",
-        customer: "ГУП МОСИНЖПРОЕКТ Представитель: Смирнов А.А.",
-        contractor: "ООО Мир Пива Исполнитель: Сидоров И.И.",
-        inspector: "Бугалин И.И.",
-        coordinates: { x: -1230, y: 68, z: -99993 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/OpenStreetMap_logo.svg/512px-OpenStreetMap_logo.svg.png",
-    },
-    {
-        id: 3,
-        address: "пр-т Мира, д. 150",
-        status: "На проверке",
-        customer: "ГКУ МосАвтоДор Представитель: Васильев В.В.",
-        contractor: "АО ИнжСтрой Исполнитель: Кузнецов К.К.",
-        inspector: "Фёдоров Ф.Ф.",
-        coordinates: { x: 100, y: -50, z: 2500 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/640px-World_map_blank_without_borders.svg.png",
-    },
+
 ];
 
 export default function ProjectsPage() {
@@ -260,7 +63,7 @@ export default function ProjectsPage() {
         <div className="flex justify-center bg-[#D0D0D0]">
             <Header />
 
-            <main className="w-[60%] bg-white px-8 pt-2">
+            <main className="w-[60%] bg-white px-8 pt-[50px]">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-xl font-semibold">Ваши объекты</h1>
                 </div>
@@ -305,15 +108,15 @@ export default function ProjectsPage() {
                                     {project.inspector && (
                                         <p>Ответственный инспектор: {project.inspector}</p>
                                     )}
-                                    {project.mapUrl && (
-                                        <Image
-                                            src={project.mapUrl}
-                                            alt="Карта"
-                                            className="w-full h-64 object-cover rounded-md"
-                                            width={50}
-                                            height={50}
-                                        />
-                                    )}
+                                    {/*{project.mapUrl && (*/}
+                                    {/*    <Image*/}
+                                    {/*        src={project.mapUrl}*/}
+                                    {/*        alt="Карта"*/}
+                                    {/*        className="w-full h-64 object-cover rounded-md"*/}
+                                    {/*        width={50}*/}
+                                    {/*        height={50}*/}
+                                    {/*    />*/}
+                                    {/*)}*/}
                                     {project.coordinates && (
                                         <p>
                                             Координаты: X: {project.coordinates.x}, Y:{" "}
