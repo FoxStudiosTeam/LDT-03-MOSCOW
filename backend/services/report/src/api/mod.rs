@@ -36,7 +36,7 @@ pub fn make_router(state: AppState) -> OpenApiRouter {
     get,
     path = "/get_statuses",
     tag = crate::MAIN_TAG,
-    summary = "Add report",
+    summary = "Get report statuses",
     responses(
         (status = 200, description = "Statuses fetched", body=ReportStatuses)
     )
