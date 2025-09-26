@@ -2,7 +2,7 @@
 
 import {jwtDecode} from "jwt-decode";
 
-const baseURL = "https://sso.foxstudios.ru:32460";
+const baseURL = "https://test.foxstudios.ru:32460/api";
 
 interface TokenPayload {
     exp: number;
@@ -13,7 +13,7 @@ interface TokenPayload {
 
 export async function AuthUser(login: string, password: string) {
     try {
-        const response = await fetch(`${baseURL}/api/auth/session`, {
+        const response = await fetch(`https://sso.foxstudios.ru:32460/api/auth/session`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -28,6 +28,22 @@ export async function AuthUser(login: string, password: string) {
         return { success: true, message: result.message, decoded };
     } catch (error) {
         console.error("Ошибка при авторизации:", error);
+        return { success: false, message: String(error) };
+    }
+}
+
+export async function CreateObject(address:string, polygon:string, ssk:string){
+    try {
+        const response = await fetch(`${baseURL}/project/create-project`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address, polygon, ssk })
+        });
+        const result = await response.json();
+        return { success: true, message: null, result: result.uuid };
+    } catch (error) {
+        console.error("Ошибка создания объекта:", error);
         return { success: false, message: String(error) };
     }
 }

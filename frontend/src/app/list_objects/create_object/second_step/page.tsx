@@ -46,7 +46,7 @@ export default function SecondStep() {
                                     <td>{item.startDate}</td>
                                     <td>{item.endDate}</td>
                                     <td className="flex flex-row gap-3">
-                                        <Link href={`/list_objects/create_object/second_step/${itemIdx}`}><Image alt="Редактирование" src={'/Tables/edit.svg'} height={15} width={15}></Image></Link>
+                                        <Link href={`/list_objects/create_object/second_step/edit/${itemIdx}`}><Image alt="Редактирование" src={'/Tables/edit.svg'} height={15} width={15}></Image></Link>
                                         <button onClick={() => deleteJob(item.id)}><Image alt="Редактирование" src={'/Tables/delete.svg'} height={15} width={15}></Image></button>
                                     </td>
                                 </tr>

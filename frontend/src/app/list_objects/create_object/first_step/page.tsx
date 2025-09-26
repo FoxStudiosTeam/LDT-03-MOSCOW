@@ -6,8 +6,10 @@ import { Geometry } from "@yandex/ymaps3-types/imperative/YMapFeature/types";
 import { LngLat } from "ymaps3";
 import { Header } from "@/app/components/header";
 import { useForm } from "react-hook-form";
-import { FirstStep } from "@/models";
+import { FirstStepForm } from "@/models";
 import { useUserStore } from "@/storage/userstore";
+import {CreateObject} from "@/app/Api/Api";
+
 
 function getCenter(geom: Geometry): LngLat {
     let verts: LngLat[] = [[0.0, 0.0]];
@@ -34,26 +36,25 @@ export default function FirstStep() {
     const [message, setMessage] = useState<string>("");
     const userData = useUserStore((state) => state.userData);
 
-    const { register, handleSubmit, formState: { errors }, setValue } = useForm<FirstStep>({
-        defaultValues: {
-            address: null,
-            polygon: null,
-        }
+    const { register, handleSubmit, setValue } = useForm<FirstStepForm>({
     });
 
-    const onSubmit = async (data: FirstStep) => {
+    const onSubmit = async (data: FirstStepForm) => {
         if (!data || !userData) {
             setMessage("Повторите попытку");
             return;
-        };
+        }
 
-        const file = JSON.stringify(data.polygon)
-        console.log('file', file)
+        try {
+            const {success, message, result} = await CreateObject(data.address, data.polygon, userData.uuid);
+            if (success && result) {
+                console.log(result)
 
-        const payload = {
-            address: data.address,
-            polygon: data.polygon,
-            ssk: userData.uuid,
+            } else {
+                setMessage(message || "Ошибка создания объекта");
+            }
+        } catch (error) {
+            setMessage(`${error}`);
         }
     }
 
@@ -77,6 +78,7 @@ export default function FirstStep() {
 
         try {
             const text = await file.text();
+            setValue("polygon", text)
             const json = JSON.parse(text);
 
             if (typeof json !== "object" || !json.type || !json.coordinates) {
@@ -89,7 +91,7 @@ export default function FirstStep() {
                 return;
             }
 
-            const checkCoords = (coords: any): boolean => {
+            const checkCoords = (coords: unknown): boolean => {
                 if (!Array.isArray(coords)) return false;
                 if (typeof coords[0] === "number" && typeof coords[1] === "number") {
                     return true;
@@ -114,7 +116,7 @@ export default function FirstStep() {
 
         try {
             const response = await fetch(
-                `https://geocode-maps.yandex.ru/1.x/?apikey=7b60bdd3-421b-48dd-a1f2-cc8b75cdcc5a&format=json&geocode=${encodeURIComponent(
+                `https://geocode-maps.yandex.ru/1.x/?apikey=API_KEY&format=json&geocode=${encodeURIComponent(
                     searchValue
                 )}`
             );

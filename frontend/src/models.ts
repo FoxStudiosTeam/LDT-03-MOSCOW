@@ -3,8 +3,8 @@ export interface LoginFormData {
     password: string;
 }
 
-export interface FirstStep {
-    address: string | null;
-    polygon: string | null;
-    ssk: string | null;
+export interface FirstStepForm {
+    address: string;
+    polygon: string;
+    ssk: string;
 }
