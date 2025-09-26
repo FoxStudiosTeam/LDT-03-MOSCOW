@@ -22,6 +22,8 @@ migrate_project:
 	refinery migrate -p ./backend/.migrations/project --table-name refinery_project_history
 migrate_fk:
 	refinery migrate -p ./backend/.migrations/fk --table-name refinery_fk_history
+migrate_data:
+	refinery migrate -p ./backend/.migrations/data --table-name refinery_data_history
 migrate:
 	make migrate_attachment
 	make migrate_journal
@@ -29,3 +31,4 @@ migrate:
 	make migrate_product
 	make migrate_project
 	make migrate_fk
+	make migrate_data
