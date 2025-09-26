@@ -1,4 +1,5 @@
-use axum::Json;
+use auth_jwt::structs::AccessTokenPayload;
+use axum::{Extension, Json};
 use axum::{extract::State, response::Response};
 use schema::prelude::*;
 use shared::prelude::*;
@@ -92,7 +93,11 @@ pub async fn handle_add_iko_to_project(State(state) : State<AppState>, Json(r) :
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_create_project_schedule(State(state) : State<AppState>, Json(r) : Json<CreateProjectScheduleRequest>) -> Result<Response, AppErr> {
+pub async fn handle_create_project_schedule(
+    State(state) : State<AppState>, 
+    
+    Json(r) : Json<CreateProjectScheduleRequest>,
+) -> Result<Response, AppErr> {
     return state.project_schedule_service().create_project_schedule(r).await
 }
 
@@ -152,6 +157,9 @@ pub async fn handle_update_works_in_schedule(State(state) : State<AppState>, Jso
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_get_project_schedule(State(state) : State<AppState>, Json(r) : Json<GetProjectScheduleRequest>) -> Result<Response, AppErr> {
+pub async fn handle_get_project_schedule(
+    State(state) : State<AppState>, 
+    Json(r) : Json<GetProjectScheduleRequest>
+) -> Result<Response, AppErr> {
     return state.project_schedule_service().get_project_schedule(r).await
 }
