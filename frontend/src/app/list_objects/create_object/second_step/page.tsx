@@ -15,7 +15,7 @@ export default function SecondStep() {
             <Header />
             <main className="w-[80%] bg-white px-8 flex flex-col items-center gap-4 ">
                 <div className="w-full flex flex-row justify-between">
-                    <p>Новый объект</p>
+                    <p className="font-bold">Новый объект</p>
                     <p>Этап 2 из 2</p>
                 </div>
 
@@ -46,7 +46,7 @@ export default function SecondStep() {
                                     <td>{item.startDate}</td>
                                     <td>{item.endDate}</td>
                                     <td className="flex flex-row gap-3">
-                                        <Link href={`/list_objects/create_object/second_step/${itemIdx}`}><Image alt="Редактирование" src={'/Tables/edit.svg'} height={15} width={15}></Image></Link>
+                                        <Link href={`/list_objects/create_object/second_step/edit/${itemIdx}`}><Image alt="Редактирование" src={'/Tables/edit.svg'} height={15} width={15}></Image></Link>
                                         <button onClick={() => deleteJob(item.id)}><Image alt="Редактирование" src={'/Tables/delete.svg'} height={15} width={15}></Image></button>
                                     </td>
                                 </tr>

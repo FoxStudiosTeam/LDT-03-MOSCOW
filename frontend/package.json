@@ -9,10 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@yandex/ymaps3-types": "^1.0.17566762",
     "next": "15.5.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-hook-form": "^7.63.0",
     "uuid": "^13.0.0",
+    "yup": "^1.7.1",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -24,6 +28,7 @@
     "@yandex/ymaps3-types": "^1.0.17595433",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
+    "jwt-decode": "^4.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

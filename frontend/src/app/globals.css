@@ -49,6 +49,7 @@ button {
 
 main {
     min-height: calc(100vh - 50px);
+    padding-top: 20px;
 }
 
 body {

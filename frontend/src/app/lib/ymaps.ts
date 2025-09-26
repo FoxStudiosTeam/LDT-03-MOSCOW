@@ -16,7 +16,7 @@ export async function loadYMaps3(): Promise<YMaps3Modules> {
   if (_ymaps3Modules) {
     console.warn("YMaps3 already loaded");
     return _ymaps3Modules;
-  };
+  }
   console.warn("YMaps3 loading...");
 
   if (typeof window === "undefined") throw new Error("YMaps3 can only load in browser");
