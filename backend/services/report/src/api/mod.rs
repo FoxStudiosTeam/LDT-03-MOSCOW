@@ -14,7 +14,8 @@ use crate::AppState;
 pub fn make_router(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
         .routes(routes!(
-            add_report
+            add_report,
+            get_report_statuses
         ))
         .routes(routes!(
             delete_report
@@ -30,6 +31,23 @@ pub fn make_router(state: AppState) -> OpenApiRouter {
         ))
         .with_state(state)
 }
+
+#[utoipa::path(
+    get,
+    path = "/get_statuses",
+    tag = crate::MAIN_TAG,
+    summary = "Add report",
+    responses(
+        (status = 200, description = "Statuses fetched", body=ReportStatuses)
+    )
+)]
+async fn get_report_statuses(
+    State(app): State<AppState>,
+) -> Result<Response, AppErr> {
+    let result = app.orm.report_statuses().select("").fetch().await?;
+    Ok((StatusCode::OK, Json(result)).into_response())
+}
+
 //-----ADD REPORT-----
 
 #[utoipa::path(
