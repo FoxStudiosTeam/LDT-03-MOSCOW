@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 type UserData = {
     role: string;
     org: string;
+    uuid?: string; //возможно уйдет
 } | null;
 
 type UserState = {

@@ -15,7 +15,8 @@
     "react-dom": "^19.1.1",
     "uuid": "^13.0.0",
     "yup": "^1.7.1",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.8",
+    "@yandex/ymaps3-types": "^1.0.17566762"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

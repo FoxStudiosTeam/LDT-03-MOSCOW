@@ -29,8 +29,7 @@ export default function SignIn() {
         try {
             const {success, message, decoded} = await AuthUser(data.email, data.password);
             if (success && decoded) {
-                console.log(decoded)
-                setUserData({role:decoded.role, org:decoded.org})
+                setUserData({role:decoded.role, org:decoded.org, uuid:decoded.uuid})
                 window.location.href = '/list_objects/';
             } else {
                 setMessage(message || "Ошибка авторизации");

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Header } from "@/app/components/header";
-import Image from "next/image";
+import Link from "next/link";
+
 
 interface Project {
     id: number;
@@ -63,7 +64,7 @@ export default function ProjectsPage() {
         <div className="flex justify-center bg-[#D0D0D0]">
             <Header />
 
-            <main className="w-[60%] bg-white px-8 pt-[50px]">
+            <main className="w-[80%] bg-white px-8 pt-[50px]">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-xl font-semibold">Ваши объекты</h1>
                 </div>
@@ -75,9 +76,9 @@ export default function ProjectsPage() {
                     <button className="bg-red-700 text-white px-4 py-2 rounded-md">
                         Завершенные
                     </button>
-                    <button className="bg-red-700 text-white px-4 py-2 rounded-md">
+                    <Link className="bg-red-700 text-white px-4 py-2 rounded-md" href={"/list_objects/create_object/first_step/"}>
                         Создать новый
-                    </button>
+                    </Link>
                 </div>
 
                 <div className="space-y-4">
