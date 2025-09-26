@@ -89,7 +89,7 @@ async fn main() -> anyhow::Result<()> {
         .split_for_parts();
     
     let app = axum::Router::new()
-        .merge(Scalar::with_url("/docs/scalar", api))
+        .merge(Scalar::with_url("/api/materials/docs/scalar", api))
         .merge(api_router)
         .merge(metrics)
         .layer(shared::helpers::cors::cors_layer())
@@ -100,7 +100,7 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Listening on 0.0.0.0:{}", CFG.PORT);
     info!(
-        "Try scalar docs on http://127.0.0.1:{}/docs/scalar",
+        "Try scalar docs on http://127.0.0.1:{}/api/materials/docs/scalar",
         CFG.PORT
     );
     axum::serve(listener, app.into_make_service()).await?;
