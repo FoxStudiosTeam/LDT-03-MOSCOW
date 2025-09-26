@@ -18,9 +18,13 @@ pub async fn get_regulation_docs(
     State(app): State<AppState>,
     Json(r): Json<DocsRequest>
 ) -> Result<Response, AppErr> {
+    let title_opt = r.title.as_ref()
+    .map(|t| t.trim()).filter(|t| !t.is_empty() || *t == " "); 
 
-    if let Some(title) = r.title {
-        let result = app.orm.regulation_docs().select("Where title Like $1").bind(title).fetch().await.into_app_err()?;
+    if let Some(title) = title_opt {
+        let title_formatted = format!("%{}%",title);
+        tracing::info!("Title: {:?}", title);
+        let result = app.orm.regulation_docs().select("where title ILIKE $1 ").bind(&title_formatted).fetch().await.into_app_err()?;
         tracing::info!("Result: {:?}", result.len());
         Ok((StatusCode::OK, Json(result)).into_response())
     }
