@@ -26,7 +26,7 @@ pub fn router(state: AppState) -> OpenApiRouter {
         ))
         .with_state(state)
         // .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator))
-        .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
 }
 
 #[derive(Deserialize, ToSchema)]

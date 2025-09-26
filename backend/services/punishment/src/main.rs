@@ -98,7 +98,7 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Listening on 0.0.0.0:{}", CFG.PORT);
     info!(
-        "Try scalar docs on http://127.0.0.1:{}/docs/scalar",
+        "Try scalar docs on http://127.0.0.1:{}/api/punishment/docs/scalar",
         CFG.PORT
     );
     axum::serve(listener, app.into_make_service()).await?;

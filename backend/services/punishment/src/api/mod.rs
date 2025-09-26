@@ -19,14 +19,14 @@ pub fn make_router(state: AppState) -> OpenApiRouter {
         .routes(routes!(
             get_punishment_items::get_punishment_items,
         ))
-        // .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        // .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
         .routes(routes!(
             get_regulation_docs::get_regulation_docs,
         ))
         .routes(routes!(
             create_punishment::create_punishment,
         ))
-        // .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        // .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
         //   .layer(auth_jwt::prelude::AuthLayer::new(Role::Customer | Role::Inspector ))
         .with_state(state)
 }

@@ -207,8 +207,8 @@ dependencies = [
 
 [[package]]
 name = "auth_jwt"
-version = "0.1.0"
-source = "git+ssh://git@github.com/FoxStudiosTeam/sso.git?rev=0c2f95e#0c2f95eeb54507f147d7d8933251be88909f820a"
+version = "0.1.1"
+source = "git+ssh://git@github.com/FoxStudiosTeam/sso.git?rev=979dd042#979dd042e916216302c8ec819ff08081764c9361"
 dependencies = [
  "anyhow",
  "axum",
@@ -221,7 +221,7 @@ dependencies = [
  "serde_json",
  "tower",
  "tracing",
- "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=d0cd9b1)",
+ "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=96b8ea2)",
  "utoipa",
  "uuid",
 ]
@@ -4251,7 +4251,7 @@ dependencies = [
 [[package]]
 name = "utils"
 version = "0.2.0"
-source = "git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=d0cd9b1#d0cd9b1db561f47373eb42113a3952e607faad31"
+source = "git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=96b8ea2#96b8ea20187fdb3e650d91d93b7d6b079d946ff9"
 dependencies = [
  "dotenvy",
  "once_cell",
