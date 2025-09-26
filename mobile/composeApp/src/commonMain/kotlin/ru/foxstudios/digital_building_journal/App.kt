@@ -3,6 +3,7 @@ package ru.foxstudios.digital_building_journal
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import ru.foxstudios.authlib.auth.IAuthStorageProvider
@@ -30,6 +31,22 @@ enum class Screen {
 @Composable
 @Preview
 fun App() {
+    var showSplash by remember { mutableStateOf(true) }
+    var isLoading by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(2000L)
+        showSplash = false
+        delay(500L)
+        isLoading = false
+    }
+    if (isLoading) {
+        SplashScreen(showSplash = showSplash)
+    } else {
+        MainAppContent()
+    }
+}
+@Composable
+fun MainAppContent(){
     val di = normalBuilder(DependencyBuilder)
     val authStorageProvider = di.get<IAuthStorageProvider>(IAuthStorageProviderDIToken)
     var startScreen by remember { mutableStateOf(checkCurrentScreen(di)) }
