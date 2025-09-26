@@ -15,7 +15,7 @@ export default function SecondStep() {
             <Header />
             <main className="w-[80%] bg-white px-8 flex flex-col items-center gap-4 ">
                 <div className="w-full flex flex-row justify-between">
-                    <p>Новый объект</p>
+                    <p className="font-bold">Новый объект</p>
                     <p>Этап 2 из 2</p>
                 </div>
 
