@@ -1,49 +1,62 @@
 package ru.foxstudios.digital_building_journal
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import ru.foxstudios.authlib.auth.IAuthStorageProvider
+import ru.foxstudios.authlib.auth.IAuthStorageProviderDIToken
+import ru.foxstudios.dependency_container.DependencyBuilder
+import ru.foxstudios.dependency_container.IContainer
+import ru.foxstudios.digital_building_journal.di.normalBuilder
+import ru.foxstudios.digital_building_journal.screens.*
+import ru.foxstudios.digital_building_journal.screens.material.MaterialsScreen
+import ru.foxstudios.digital_building_journal.screens.auth.AuthScreen
+import ru.foxstudios.digital_building_journal.screens.subject.ObjectScreen
+import ru.foxstudios.digital_building_journal.screens.punishment.PunishmentsScreen
+import ru.foxstudios.digital_building_journal.screens.report.ReportsScreen
+import ru.foxstudios.digital_building_journal.screens.violation.ViolantionsScreen
 
-import digitalbuildingjournal.composeapp.generated.resources.Res
-import digitalbuildingjournal.composeapp.generated.resources.compose_multiplatform
-
+enum class Screen {
+    AUTH,
+    MAIN,
+    OBJECT,
+    REPORT,
+    MATERIALS,
+    PUNISHMENT,
+    VIOLATION
+}
 @Composable
 @Preview
 fun App() {
+    val di = normalBuilder(DependencyBuilder)
+    val authStorageProvider = di.get<IAuthStorageProvider>(IAuthStorageProviderDIToken)
+    var startScreen by remember { mutableStateOf(checkCurrentScreen(di)) }
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
+        when (startScreen) {
+            Screen.AUTH -> AuthScreen(di, { next -> startScreen = next }) {}
+            Screen.MAIN -> MainScreen(di, { next -> startScreen = next }) {}
+            Screen.OBJECT -> ObjectScreen(di, { next -> startScreen = next }) {}
+            Screen.REPORT -> ReportsScreen(di, { next -> startScreen = next }) {}
+            Screen.MATERIALS -> MaterialsScreen(di, { next -> startScreen = next }) {}
+            Screen.PUNISHMENT -> PunishmentsScreen(di, { next -> startScreen = next }) {}
+            Screen.VIOLATION -> ViolantionsScreen(di, { next -> startScreen = next }) {}
         }
     }
+}
+
+fun checkCurrentScreen(di : IContainer): Screen {
+    val authStorageProvider = di.get<IAuthStorageProvider>(IAuthStorageProviderDIToken)
+    val refreshToken = runBlocking { authStorageProvider.getRefreshToken() }
+    if (refreshToken.isNotEmpty()){
+        return Screen.MAIN
+    }
+    return Screen.AUTH
+}
+
+@Composable
+@Preview
+fun PreviewApp() {
+    App()
 }
