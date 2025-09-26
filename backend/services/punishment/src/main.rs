@@ -87,7 +87,7 @@ async fn main() -> anyhow::Result<()> {
         .split_for_parts();
     
     let app = axum::Router::new()
-        .merge(Scalar::with_url("/docs/scalar", api))
+        .merge(Scalar::with_url("/api/punishment/docs/scalar", api))
         .merge(metrics)
         .merge(api_router)
         .layer(shared::helpers::cors::cors_layer())

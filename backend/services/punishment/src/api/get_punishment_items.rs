@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use shared::{prelude::{AppErr, IntoAppErr}};
 use tracing::info;
 use schema::prelude::*;
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 use crate::{AppState};
 
@@ -45,20 +45,12 @@ impl OptionalAttachments {
     }
 }
 
-impl ItemWithAttachment {
-    fn split(self) -> PunishmentItemWithAttachments {
-        PunishmentItemWithAttachments{
-            punishment_item: self.punishment_item,
-            attachments: self.attachment.into_attachments().map(|v| vec![v]).unwrap_or_default(),
-        }
-    }
-}
-
 
 #[utoipa::path(
     get,
     path = "/get_punishment_items",
     tag = crate::MAIN_TAG,
+    params(PunishmentItemsRequest),
     summary = "Get all items in punishment",
     responses(
         (status = 200, description = "Punishment items fetched", body=Vec<PunishmentItemWithAttachments>),
@@ -99,7 +91,7 @@ pub async fn get_punishment_items(
     Ok((StatusCode::OK, Json(v)).into_response())
 }
 
-#[derive(utoipa::ToSchema, Deserialize, Debug)]
+#[derive(utoipa::ToSchema, Deserialize, Debug, IntoParams)]
 pub struct PunishmentItemsRequest{
     #[schema(example=Uuid::new_v4)]
     punishment_id: uuid::Uuid,

@@ -1,4 +1,4 @@
-use schema::prelude::Project;
+use schema::prelude::{Attachments, Project};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -126,3 +126,48 @@ pub struct GetProjectResult {
     pub result : Vec<Project>,
     pub total: i64
 }
+
+
+#[derive(ToSchema, Debug, Serialize)]
+pub struct ProjectWithAttachments {
+    pub project: Project,
+    pub attachments: Vec<Attachments>,
+}
+
+#[derive(ToSchema, Serialize)]
+pub struct GetProjectWithAttachmentResult {
+    pub result : Vec<ProjectWithAttachments>,
+    pub total: i64
+}
+
+
+#[derive(sqlx::FromRow, Debug)]
+pub struct RowProjectWithAttachment {
+    #[sqlx(flatten)]
+    pub project: Project,
+    #[sqlx(flatten)]
+    pub attachment: OptionalAttachments,
+    pub total_count: i64,
+}
+
+#[derive(sqlx::FromRow, Default, Debug)]
+pub struct OptionalAttachments {
+    pub original_filename: Option<String>,
+    pub attachment_uuid: Option<uuid::Uuid>,
+    pub base_entity_uuid: Option<uuid::Uuid>,
+    pub file_uuid: Option<uuid::Uuid>,
+    pub content_type: Option<String>,
+}
+
+impl OptionalAttachments {
+    pub fn into_attachments(self) -> Option<Attachments> {
+        Some(Attachments {
+            original_filename: self.original_filename?,
+            uuid: self.attachment_uuid?,
+            base_entity_uuid: self.base_entity_uuid?,
+            file_uuid: self.file_uuid?,
+            content_type: self.content_type,
+        })
+    }
+}
+

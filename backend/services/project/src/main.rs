@@ -116,6 +116,60 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
+        .nest("/api/project", 
+            OpenApiRouter::new()
+                .routes(
+                    routes!(
+                        controllers::handle_get_project,
+                    )
+                )
+                .routes(
+                    routes!(
+                        controllers::handle_create_project
+                    )
+                )
+                .routes(
+                    routes!(
+                        controllers::handle_update_project
+                    )
+                )
+                .routes(
+                    routes!(
+                        controllers::handle_activate_project
+                    )
+                )
+                .routes(
+                    routes!(
+                        controllers::handle_add_iko_to_project
+                    )
+                )
+                .routes(
+                    routes!(
+                        controllers::handle_create_project_schedule
+                    )
+                )
+                .routes(
+                    routes!(
+                        controllers::handle_add_work_to_schedule
+                    )
+                )
+                .routes(
+                    routes!(
+                        controllers::handle_update_work_schedule
+                    )
+                )
+                .routes(
+                    routes!(
+                        controllers::handle_update_works_in_schedule
+                    )
+                )
+                .routes(
+                    routes!(
+                        controllers::handle_get_project_schedule
+                    )
+                )
+                .with_state(state)
+        )
         // .routes(
         //     routes!(
         //         secured_route
@@ -128,61 +182,10 @@ async fn main() -> anyhow::Result<()> {
         //     .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::Inspector))
         //     .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
         // )
-        .routes(
-            routes!(
-                controllers::handle_get_project,
-            )
-        )
-         .routes(
-            routes!(
-                controllers::handle_create_project
-            )
-        )
-        .routes(
-            routes!(
-                controllers::handle_update_project
-            )
-        )
-        .routes(
-            routes!(
-                controllers::handle_activate_project
-            )
-        )
-        .routes(
-            routes!(
-                controllers::handle_add_iko_to_project
-            )
-        )
-         .routes(
-            routes!(
-                controllers::handle_create_project_schedule
-            )
-        )
-        .routes(
-            routes!(
-                controllers::handle_add_work_to_schedule
-            )
-        )
-        .routes(
-            routes!(
-                controllers::handle_update_work_schedule
-            )
-        )
-        .routes(
-            routes!(
-                controllers::handle_update_works_in_schedule
-            )
-        )
-        .routes(
-            routes!(
-                controllers::handle_get_project_schedule
-            )
-        )
-        .with_state(state)
         .split_for_parts();
     
     let app = axum::Router::new()
-        .merge(Scalar::with_url("/docs/scalar", api))
+        .merge(Scalar::with_url("/api/project/docs/scalar", api))
         .merge(metrics)
         .merge(api_router)
         .layer(shared::helpers::cors::cors_layer())
@@ -193,7 +196,7 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Listening on 0.0.0.0:{}", CFG.PORT);
     info!(
-        "Try scalar docs on http://127.0.0.1:{}/docs/scalar",
+        "Try scalar docs on http://127.0.0.1:{}/api/project/docs/scalar",
         CFG.PORT
     );
     axum::serve(listener, app.into_make_service()).await?;
