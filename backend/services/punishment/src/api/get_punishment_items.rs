@@ -1,11 +1,11 @@
-use std::{collections::HashMap, hash::Hash};
+use std::{collections::HashMap};
 
 use axum::{Json, extract::{Query, State}, http::StatusCode, response::{IntoResponse, Response}};
 use serde::{Deserialize, Serialize};
 use shared::{prelude::{AppErr, IntoAppErr}};
 use tracing::info;
 use schema::prelude::*;
-use utoipa::{IntoParams, ToSchema};
+use utoipa::{IntoParams, ToSchema, openapi::example};
 use uuid::Uuid;
 use crate::{AppState};
 
@@ -94,5 +94,6 @@ pub async fn get_punishment_items(
 #[derive(utoipa::ToSchema, Deserialize, Debug, IntoParams)]
 pub struct PunishmentItemsRequest{
     #[schema(example=Uuid::new_v4)]
+    #[param(example=Uuid::new_v4)]
     punishment_id: uuid::Uuid,
 }
