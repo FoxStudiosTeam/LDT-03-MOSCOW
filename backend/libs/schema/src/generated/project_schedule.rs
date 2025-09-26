@@ -17,17 +17,8 @@ impl ProjectSchedule {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct ProjectSchedule {
-    pub start_date: Option<chrono::NaiveDate>,
-    pub uuid: uuid::Uuid,
-    pub end_date: Option<chrono::NaiveDate>,
-    pub project_uuid: uuid::Uuid,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct ProjectSchedule {
     pub start_date: Option<chrono::NaiveDate>,

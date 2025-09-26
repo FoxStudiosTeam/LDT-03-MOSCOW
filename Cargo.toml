@@ -3,11 +3,12 @@ members = [ "backend/libs/schema","backend/libs/shared", "backend/.schema_gen", 
 resolver = "2"
 
 [workspace.dependencies]
-orm = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="250427e", package = "orm" }
-schema_reader = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="250427e", package = "schema_reader" }
-utils = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="250427e", package = "utils" }
-di = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="250427e", package = "di" }
+orm = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="85fc4a8", package = "orm" }
+schema_reader = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="85fc4a8", package = "schema_reader" }
+utils = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="85fc4a8", package = "utils" }
+di = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="85fc4a8", package = "di" }
 auth_jwt = { git = "ssh://git@github.com/FoxStudiosTeam/sso.git", rev="0c2f95e", package = "auth_jwt" }
+
 # be careful adding new local deps - all of it need to be added into dockerfile!
 shared = { path = "backend/libs/shared" }
 schema = { path = "backend/libs/schema" }

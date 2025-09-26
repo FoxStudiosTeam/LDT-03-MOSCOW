@@ -18,18 +18,8 @@ impl Reports {
     }
 }
 
-#[cfg(not(feature="serde"))]
-#[derive(Clone, Debug, FromRow)]
-pub struct Reports {
-    pub check_date: Option<chrono::NaiveDate>,
-    pub report_date: chrono::NaiveDate,
-    pub uuid: uuid::Uuid,
-    pub project_schedule_item: uuid::Uuid,
-    pub status: i32,
-}
-
-#[cfg(feature="serde")]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct Reports {
     pub check_date: Option<chrono::NaiveDate>,

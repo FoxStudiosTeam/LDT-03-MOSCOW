@@ -30,17 +30,18 @@ jobs:
   build-and-deploy:
     needs: lint-and-test
     if: ${{ github.ref == 'refs/heads/main' }}
-    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.26
+    uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.29
     with:
       image-name: frontend/frontend
       namespace: solution
       workdir: './frontend'
       context: './'
       manifest-files-path-root: ./frontend/.deployment
-      version-dir: ./frontend/.deployment
+      version_path: ./frontend/.deployment/version.toml
       service-name: frontend
       shared_cache: /mnt/shared
       shared_cache_key: frontend
+      restart-deployment: true
     secrets:
       DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}

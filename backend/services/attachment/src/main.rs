@@ -1,22 +1,27 @@
-use auth_jwt::prelude::Role;
+use aws_config::{BehaviorVersion, Region};
+use aws_sdk_s3::{config::{Credentials, SharedCredentialsProvider}};
 use axum::http::StatusCode;
 use axum::routing::get;
 use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Basic;
 use axum_prometheus::PrometheusMetricLayer;
+use sqlx::Postgres;
 use tower::ServiceBuilder;
 use tracing::*;
 use utils::env_config;
 use utoipa::OpenApi;
-use utoipa_axum::router::{OpenApiRouter, UtoipaMethodRouterExt};
+use utoipa_axum::router::{OpenApiRouter};
 
+mod api;
+mod multipart;
+mod state;
 
-use orm::prelude::*;
 // Some useful things
 use shared::prelude::*;
-use utoipa_axum::routes;
 use utoipa_scalar::{Scalar, Servable};
+
+use crate::state::AppState;
 
 // Hover to see docs
 env_config!(
@@ -24,6 +29,10 @@ env_config!(
         DB_URL: String,
         METRICS_USERNAME: String,
         METRICS_PASSWORD: String,
+        S3_URL: String,
+        S3_KEY: String,
+        S3_SECRET: String,
+        S3_BUCKET: String
     }
     ".cfg" => pub(crate) CFG = pub(crate) Cfg {
         PORT: u16 = 4000,
@@ -42,16 +51,16 @@ pub const MAIN_TAG: &str = "attachment";
 
 struct ApiDoc;
 
-#[derive(Clone)]
-pub struct AppState<DB> where DB: Clone {
-    pub orm: Orm<DB>,
-}
+pub type DB = Postgres;
+pub type Orm = orm::prelude::Orm<sqlx::Pool<DB>>;
+
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::new("debug"))
         .init();
+
     info!("Connecting to DB");
     let pg = sqlx::postgres::PgPoolOptions::new()
         .max_connections(5)
@@ -59,9 +68,27 @@ async fn main() -> anyhow::Result<()> {
         .await
         .inspect_err(|e| info!("Can't connect to db: {e}"))?;
     info!("Connected to DB");
+    
+    info!("Connecting to s3");
+    let creds = SharedCredentialsProvider::new(Credentials::new(
+        &ENV.S3_KEY,
+        &ENV.S3_SECRET,
+        None,
+        None,
+        "provider",
+    ));
+
+    let config = aws_config::SdkConfig::builder()
+        .credentials_provider(creds)
+        .endpoint_url(ENV.S3_URL.clone())
+        .behavior_version(BehaviorVersion::latest())
+        .region(Region::new("eu-north-1"))
+        .build();
+
+    let client = aws_sdk_s3::Client::new(&config);
 
     let orm = orm::prelude::Orm::new(pg);
-    let state = AppState{orm};
+    let state = AppState{orm, s3: client};
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
@@ -83,28 +110,14 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .routes(routes!(
-            demo_route
-        ))
-        .routes(
-            routes!(
-                secured_route
-            ).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
-        )
-        .routes(
-            routes!(
-                role_secured_route
-            )
-            .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::Inspector))
-            .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
-        )
-        .with_state(state)
+        .nest("/api", api::router(state))
         .split_for_parts();
     
     let app = axum::Router::new()
-        .merge(Scalar::with_url("/docs/scalar", api))
-        .merge(metrics)
+        .merge(Scalar::with_url("/api/attachment/docs/scalar", api))
         .merge(api_router)
+        .merge(metrics)
+        .layer(shared::helpers::cors::cors_layer())
         .layer(default_layers);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", CFG.PORT)).await
@@ -112,52 +125,9 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Listening on 0.0.0.0:{}", CFG.PORT);
     info!(
-        "Try scalar docs on http://127.0.0.1:{}/docs/scalar",
+        "Try scalar docs on http://127.0.0.1:{}/api/attachment/docs/scalar",
         CFG.PORT
     );
     axum::serve(listener, app.into_make_service()).await?;
     Ok(())
-}
-
-
-#[utoipa::path(
-    get,
-    path = "/hello_world",
-    tag = crate::MAIN_TAG,
-    summary = "Hello world",
-    responses(
-        (status = 200, description = "Hello world!"),
-    )
-)]
-async fn demo_route() -> String {
-    "Hello from attachment!".to_string()
-}
-
-
-#[utoipa::path(
-    get,
-    path = "/secured",
-    tag = crate::MAIN_TAG,
-    summary = "Secured route. Any authorized user can access it",
-    responses(
-        (status = 200, description = "You passed!"),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-async fn secured_route() -> String {
-    "Hello from secured!".to_string()
-}
-
-#[utoipa::path(
-    get,
-    path = "/specific_role",
-    tag = crate::MAIN_TAG,
-    summary = "Secured route. Only users with Operator or Inspector role can access it. Admin can access any route secured with this middleware",
-    responses(
-        (status = 200, description = "You passed!"),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-async fn role_secured_route() -> String {
-    "Hello from secured!".to_string()
 }

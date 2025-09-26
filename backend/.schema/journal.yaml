@@ -45,6 +45,8 @@ tables:
     default: null
   - name: project
     type: uuid
+  - name: punishment_status
+    type: integer
   - name: punish_datetime
     type: timestamp
   - name: uuid

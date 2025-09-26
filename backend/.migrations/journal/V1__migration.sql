@@ -3,6 +3,57 @@
 
 
 CREATE SCHEMA IF NOT EXISTS journal;
+CREATE TABLE IF NOT EXISTS journal.project_schedule (
+  start_date date
+    
+    
+    
+    ,
+  uuid uuid
+     PRIMARY KEY
+    
+     NOT NULL
+     DEFAULT gen_random_uuid(),
+  end_date date
+    
+    
+    
+    ,
+  project_uuid uuid
+    
+    
+     NOT NULL
+    
+);
+CREATE SCHEMA IF NOT EXISTS journal;
+CREATE TABLE IF NOT EXISTS journal.punishment (
+  custom_number text
+    
+    
+    
+    ,
+  project uuid
+    
+    
+     NOT NULL
+    ,
+  punishment_status integer
+    
+    
+     NOT NULL
+    ,
+  punish_datetime timestamp
+    
+    
+     NOT NULL
+    ,
+  uuid uuid
+     PRIMARY KEY
+    
+     NOT NULL
+     DEFAULT gen_random_uuid()
+);
+CREATE SCHEMA IF NOT EXISTS journal;
 CREATE TABLE IF NOT EXISTS journal.punishment_item (
   punishment uuid
     
@@ -118,52 +169,6 @@ CREATE TABLE IF NOT EXISTS journal.project_schedule_items (
      NOT NULL
     ,
   is_deleted boolean
-    
-    
-     NOT NULL
-    
-);
-CREATE SCHEMA IF NOT EXISTS journal;
-CREATE TABLE IF NOT EXISTS journal.punishment (
-  custom_number text
-    
-    
-    
-    ,
-  project uuid
-    
-    
-     NOT NULL
-    ,
-  punish_datetime timestamp
-    
-    
-     NOT NULL
-    ,
-  uuid uuid
-     PRIMARY KEY
-    
-     NOT NULL
-     DEFAULT gen_random_uuid()
-);
-CREATE SCHEMA IF NOT EXISTS journal;
-CREATE TABLE IF NOT EXISTS journal.project_schedule (
-  start_date date
-    
-    
-    
-    ,
-  uuid uuid
-     PRIMARY KEY
-    
-     NOT NULL
-     DEFAULT gen_random_uuid(),
-  end_date date
-    
-    
-    
-    ,
-  project_uuid uuid
     
     
      NOT NULL
