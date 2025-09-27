@@ -18,8 +18,11 @@ use crate::entities::*;
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_get_project(State(state) : State<AppState>, Json(r) : Json<GetProjectRequest>) -> Result<Response, AppErr> {
-    return state.project_service().get_project(r).await
+pub async fn handle_get_project(
+    State(state): State<AppState>,
+    Json(r): Json<GetProjectRequest>,
+) -> Result<Response, AppErr> {
+    return state.project_service().get_project(r).await;
 }
 
 #[utoipa::path(
@@ -33,8 +36,12 @@ pub async fn handle_get_project(State(state) : State<AppState>, Json(r) : Json<G
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_create_project(State(state) : State<AppState>, Json(r) : Json<CreateProjectRequest>) -> Result<Response, AppErr> {
-    return state.project_service().create_project(r).await
+pub async fn handle_create_project(
+    State(state): State<AppState>,
+    Extension(payload): Extension<AccessTokenPayload>,
+    Json(r): Json<CreateProjectRequest>,
+) -> Result<Response, AppErr> {
+    return state.project_service().create_project(r, payload).await;
 }
 
 #[utoipa::path(
@@ -48,8 +55,11 @@ pub async fn handle_create_project(State(state) : State<AppState>, Json(r) : Jso
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_update_project(State(state) : State<AppState>, Json(r) : Json<UpdateProjectRequest>) -> Result<Response, AppErr> {
-    return state.project_service().update_project(r).await
+pub async fn handle_update_project(
+    State(state): State<AppState>,
+    Json(r): Json<UpdateProjectRequest>,
+) -> Result<Response, AppErr> {
+    return state.project_service().update_project(r).await;
 }
 
 #[utoipa::path(
@@ -63,8 +73,11 @@ pub async fn handle_update_project(State(state) : State<AppState>, Json(r) : Jso
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_activate_project(State(state) : State<AppState>, Json(r) : Json<ActivateProjectRequest>) -> Result<Response, AppErr> {
-    return state.project_service().activate_project(r).await
+pub async fn handle_activate_project(
+    State(state): State<AppState>,
+    Json(r): Json<ActivateProjectRequest>,
+) -> Result<Response, AppErr> {
+    return state.project_service().activate_project(r).await;
 }
 
 #[utoipa::path(
@@ -78,8 +91,11 @@ pub async fn handle_activate_project(State(state) : State<AppState>, Json(r) : J
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_add_iko_to_project(State(state) : State<AppState>, Json(r) : Json<AddIkoToProjectRequest>) -> Result<Response, AppErr> {
-    return state.project_service().add_iko_to_project(r).await
+pub async fn handle_add_iko_to_project(
+    State(state): State<AppState>,
+    Json(r): Json<AddIkoToProjectRequest>,
+) -> Result<Response, AppErr> {
+    return state.project_service().add_iko_to_project(r).await;
 }
 
 #[utoipa::path(
@@ -94,11 +110,14 @@ pub async fn handle_add_iko_to_project(State(state) : State<AppState>, Json(r) :
     )
 )]
 pub async fn handle_create_project_schedule(
-    State(state) : State<AppState>, 
-    
-    Json(r) : Json<CreateProjectScheduleRequest>,
+    State(state): State<AppState>,
+    //Extension(payload) : Extension<AccessTokenPayload>,
+    Json(r): Json<CreateProjectScheduleRequest>,
 ) -> Result<Response, AppErr> {
-    return state.project_schedule_service().create_project_schedule(r).await
+    return state
+        .project_schedule_service()
+        .create_project_schedule(r)
+        .await;
 }
 
 #[utoipa::path(
@@ -112,8 +131,15 @@ pub async fn handle_create_project_schedule(
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_add_work_to_schedule(State(state) : State<AppState>, Json(r) : Json<AddWorkToScheduleRequest>) -> Result<Response, AppErr> {
-    return state.project_schedule_service().add_work_to_schedule(r).await
+//,Extension(payload) : Extension<AccessTokenPayload>
+pub async fn handle_add_work_to_schedule(
+    State(state): State<AppState>,
+    Json(r): Json<AddWorkToScheduleRequest>,
+) -> Result<Response, AppErr> {
+    return state
+        .project_schedule_service()
+        .add_work_to_schedule(r)
+        .await;
 }
 
 #[utoipa::path(
@@ -127,8 +153,15 @@ pub async fn handle_add_work_to_schedule(State(state) : State<AppState>, Json(r)
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_update_work_schedule(State(state) : State<AppState>, Json(r) : Json<UpdateWorkScheduleRequest>) -> Result<Response, AppErr> {
-    return state.project_schedule_service().update_work_schedule(r).await
+//Extension(payload) : Extension<AccessTokenPayload>,
+pub async fn handle_update_works_in_schedule(
+    State(state): State<AppState>,
+    Json(r): Json<UpdateWorkScheduleRequest>,
+) -> Result<Response, AppErr> {
+    return state
+        .project_schedule_service()
+        .update_works_in_schedule(r)
+        .await;
 }
 
 #[utoipa::path(
@@ -142,8 +175,15 @@ pub async fn handle_update_work_schedule(State(state) : State<AppState>, Json(r)
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_update_works_in_schedule(State(state) : State<AppState>, Json(r) : Json<UpdateWorksInScheduleRequest>) -> Result<Response, AppErr> {
-    return state.project_schedule_service().update_works_in_schedule(r).await
+//Extension(payload) : Extension<AccessTokenPayload>,
+pub async fn handle_update_work_in_schedule(
+    State(state): State<AppState>,
+    Json(r): Json<UpdateWorksInScheduleRequest>,
+) -> Result<Response, AppErr> {
+    return state
+        .project_schedule_service()
+        .update_work_in_schedule(r)
+        .await;
 }
 
 #[utoipa::path(
@@ -157,9 +197,124 @@ pub async fn handle_update_works_in_schedule(State(state) : State<AppState>, Jso
         (status = 401, description = "Unauthorized"),
     )
 )]
+//Extension(payload) : Extension<AccessTokenPayload>,
 pub async fn handle_get_project_schedule(
-    State(state) : State<AppState>, 
-    Json(r) : Json<GetProjectScheduleRequest>
+    State(state): State<AppState>,
+    Json(r): Json<GetProjectScheduleRequest>,
 ) -> Result<Response, AppErr> {
-    return state.project_schedule_service().get_project_schedule(r).await
+    return state
+        .project_schedule_service()
+        .get_project_schedule(r)
+        .await;
+}
+
+#[utoipa::path(
+    post,
+    path = "/create-work-category",
+    tag = crate::MAIN_TAG,
+    summary = "create work category",
+    responses(
+        (status = 200, description = "Work category are successfully created", body = CreateProjectRequest,
+            example = json!({"title": "some title", "kpgz": 638862539})
+        ),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_create_work_category(
+    State(state): State<AppState>,
+    Json(r): Json<CreateWorkCategoryRequest>,
+) -> Result<Response, AppErr> {
+    return state.work_category_service().create_work_category(r).await;
+}
+
+#[utoipa::path(
+    put,
+    path = "/update-work-category",
+    summary = "update one work category",
+    responses (
+        (status = 200, description = "Update one Work Category"),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_update_work_category(
+    State(state): State<AppState>,
+    Json(r): Json<UpdateWorkCategoryRequest>,
+) -> Result<Response, AppErr> {
+    return state.work_category_service().update_work_category(r).await;
+}
+
+#[utoipa::path(
+    get,
+    path = "/get-work-category",
+    tag = crate::MAIN_TAG,
+    summary = "get work categories as vec",
+    responses (
+        (status = 200, description = "Work Categories as vec"),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_get_work_categories(State(state): State<AppState>) -> Result<Response, AppErr> {
+    return state.work_category_service().get_work_categories().await;
+}
+
+#[utoipa::path(
+    get,
+    path = "/get-kpgz-vec",
+    tag = crate::MAIN_TAG,
+    summary = "get kpgz dictionary as vec",
+    responses (
+        (status = 200, description = "kpgz dictionary as vec"),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_get_kpgz_vec(State(state) : State<AppState>) -> Result<Response, AppErr> {
+    return state.work_category_service().get_kpgz_vec().await;
+}
+#[utoipa::path(
+    post,
+    path = "/works/save",
+    tag = crate::MAIN_TAG,
+    summary = "save work using work_category_uuid and title",
+    responses (
+        (status = 200, description = "work successfully saved"),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_save_work(State(state) : State<AppState>, Json(r): Json<CreateUpdateWorkRequest>) -> Result<Response, AppErr> {
+    return state.work_service().save_work(r).await;
+}
+
+#[utoipa::path(
+    post,
+    path = "/works/get",
+    tag = crate::MAIN_TAG,
+    summary = "get work using work_category_uuid",
+    responses (
+        (status = 200, description = "works list by work_category_uuid"),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_get_works_by_category(State(state) : State<AppState>, Json(r) : Json<GetWorksByCategoryRequest>) -> Result<Response, AppErr> {
+    return state.work_service().get_works_by_category(r).await;
+}
+
+#[utoipa::path(
+    get,
+    path = "/statuses/get",
+    tag = crate::MAIN_TAG,
+    summary = "get project statuses",
+    responses (
+        (status = 200, description = "roject statuses list"),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_get_project_statuses(State(state) : State<AppState>) -> Result<Response, AppErr> {
+    return state.project_service().get_project_statuses().await;
 }
