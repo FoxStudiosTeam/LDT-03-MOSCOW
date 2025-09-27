@@ -134,11 +134,12 @@ pub async fn handle_create_project_schedule(
 //,Extension(payload) : Extension<AccessTokenPayload>
 pub async fn handle_add_work_to_schedule(
     State(state): State<AppState>,
+    Extension(payload) : Extension<AccessTokenPayload>,
     Json(r): Json<AddWorkToScheduleRequest>,
 ) -> Result<Response, AppErr> {
     return state
         .project_schedule_service()
-        .add_work_to_schedule(r)
+        .add_work_to_schedule(r, payload)
         .await;
 }
 
@@ -217,6 +218,7 @@ pub async fn handle_get_project_schedule(
         (status = 200, description = "Work category are successfully created", body = CreateProjectRequest,
             example = json!({"title": "some title", "kpgz": 638862539})
         ),
+        (status = 400, description = "Kpgz id not found"),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )

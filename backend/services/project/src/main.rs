@@ -187,19 +187,10 @@ async fn main() -> anyhow::Result<()> {
                         controllers::handle_create_work_category
                     )
                 )
-                .routes(
-                    routes!(
-                        controllers::handle_get_work_categories
-                    )
-                )
+                
                 .routes(
                     routes!(
                         controllers::handle_update_work_category
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_get_kpgz_vec
                     )
                 )
                 .routes (
@@ -212,13 +203,27 @@ async fn main() -> anyhow::Result<()> {
                         controllers::handle_get_works_by_category
                     )
                 )
-                .routes (
-                    routes!(
-                        controllers::handle_get_project_statuses
-                    )
-                )
+                .with_state(state.clone())
                 .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
-                .with_state(state)
+                .merge(
+                    OpenApiRouter::new()
+                    .routes(
+                        routes!(
+                            controllers::handle_get_work_categories
+                        )
+                    )
+                    .routes (
+                        routes!(
+                            controllers::handle_get_project_statuses
+                        )
+                    )
+                    .routes(
+                        routes!(
+                            controllers::handle_get_kpgz_vec
+                        )
+                    )
+                    .with_state(state)
+                )
         )
         // .routes(
         //     routes!(

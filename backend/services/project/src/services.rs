@@ -276,7 +276,7 @@ pub trait IProjectScheduleService: Send + Sync {
         r: CreateProjectScheduleRequest,
         t : AccessTokenPayload
     ) -> Result<Response, AppErr>;
-    async fn add_work_to_schedule(&self, r: AddWorkToScheduleRequest) -> Result<Response, AppErr>;
+    async fn add_work_to_schedule(&self, r: AddWorkToScheduleRequest, t: AccessTokenPayload) -> Result<Response, AppErr>;
     async fn update_works_in_schedule(
         &self,
         r: UpdateWorkScheduleRequest,
@@ -321,8 +321,7 @@ impl IProjectScheduleService for ProjectScheduleService {
         return Ok((StatusCode::OK, Json(res)).into_response());
     }
 
-    //, t: AccessTokenPayload
-    async fn add_work_to_schedule(&self, r: AddWorkToScheduleRequest) -> Result<Response, AppErr> {
+    async fn add_work_to_schedule(&self, r: AddWorkToScheduleRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
         let mut work_to_schedule = ActiveProjectScheduleItems::default();
         work_to_schedule.created_by = Set(r.created_by);
         work_to_schedule.work_uuid = Set(r.work_uuid);
@@ -330,6 +329,7 @@ impl IProjectScheduleService for ProjectScheduleService {
         work_to_schedule.end_date = Set(r.end_date);
         work_to_schedule.target_volume = Set(r.target_volume);
         work_to_schedule.is_draft = Set(r.is_draft);
+        work_to_schedule.created_by = Set(t.uuid);
 
         let res = self
             .state
@@ -346,7 +346,6 @@ impl IProjectScheduleService for ProjectScheduleService {
         return Ok((StatusCode::OK, Json(res)).into_response());
     }
 
-    //, 
     async fn update_works_in_schedule(
         &self,
         r: UpdateWorkScheduleRequest,
@@ -607,7 +606,16 @@ impl IWorkCategoryService for WorkCategoryService {
             .work_category()
             .save(cat, Insert)
             .await
-            .into_app_err()?;
+            .into_app_err();
+        let res = match res {Ok(res) => res, Err(mut e) => {
+            let err = e.to_string();
+            if err.contains("violates") {
+                e = e
+                    .with_status(StatusCode::BAD_REQUEST)
+                    .with_response("kpgz_id not found");
+            }
+            return Err(e);
+        }};
 
         return Ok((StatusCode::OK, Json(res)).into_response());
     }
