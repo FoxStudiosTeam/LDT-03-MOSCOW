@@ -122,7 +122,7 @@ impl IProjectService for ProjectService {
                 .with_status(StatusCode::FORBIDDEN));
         }
 
-        project.created_by = Set(Some(t.uuid));
+        // project.created_by = Set(Some(t.uuid));
         let addr = r.address.map(|addr| (addr)).ok_or(
             AppErr::default()
                 .with_err_response("address is empty")
