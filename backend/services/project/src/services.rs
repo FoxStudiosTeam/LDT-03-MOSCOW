@@ -609,7 +609,7 @@ impl IWorkCategoryService for WorkCategoryService {
             .into_app_err();
         let res = match res {Ok(res) => res, Err(mut e) => {
             let err = e.to_string();
-            if err.contains("violates") {
+            if err.contains("work_category_kpgz_id_fk") {
                 e = e
                     .with_status(StatusCode::BAD_REQUEST)
                     .with_response("kpgz_id not found");
