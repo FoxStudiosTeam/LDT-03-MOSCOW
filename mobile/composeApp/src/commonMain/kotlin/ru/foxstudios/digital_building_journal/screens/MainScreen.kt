@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,56 +28,89 @@ import ru.foxstudios.authlib.auth.IAuthStorageProvider
 import ru.foxstudios.authlib.auth.IAuthStorageProviderDIToken
 import ru.foxstudios.dependency_container.IContainer
 import ru.foxstudios.digital_building_journal.Screen
-import androidx.compose.material.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
 import androidx.compose.material3.*
-import androidx.compose.ui.graphics.vector.ImageVector
-import org.jetbrains.compose.resources.vectorResource
-
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.zIndex
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import ru.foxstudios.authlib.auth.IAuthProviderDIToken
+import ru.foxstudios.dependency_container.DependencyBuilder
+import ru.foxstudios.digital_building_journal.di.I_SSO_DI_TOKEN
+import ru.foxstudios.digital_building_journal.di.normalBuilder
+import ru.foxstudios.digital_building_journal.dummy.DummyAuthProvider
+import ru.foxstudios.digital_building_journal.dummy.DummyAuthStorageProvider
+import ru.foxstudios.digital_building_journal.screens.Header
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    di : IContainer,
-    changeScreen:(Screen)->Unit,
+    di: IContainer,
+    changeScreen: (Screen) -> Unit,
     function: () -> Unit //кал бэк
 ) {
     val authStorageProvider = di.get<IAuthStorageProvider>(IAuthStorageProviderDIToken)
     var refreshToken by remember { mutableStateOf(authStorageProvider.getRefreshToken()) }
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("") },
-                navigationIcon = {
-                },
-                actions = {
+    var expanded by remember { mutableStateOf(false) }
 
-                }
-            )
-        }
-    ) { innerPadding ->
-        Box(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .border(0.5.dp, Color.Gray)
+            .padding(top=10.dp, bottom = 5.dp)
+    ) {
+        Header()
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(Color(0xFFD0D0D0)),
-            contentAlignment = Alignment.Center
-
+                .fillMaxWidth()
+                .padding(top = 24.dp)
+                .alpha(if (expanded) 0f else 1f),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.Start,
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Button(
+                onClick = { changeScreen(Screen.VIOLATION) },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp)
+                    .padding(start = 8.dp, end = 8.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFB41313),
+                    contentColor = Color.White
+                )
             ) {
-                Text("$refreshToken")
-
-                Button(onClick = { changeScreen(Screen.AUTH) }) {
-                    Text("выход")
-                }
+                Text("В процессе")
+            }
+            Button(
+                onClick = { changeScreen(Screen.REPORT) },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp)
+                    .padding(start = 8.dp, end = 8.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFB41313),
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Завершенные")
             }
         }
     }
 }
+
+@Composable
+@Preview
+fun MainScreenPreview(){
+    DependencyBuilder.registryDependency(IAuthProviderDIToken, DummyAuthProvider())
+    DependencyBuilder.registryDependency(IAuthStorageProviderDIToken, DummyAuthStorageProvider())
+    DependencyBuilder.registryDependency(I_SSO_DI_TOKEN, "dummy")
+    val di = normalBuilder(DependencyBuilder)
+    MainScreen(di,{},{})
+}
+
+
 

@@ -22,6 +22,7 @@ import ru.foxstudios.digital_building_journal.screens.violation.ViolantionsScree
 enum class Screen {
     AUTH,
     MAIN,
+
     OBJECT,
     REPORT,
     MATERIALS,
@@ -71,6 +72,7 @@ fun checkCurrentScreen(di : IContainer): Screen {
     }
     return Screen.AUTH
 }
+
 
 @Composable
 @Preview

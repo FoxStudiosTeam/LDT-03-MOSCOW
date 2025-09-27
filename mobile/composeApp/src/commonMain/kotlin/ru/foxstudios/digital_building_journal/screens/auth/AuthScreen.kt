@@ -46,7 +46,6 @@ fun AuthScreen(
     val coroutineScope = rememberCoroutineScope()
     var text by remember { mutableStateOf("Войти") }
     var showErrorDialog by remember { mutableStateOf(false) }
-    var refreshToken by remember { mutableStateOf(authStorageProvider.getRefreshToken()) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -103,15 +102,8 @@ fun AuthScreen(
                                 authProvider.login(login, password, 5000, authStorageProvider)
                             println(result)
                             result.onSuccess { abc ->
-                                refreshToken = authStorageProvider.getRefreshToken()
-                                text = "ok ${abc.accessToken} : ${abc.exp}"
-                                if(authStorageProvider.getRefreshToken().isEmpty()){
-                                     println("Нет токена")
-                                }
-                                else
-                                {
+                                //text = "ok ${abc.accessToken} : ${abc.exp}"
                                     changeScreen(Screen.MAIN)
-                                }
                             }
                             result.onFailure {
                                 authStorageProvider.clear()
