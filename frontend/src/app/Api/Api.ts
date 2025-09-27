@@ -94,3 +94,90 @@ export async function GetProjectSchedule(uuid:string){
     }
 }
 
+export async function GetWorkCategories(){
+    try {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
+        const response = await fetch(`${baseURL}/project/get-work-category`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        if(response.ok){
+            const result = await response.json();
+            return { successCategories: true, messageCategories: null, resultCategories: result.items};
+        } else {
+            const result = await response.json();
+            return { successCategories: false, messageCategories: result.message }
+        }
+
+    } catch (error) {
+        console.error("Ошибка создания объекта:", error);
+        return { successCategories: false, messageCategories: String(error) };
+    }
+}
+
+export async function GetMeasurement(){
+    try {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
+        const response = await fetch(`${baseURL}/project/get-measurements`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        if(response.ok){
+            const result = await response.json();
+            return { successMeasurement: true, messageMeasurement: null, resultMeasurement: result};
+        } else {
+            const result = await response.json();
+            return { successMeasurement: false, messageMeasurement: result.message }
+        }
+
+    } catch (error) {
+        console.error("Ошибка создания объекта:", error);
+        return { successMeasurement: false, messageMeasurement: String(error) };
+    }
+}
+
+export async function Getkpgz(){
+    try {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
+        const response = await fetch(`${baseURL}/project/get-kpgz-vec`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        if(response.ok){
+            const result = await response.json();
+            return { successkpgz: true, messagekpgz: null, resultkpgz: result.items};
+        } else {
+            const result = await response.json();
+            return { successkpgz: false, messagekpgz: result.message }
+        }
+
+    } catch (error) {
+        console.error("Ошибка создания объекта:", error);
+        return { successkpgz: false, messagekpgz: String(error) };
+    }
+}
+

@@ -30,7 +30,7 @@ export default function SecondStep() {
                             });
                         });
                     } else if (!success && respMessage === "not found project_schedule") {
-                        setIsEmpty(true);   // пустая таблица
+                        setIsEmpty(true);
                     } else {
                         setMessage(respMessage || "Ошибка загрузки этапов");
                     }
