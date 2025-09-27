@@ -17,6 +17,7 @@ impl ProjectScheduleItems {
             start_date: Set(self.start_date),
             end_date: Set(self.end_date),
             target_volume: Set(self.target_volume),
+            measurement: Set(self.measurement),
             updated_by: Set(self.updated_by),
             is_draft: Set(self.is_draft),
             is_deleted: Set(self.is_deleted),
@@ -36,6 +37,7 @@ pub struct ProjectScheduleItems {
     pub start_date: chrono::NaiveDate,
     pub end_date: chrono::NaiveDate,
     pub target_volume: f64,
+    pub measurement: i32,
     pub updated_by: Option<uuid::Uuid>,
     pub is_draft: bool,
     pub is_deleted: bool,
@@ -51,6 +53,7 @@ pub struct ActiveProjectScheduleItems {
     pub start_date: Optional<chrono::NaiveDate>,
     pub end_date: Optional<chrono::NaiveDate>,
     pub target_volume: Optional<f64>,
+    pub measurement: Optional<i32>,
     pub updated_by: Optional<Option<uuid::Uuid>>,
     pub is_draft: Optional<bool>,
     pub is_deleted: Optional<bool>,
@@ -67,6 +70,7 @@ impl ActiveProjectScheduleItems {
             start_date: self.start_date.into_option()?,
             end_date: self.end_date.into_option()?,
             target_volume: self.target_volume.into_option()?,
+            measurement: self.measurement.into_option()?,
             updated_by: self.updated_by.into_option()?,
             is_draft: self.is_draft.into_option()?,
             is_deleted: self.is_deleted.into_option()?,
@@ -101,6 +105,7 @@ impl TableSelector for ActiveProjectScheduleItems {
             "start_date" => self.start_date.is_set(),
             "end_date" => self.end_date.is_set(),
             "target_volume" => self.target_volume.is_set(),
+            "measurement" => self.measurement.is_set(),
             "updated_by" => self.updated_by.is_set(),
             "is_draft" => self.is_draft.is_set(),
             "is_deleted" => self.is_deleted.is_set(),
@@ -160,6 +165,13 @@ impl TableSelector for ActiveProjectScheduleItems {
             },
             ColumnDef{
                 name: "target_volume",
+                nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "measurement",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -233,6 +245,7 @@ impl ModelOps<sqlx::Postgres> for ActiveProjectScheduleItems
         if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.target_volume {tracing::debug!("Binded target_volume"); q = q.bind(v);}
+        if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
         if let Set(v) = &self.updated_by {tracing::debug!("Binded updated_by"); q = q.bind(v);}
         if let Set(v) = &self.is_draft {tracing::debug!("Binded is_draft"); q = q.bind(v);}
         if let Set(v) = &self.is_deleted {tracing::debug!("Binded is_deleted"); q = q.bind(v);}
@@ -360,6 +373,7 @@ impl ModelOps<sqlx::MySql> for ActiveProjectScheduleItems
         if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.target_volume {tracing::debug!("Binded target_volume"); q = q.bind(v);}
+        if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
         if let Set(v) = &self.updated_by {tracing::debug!("Binded updated_by"); q = q.bind(v);}
         if let Set(v) = &self.is_draft {tracing::debug!("Binded is_draft"); q = q.bind(v);}
         if let Set(v) = &self.is_deleted {tracing::debug!("Binded is_deleted"); q = q.bind(v);}
@@ -487,6 +501,7 @@ impl ModelOps<sqlx::Sqlite> for ActiveProjectScheduleItems
         if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.target_volume {tracing::debug!("Binded target_volume"); q = q.bind(v);}
+        if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
         if let Set(v) = &self.updated_by {tracing::debug!("Binded updated_by"); q = q.bind(v);}
         if let Set(v) = &self.is_draft {tracing::debug!("Binded is_draft"); q = q.bind(v);}
         if let Set(v) = &self.is_deleted {tracing::debug!("Binded is_deleted"); q = q.bind(v);}
