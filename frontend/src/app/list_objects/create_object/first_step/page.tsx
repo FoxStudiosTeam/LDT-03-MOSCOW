@@ -235,7 +235,7 @@ export default function FirstStep() {
                             <input type="submit" value={"Далее"} className="bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg"></input>
                         </div>
 
-                        {message && <p className="w-full text-center text-red-600 mt-2">{message}</p>}
+                        {message && <p className="w-full text-center text-red-600 pt-2">{message}</p>}
                     </div>
                 </form>
             </main>

@@ -74,7 +74,7 @@ export default function SignIn() {
                         Войти
                     </button>
 
-                    {message && <p className="w-full text-center text-red-600 mt-2">{message}</p>}
+                    {message && <p className="w-full text-center text-red-600 pt-2">{message}</p>}
                 </form>
 
             </div>

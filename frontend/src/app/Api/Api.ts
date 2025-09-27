@@ -62,3 +62,35 @@ export async function CreateObject(address: string, polygon: string, ssk: string
         return { success: false, message: String(error) };
     }
 }
+
+export async function GetProjectSchedule(uuid:string){
+    try {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
+        const response = await fetch(`${baseURL}/project/get-project-schedule`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ uuid})
+        });
+        if(response.ok){
+            const result = await response.json();
+            return { success: true, message: null, result: result};
+        } else {
+            const result = await response.json();
+            return { success: false, message: result.message }
+        }
+
+    } catch (error) {
+        console.error("Ошибка создания объекта:", error);
+        return { success: false, message: String(error) };
+    }
+}
+
