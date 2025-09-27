@@ -13,7 +13,7 @@ interface TokenPayload {
 
 export async function AuthUser(login: string, password: string) {
     try {
-        const response = await fetch(`https://sso.foxstudios.ru:32460/api/auth/session`, {
+        const response = await fetch(`http://81.200.145.130:32460/api/auth/session`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -32,16 +32,31 @@ export async function AuthUser(login: string, password: string) {
     }
 }
 
-export async function CreateObject(address:string, polygon:string, ssk:string){
+export async function CreateObject(address: string, polygon: string, ssk: string) {
     try {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
         const response = await fetch(`${baseURL}/project/create-project`, {
             method: "POST",
             credentials: "include",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
             body: JSON.stringify({ address, polygon, ssk })
         });
+
+        if (!response.ok) {
+            throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
+        }
+
         const result = await response.json();
         return { success: true, message: null, result: result.uuid };
+
     } catch (error) {
         console.error("Ошибка создания объекта:", error);
         return { success: false, message: String(error) };

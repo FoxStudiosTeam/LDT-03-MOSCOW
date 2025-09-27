@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { FirstStepForm } from "@/models";
 import { useUserStore } from "@/storage/userstore";
 import {CreateObject} from "@/app/Api/Api";
+import { useRouter } from "next/navigation";
 
 
 function getCenter(geom: Geometry): LngLat {
@@ -35,6 +36,7 @@ function getCenter(geom: Geometry): LngLat {
 export default function FirstStep() {
     const [message, setMessage] = useState<string>("");
     const userData = useUserStore((state) => state.userData);
+    const router = useRouter();
 
     const { register, handleSubmit, setValue } = useForm<FirstStepForm>({
     });
@@ -49,7 +51,8 @@ export default function FirstStep() {
             const {success, message, result} = await CreateObject(data.address, data.polygon, userData.uuid);
             if (success && result) {
                 console.log(result)
-
+                localStorage.setItem("projectUuid", result);
+                router.push("/list_objects/create_object/second_step");
             } else {
                 setMessage(message || "Ошибка создания объекта");
             }
