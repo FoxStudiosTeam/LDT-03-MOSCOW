@@ -1,75 +1,105 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export interface SubJob {
-  id: string;
+export interface Item {
+  uuid: string;
   title: string;
-  volume: number;
-  unitOfMeasurement: string;
-  startDate: string;
-  endDate: string;
+  start_date: string;
+  end_date: string;
+  is_completed: boolean;
+  is_deleted: boolean;
+  is_draft: boolean;
+  measurement: number;
+  target_volume: number;
 }
 
-export interface Job {
-  id: string;
+export interface DataBlock {
+  uuid: string;
   title: string;
-  startDate: string;
-  endDate: string;
-  subJobs: SubJob[];
+  start_date: string;
+  end_date: string;
+  items: Item[];
 }
 
-interface JobsState {
-  jobs: Job[];
+interface DataState {
+  data: DataBlock[];
   hydrated: boolean;
   setHydrated: () => void;
-  addJob: (job: Job) => void;
-  updateJob: (id: string, updated: Partial<Job>) => void;
-  deleteJob: (id: string) => void;
-  updateSubJob: (jobId: string, subJobId: string, updated: Partial<SubJob>) => void;
+
+  addDataBlock: (block: Omit<DataBlock, "start_date" | "end_date">) => void;
+  updateDataBlock: (uuid: string, updated: Partial<DataBlock>) => void;
+  deleteDataBlock: (uuid: string) => void;
+  updateItem: (blockUuid: string, itemUuid: string, updated: Partial<Item>) => void;
 }
 
-export const useActionsStore = create<JobsState>()(
-    persist(
-        (set) => ({
-          jobs: [],
-          hydrated: false,
+// утилита для вычисления дат
+function calculateBlockDates(items: Item[]): { start_date: string; end_date: string } {
+  if (items.length === 0) {
+    return { start_date: "", end_date: "" };
+  }
+  const sortedByStart = [...items].sort(
+    (a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+  );
+  const sortedByEnd = [...items].sort(
+    (a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime()
+  );
+  return {
+    start_date: sortedByStart[0].start_date,
+    end_date: sortedByEnd[0].end_date,
+  };
+}
 
-          setHydrated: () => set({ hydrated: true }),
+export const useActionsStore = create<DataState>()(
+  persist(
+    (set) => ({
+      data: [],
+      hydrated: false,
 
-          addJob: (job) =>
-              set((state) => ({ jobs: [...state.jobs, job] })),
+      setHydrated: () => set({ hydrated: true }),
 
-          updateJob: (id, updated) =>
-              set((state) => ({
-                jobs: state.jobs.map((j) =>
-                    j.id === id ? { ...j, ...updated } : j
-                ),
-              })),
-
-          deleteJob: (id) =>
-              set((state) => ({
-                jobs: state.jobs.filter((j) => j.id !== id),
-              })),
-
-          updateSubJob: (jobId, subJobId, updated) =>
-              set((state) => ({
-                jobs: state.jobs.map((j) =>
-                    j.id === jobId
-                        ? {
-                          ...j,
-                          subJobs: j.subJobs.map((s) =>
-                              s.id === subJobId ? { ...s, ...updated } : s
-                          ),
-                        }
-                        : j
-                ),
-              })),
+      addDataBlock: (block) =>
+        set((state) => {
+          const { start_date, end_date } = calculateBlockDates(block.items);
+          return {
+            data: [
+              ...state.data,
+              { ...block, start_date, end_date },
+            ],
+          };
         }),
-        {
-          name: "jobs-storage",
-          onRehydrateStorage: () => (state) => {
-            state?.setHydrated();
-          },
-        }
-    )
+
+      updateDataBlock: (uuid, updated) =>
+        set((state) => ({
+          data: state.data.map((b) => {
+            if (b.uuid !== uuid) return b;
+            const merged = { ...b, ...updated };
+            const { start_date, end_date } = calculateBlockDates(merged.items);
+            return { ...merged, start_date, end_date };
+          }),
+        })),
+
+      deleteDataBlock: (uuid) =>
+        set((state) => ({
+          data: state.data.filter((b) => b.uuid !== uuid),
+        })),
+
+      updateItem: (blockUuid, itemUuid, updated) =>
+        set((state) => ({
+          data: state.data.map((b) => {
+            if (b.uuid !== blockUuid) return b;
+            const newItems = b.items.map((i) =>
+              i.uuid === itemUuid ? { ...i, ...updated } : i
+            );
+            const { start_date, end_date } = calculateBlockDates(newItems);
+            return { ...b, items: newItems, start_date, end_date };
+          }),
+        })),
+    }),
+    {
+      name: "data-storage",
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated();
+      },
+    }
+  )
 );

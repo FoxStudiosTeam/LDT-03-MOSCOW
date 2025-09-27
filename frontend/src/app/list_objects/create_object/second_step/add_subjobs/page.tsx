@@ -125,6 +125,7 @@ export default function AddSubjobs() {
                         <div className="w-full flex flex-col">
                             <label>КПГЗ</label>
                             <input
+                                disabled
                                 type="text"
                                 value={kpgz}
                                 onChange={(e) => setKpgz(e.target.value)}
@@ -137,6 +138,7 @@ export default function AddSubjobs() {
                         <div className="w-full flex flex-col">
                             <label>Дата начала</label>
                             <input
+                                disabled
                                 type="text"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
@@ -146,6 +148,7 @@ export default function AddSubjobs() {
                         <div className="w-full flex flex-col">
                             <label>Дата окончание</label>
                             <input
+                                disabled
                                 type="text"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
@@ -155,7 +158,6 @@ export default function AddSubjobs() {
                     </div>
                 </div>
 
-                {/* Таблица subJobs */}
                 <div className="w-full overflow-x-auto">
                     <table className="w-full table-fixed border-collapse">
                         <thead>
@@ -206,15 +208,12 @@ export default function AddSubjobs() {
 
                                         <td onClick={() => startEdit(itemIdx, "unitOfMeasurement")}>
                                             {editing && editingCell?.col === "unitOfMeasurement" ? (
-                                                <input
-                                                    ref={(el) => { inputRef.current = el; }}
-                                                    type="text"
-                                                    value={item.unitOfMeasurement}
-                                                    onChange={(e) => updateCell(itemIdx, "unitOfMeasurement", e.target.value)}
-                                                    onBlur={stopEdit}
-                                                    onKeyDown={(e) => handleKeyDown(e)}
+                                                <select
+                                                
                                                     className="w-full h-10 p-2 outline-none border rounded"
-                                                />
+                                                >
+
+                                                </select>
                                             ) : (
                                                 <div className="min-h-[36px]">{item.unitOfMeasurement || <span className="text-slate-400">—</span>}</div>
                                             )}
@@ -253,7 +252,7 @@ export default function AddSubjobs() {
                                         </td>
 
                                         <td className="text-center">
-                                            <button onClick={() => deleteRow(itemIdx)} className="h-9 px-3 rounded bg-white border hover:bg-red-50">🗑</button>
+                                            <button type="button" onClick={() => deleteRow(itemIdx)} className="h-9 px-3 rounded bg-white border hover:bg-red-50">🗑</button>
                                         </td>
                                     </tr>
                                 );
@@ -263,8 +262,8 @@ export default function AddSubjobs() {
                 </div>
 
                 <div className="w-full flex items-center justify-between gap-4">
-                    <button className="bg-red-700 text-white px-6 py-2 rounded-lg" onClick={addRow}>Добавить строку</button>
-                    <button className="bg-red-700 text-white px-6 py-2 rounded-lg" onClick={handleSave}>Сохранить</button>
+                    <button type="button" className="bg-red-700 text-white px-6 py-2 rounded-lg" onClick={addRow}>Добавить строку</button>
+                    <button type="submit" className="bg-red-700 text-white px-6 py-2 rounded-lg" onClick={handleSave}>Сохранить</button>
                 </div>
             </main>
         </div>
