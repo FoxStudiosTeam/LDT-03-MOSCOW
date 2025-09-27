@@ -17,7 +17,7 @@ use shared::prelude::*;
 use utoipa_axum::routes;
 use utoipa_scalar::{Scalar, Servable};
 
-use crate::services::{IProjectScheduleService, IProjectService};
+use crate::services::{IProjectScheduleService, IProjectService, IWorkCategoryService, IWorkService};
 
 mod controllers;
 mod services;
@@ -55,7 +55,9 @@ pub type Orm = orm::prelude::Orm<sqlx::Pool<DB>>;
 struct AppState {
     orm: Option<Orm>,
     project_service: Option<Arc<dyn IProjectService>>,
-    project_schedule_service: Option<Arc<dyn IProjectScheduleService>>
+    project_schedule_service: Option<Arc<dyn IProjectScheduleService>>,
+    work_category_service: Option<Arc<dyn IWorkCategoryService>>,
+    work_service : Option<Arc<dyn IWorkService>>
 } 
 
 impl AppState {
@@ -70,6 +72,12 @@ impl AppState {
     }
     fn project_schedule_service(&self) -> &Arc<dyn IProjectScheduleService> {
         self.project_schedule_service.as_ref().expect("ProjectScheduleService is not initialized")
+    }
+    fn work_category_service(&self) -> &Arc<dyn IWorkCategoryService> {
+        self.work_category_service.as_ref().expect("WorkCategoryService is not initialized")
+    }
+    fn work_service(&self) -> &Arc<dyn IWorkService> {
+        self.work_service.as_ref().expect("WorkService is not initialized")
     }
 }
 
@@ -95,6 +103,12 @@ async fn main() -> anyhow::Result<()> {
     
     let project_schedule_service = services::new_project_schedule_service(state.clone());
     state.project_schedule_service = Some(project_schedule_service);
+
+    let work_category_service = services::new_work_category_service(state.clone());
+    state.work_category_service = Some(work_category_service);
+
+    let work_service = services::new_work_service(state.clone());
+    state.work_service = Some(work_service);
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
@@ -155,12 +169,12 @@ async fn main() -> anyhow::Result<()> {
                 )
                 .routes(
                     routes!(
-                        controllers::handle_update_work_schedule
+                        controllers::handle_update_works_in_schedule
                     )
                 )
                 .routes(
                     routes!(
-                        controllers::handle_update_works_in_schedule
+                        controllers::handle_update_work_in_schedule
                     )
                 )
                 .routes(
@@ -168,7 +182,48 @@ async fn main() -> anyhow::Result<()> {
                         controllers::handle_get_project_schedule
                     )
                 )
-                .with_state(state)
+                .routes(
+                    routes!(
+                        controllers::handle_create_work_category
+                    )
+                )
+                
+                .routes(
+                    routes!(
+                        controllers::handle_update_work_category
+                    )
+                )
+                .routes (
+                    routes!(
+                        controllers::handle_save_work
+                    )
+                )
+                .routes (
+                    routes!(
+                        controllers::handle_get_works_by_category
+                    )
+                )
+                .with_state(state.clone())
+                .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+                .merge(
+                    OpenApiRouter::new()
+                    .routes(
+                        routes!(
+                            controllers::handle_get_work_categories
+                        )
+                    )
+                    .routes (
+                        routes!(
+                            controllers::handle_get_project_statuses
+                        )
+                    )
+                    .routes(
+                        routes!(
+                            controllers::handle_get_kpgz_vec
+                        )
+                    )
+                    .with_state(state)
+                )
         )
         // .routes(
         //     routes!(
