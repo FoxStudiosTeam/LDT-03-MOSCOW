@@ -1,5 +1,6 @@
-use schema::prelude::{Attachments, Kpgz, Project, ProjectStatuses, WorkCategory, Works};
+use schema::prelude::*;
 use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -90,17 +91,18 @@ pub struct AddIkoToProjectRequest {
 
 #[derive(ToSchema, Deserialize)]
 pub struct CreateProjectScheduleRequest {
-    pub project_uuid : Uuid
+    pub project_uuid : Uuid,
+    pub work_uuid : Uuid,
 }
 
 #[derive(ToSchema, Deserialize)]
 pub struct AddWorkToScheduleRequest {
     pub created_by : Uuid,
-    pub work_uuid : Uuid, 
     pub start_date : chrono::NaiveDate,
     pub end_date : chrono::NaiveDate,
     pub target_volume : f64,
-    pub is_draft : bool
+    pub is_draft : bool,
+    pub title: String,
 }
 
 #[derive(ToSchema, Deserialize)]
@@ -113,7 +115,8 @@ pub struct UpdateWorksInScheduleRequest {
     pub start_date : chrono::NaiveDate,
     pub end_date : chrono::NaiveDate,
     pub uuid : Option<Uuid>,
-    pub work_uuid : Uuid,
+    // pub work_uuid : Uuid,
+    pub title : String,
     pub target_volume : f64,
     pub is_complete: bool,
     pub project_schedule_uuid : Uuid,
@@ -121,8 +124,8 @@ pub struct UpdateWorksInScheduleRequest {
 }
 
 #[derive(ToSchema, Deserialize)]
-pub struct GetProjectScheduleRequest{
-    pub uuid : Uuid
+pub struct GetProjectScheduleRequest {
+    pub project_uuid : Uuid
 }
 #[derive(ToSchema, Serialize)]
 pub struct GetProjectScheduleResponse {
@@ -147,6 +150,22 @@ pub struct ProjectScheduleItemResponse {
     pub is_completed: bool,
     pub target_volume: f64,
     pub measurement: i32
+}
+
+impl ProjectScheduleItemResponse {
+    pub fn from_items(items: ProjectScheduleItems) -> Self {
+        Self {
+            uuid: items.uuid,
+            title: items.title,
+            start_date: items.start_date,
+            end_date: items.end_date,
+            is_deleted: items.is_deleted,
+            is_draft: items.is_draft,
+            is_completed: items.is_completed,
+            target_volume: items.target_volume,
+            measurement: items.measurement
+        }
+    }
 }
 
 // ProjectStatus - таблица статусов проекта.
@@ -231,3 +250,10 @@ impl OptionalAttachments {
     }
 }
 
+
+
+#[derive(Deserialize, FromRow)]
+pub struct TitledSchedule {
+    pub uuid : Uuid,
+    pub title : String,
+}

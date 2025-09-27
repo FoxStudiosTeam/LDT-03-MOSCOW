@@ -70,6 +70,8 @@ tables:
     default: null
   - name: project_uuid
     type: uuid
+  - name: work_uuid
+    type: uuid
 - name: project_schedule_items
   schema: journal
   fields:
@@ -83,8 +85,6 @@ tables:
     type: uuid
     isPrimary: true
     default: "gen_random_uuid()"
-  - name: work_uuid
-    type: uuid
   - name: start_date
     type: date
   - name: end_date
@@ -97,6 +97,8 @@ tables:
     type: uuid
     nullable: true
     default: null
+  - name: title
+    type: text
   - name: is_draft
     type: boolean
   - name: is_deleted
