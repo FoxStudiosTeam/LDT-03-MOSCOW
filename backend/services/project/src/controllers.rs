@@ -130,10 +130,10 @@ pub async fn handle_create_project_schedule(
     post,
     path = "/add-work-to-schedule-request",
     tag = crate::MAIN_TAG,
-    summary = "Add work to schedule.",
+    summary = "Add subwork to schedule.",
     security(("bearer_access" = [])),
     responses(
-        (status = 200, description = "work was added into schedule.", body = ProjectScheduleItems),
+        (status = 200, description = "work subwork added into schedule.", body = ProjectScheduleItems),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -296,7 +296,7 @@ pub async fn handle_get_kpgz_vec(State(state) : State<AppState>) -> Result<Respo
     tag = crate::MAIN_TAG,
     summary = "get measurement dictionary as vec",
     responses (
-        (status = 200, description = "Measurement dictionary as vec", body = Vec<Measurements>),
+        (status = 200, description = "easurement dictionary as vec", body = Vec<Measurements>),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
