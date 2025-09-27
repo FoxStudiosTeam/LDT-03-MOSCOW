@@ -33,8 +33,9 @@ import androidx.compose.ui.zIndex
 import ru.foxstudios.digital_building_journal.Screen
 import ru.foxstudios.digital_building_journal.screens.*
 @Composable
-fun Header() {
+fun Header(changeScreen: (Screen) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
+    var buttonText by remember { mutableStateOf("☰") } // Вынес в отдельное состояние
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -43,23 +44,25 @@ fun Header() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            "ЭСЖ",
+            text = "\uD83D\uDCD6 ЭСЖ",
             color = Color(0xFF000000),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
         )
         Button(
-            onClick = { expanded = !expanded },
+            onClick = { expanded = !expanded; buttonText = if (buttonText == "☰") "✕" else "☰"},
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White,
                 contentColor = Color.Black
             ),
+            contentPadding = PaddingValues(0.dp),
             modifier = Modifier
                 .height(40.dp)
-                .width(110.dp)
+                .width(40.dp)
+                .padding(0.dp)
         ) {
-            Text("Меню", color = Color(0xFF000000), fontSize = 20.sp)
+            Text(buttonText, color = Color(0xFF000000), fontSize = 28.sp)
         }
     }
     Divider(
@@ -168,4 +171,3 @@ fun Header() {
     }
 }
 
-annotation class changeScreen(val value: ru.foxstudios.digital_building_journal.Screen)

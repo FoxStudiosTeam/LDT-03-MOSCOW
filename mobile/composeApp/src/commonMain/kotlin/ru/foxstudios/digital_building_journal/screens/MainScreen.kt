@@ -61,7 +61,7 @@ fun MainScreen(
             .border(0.5.dp, Color.Gray)
             .padding(top=10.dp, bottom = 5.dp)
     ) {
-        Header()
+        Header(changeScreen)
         Row(
             modifier = Modifier
                 .fillMaxWidth()

@@ -1,11 +1,15 @@
 package ru.foxstudios.digital_building_journal.screens.subject
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -22,6 +26,7 @@ import ru.foxstudios.authlib.auth.IAuthStorageProvider
 import ru.foxstudios.authlib.auth.IAuthStorageProviderDIToken
 import ru.foxstudios.dependency_container.IContainer
 import ru.foxstudios.digital_building_journal.Screen
+import ru.foxstudios.digital_building_journal.screens.Header
 
 @Composable
 fun ObjectScreen(
@@ -30,12 +35,21 @@ fun ObjectScreen(
     function: () -> Unit //кал бэк
 ){
     val authStorageProvider = di.get<IAuthStorageProvider>(IAuthStorageProviderDIToken)
-
     Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .border(0.5.dp, Color.Gray)
+            .padding(top=10.dp, bottom = 5.dp)
     ) {
+        Header(changeScreen)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.Start,
+        ){
         Text(
             text = "Добро пожаловать на страницу объекта",
             fontSize = 24.sp,
@@ -70,5 +84,5 @@ fun ObjectScreen(
         ) {
             Text("Вернуться на главный экран")
         }
-    }
+    }}
 }

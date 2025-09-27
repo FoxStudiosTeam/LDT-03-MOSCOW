@@ -1,5 +1,7 @@
 package ru.foxstudios.digital_building_journal.screens.violation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,12 +43,18 @@ fun ViolantionsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(Color.White)
+            .border(0.5.dp, Color.Gray)
+            .padding(top=10.dp, bottom = 5.dp)
     ) {
-        Header()
-        Row(){
+        Header(changeScreen)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.Start,
+        ){
         Button(
             onClick = {
                 authStorageProvider.clear()
@@ -62,7 +70,7 @@ fun ViolantionsScreen(
                 contentColor = Color.White
             )
         ) {
-            Text("Выти из")
+            Text("Выйти из")
         }
         Spacer(Modifier.height(20.dp))
         Text(
@@ -84,7 +92,7 @@ fun ViolantionsScreen(
                 contentColor = Color.White
             )
         ) {
-            Text("")
+            Text("рапрпа")
         }
     }
     }

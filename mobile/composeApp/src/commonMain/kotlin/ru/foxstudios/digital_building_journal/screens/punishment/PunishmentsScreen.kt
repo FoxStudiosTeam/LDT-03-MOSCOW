@@ -1,7 +1,10 @@
 package ru.foxstudios.digital_building_journal.screens.punishment
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,47 +39,54 @@ fun PunishmentsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(Color.White)
+            .border(0.5.dp, Color.Gray)
+            .padding(top=10.dp, bottom = 5.dp)
     ) {
-        Header()
-        Text(
-            text = "Страница наказаний",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = {
-                // Navigate to add a new punishment
-            },
+        Header(changeScreen)
+        Row(
             modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(50.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = Color.White
-            )
+                .fillMaxWidth()
+                .padding(top = 24.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.Start,
         ) {
-            Text("Добавить наказание")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { changeScreen(Screen.MAIN) }, // Go back to the main screen
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(50.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFB41313),
-                contentColor = Color.White
+            Text(
+                text = "Страница наказаний",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
-        ) {
-            Text("Вернуться на главный экран")
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = {
+                    // Navigate to add a new punishment
+                },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Добавить наказание")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = { changeScreen(Screen.MAIN) }, // Go back to the main screen
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFB41313),
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Вернуться на главный экран")
+            }
         }
-
     }
 }
