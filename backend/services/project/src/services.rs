@@ -461,7 +461,7 @@ impl IProjectScheduleService for ProjectScheduleService {
         let project_schedule = raw.first().ok_or_else(|| {
             AppErr::default()
                 .with_err_response("not found project_schedule")
-                .with_status(StatusCode::INTERNAL_SERVER_ERROR)
+                .with_status(StatusCode::NOT_FOUND)
         })?;
 
         tracing::warn!(
