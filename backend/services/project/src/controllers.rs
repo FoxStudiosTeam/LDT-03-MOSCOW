@@ -111,12 +111,12 @@ pub async fn handle_add_iko_to_project(
 )]
 pub async fn handle_create_project_schedule(
     State(state): State<AppState>,
-    //Extension(payload) : Extension<AccessTokenPayload>,
+    Extension(payload) : Extension<AccessTokenPayload>,
     Json(r): Json<CreateProjectScheduleRequest>,
 ) -> Result<Response, AppErr> {
     return state
         .project_schedule_service()
-        .create_project_schedule(r)
+        .create_project_schedule(r, payload)
         .await;
 }
 
@@ -153,14 +153,14 @@ pub async fn handle_add_work_to_schedule(
         (status = 401, description = "Unauthorized"),
     )
 )]
-//Extension(payload) : Extension<AccessTokenPayload>,
 pub async fn handle_update_works_in_schedule(
     State(state): State<AppState>,
+    Extension(payload) : Extension<AccessTokenPayload>,
     Json(r): Json<UpdateWorkScheduleRequest>,
 ) -> Result<Response, AppErr> {
     return state
         .project_schedule_service()
-        .update_works_in_schedule(r)
+        .update_works_in_schedule(r, payload)
         .await;
 }
 
@@ -175,14 +175,14 @@ pub async fn handle_update_works_in_schedule(
         (status = 401, description = "Unauthorized"),
     )
 )]
-//Extension(payload) : Extension<AccessTokenPayload>,
 pub async fn handle_update_work_in_schedule(
     State(state): State<AppState>,
+    Extension(payload) : Extension<AccessTokenPayload>,
     Json(r): Json<UpdateWorksInScheduleRequest>,
 ) -> Result<Response, AppErr> {
     return state
         .project_schedule_service()
-        .update_work_in_schedule(r)
+        .update_work_in_schedule(r, payload)
         .await;
 }
 
@@ -197,14 +197,14 @@ pub async fn handle_update_work_in_schedule(
         (status = 401, description = "Unauthorized"),
     )
 )]
-//Extension(payload) : Extension<AccessTokenPayload>,
 pub async fn handle_get_project_schedule(
     State(state): State<AppState>,
+    Extension(payload) : Extension<AccessTokenPayload>,
     Json(r): Json<GetProjectScheduleRequest>,
 ) -> Result<Response, AppErr> {
     return state
         .project_schedule_service()
-        .get_project_schedule(r)
+        .get_project_schedule(r, payload)
         .await;
 }
 
@@ -233,7 +233,7 @@ pub async fn handle_create_work_category(
     path = "/update-work-category",
     summary = "update one work category",
     responses (
-        (status = 200, description = "Update one Work Category"),
+        (status = 200, description = "Update one Work Category", body = Option<WorkCategory>),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -251,7 +251,7 @@ pub async fn handle_update_work_category(
     tag = crate::MAIN_TAG,
     summary = "get work categories as vec",
     responses (
-        (status = 200, description = "Work Categories as vec"),
+        (status = 200, description = "Work Categories as vec", body = GetWorkCategoriesResponse),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -266,7 +266,7 @@ pub async fn handle_get_work_categories(State(state): State<AppState>) -> Result
     tag = crate::MAIN_TAG,
     summary = "get kpgz dictionary as vec",
     responses (
-        (status = 200, description = "kpgz dictionary as vec"),
+        (status = 200, description = "kpgz dictionary as vec", body = GetKpgz),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -280,7 +280,7 @@ pub async fn handle_get_kpgz_vec(State(state) : State<AppState>) -> Result<Respo
     tag = crate::MAIN_TAG,
     summary = "save work using work_category_uuid and title",
     responses (
-        (status = 200, description = "work successfully saved"),
+        (status = 200, description = "work successfully saved", body = SaveWorkResponse),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -295,7 +295,7 @@ pub async fn handle_save_work(State(state) : State<AppState>, Json(r): Json<Crea
     tag = crate::MAIN_TAG,
     summary = "get work using work_category_uuid",
     responses (
-        (status = 200, description = "works list by work_category_uuid"),
+        (status = 200, description = "works list by work_category_uuid", body = GetWorksByCategoryResponse),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -310,7 +310,7 @@ pub async fn handle_get_works_by_category(State(state) : State<AppState>, Json(r
     tag = crate::MAIN_TAG,
     summary = "get project statuses",
     responses (
-        (status = 200, description = "roject statuses list"),
+        (status = 200, description = "project statuses list", body = ProjectStatusesResponse),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )

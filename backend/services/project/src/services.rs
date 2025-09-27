@@ -271,26 +271,24 @@ pub fn new_project_service(state: AppState) -> Arc<dyn IProjectService> {
 
 #[async_trait]
 pub trait IProjectScheduleService: Send + Sync {
-    //, t : AccessTokenPayload
     async fn create_project_schedule(
         &self,
         r: CreateProjectScheduleRequest,
+        t : AccessTokenPayload
     ) -> Result<Response, AppErr>;
-    //, t: AccessTokenPayload
     async fn add_work_to_schedule(&self, r: AddWorkToScheduleRequest) -> Result<Response, AppErr>;
-    // , t: AccessTokenPayload
     async fn update_works_in_schedule(
         &self,
         r: UpdateWorkScheduleRequest,
+        t: AccessTokenPayload
     ) -> Result<Response, AppErr>;
-    //, t: AccessTokenPayload
     async fn update_work_in_schedule(
         &self,
         r: UpdateWorksInScheduleRequest,
+        t: AccessTokenPayload
     ) -> Result<Response, AppErr>;
 
-    //, t: AccessTokenPayload
-    async fn get_project_schedule(&self, r: GetProjectScheduleRequest) -> Result<Response, AppErr>;
+    async fn get_project_schedule(&self, r: GetProjectScheduleRequest, t: AccessTokenPayload) -> Result<Response, AppErr>;
 }
 #[derive(Clone)]
 struct ProjectScheduleService {
@@ -299,14 +297,14 @@ struct ProjectScheduleService {
 
 #[async_trait]
 impl IProjectScheduleService for ProjectScheduleService {
-    //, t: AccessTokenPayload
     async fn create_project_schedule(
         &self,
         r: CreateProjectScheduleRequest,
+        t: AccessTokenPayload
     ) -> Result<Response, AppErr> {
         let mut project_schedule = ActiveProjectSchedule::default();
         project_schedule.project_uuid = Set(r.project_uuid);
-        //project_schedule.created_by = Set(t.uuid);
+        // project_schedule.created_by = Set(t.uuid); // TODO!
 
         let res = self
             .state
@@ -348,10 +346,11 @@ impl IProjectScheduleService for ProjectScheduleService {
         return Ok((StatusCode::OK, Json(res)).into_response());
     }
 
-    //, t: AccessTokenPayload
+    //, 
     async fn update_works_in_schedule(
         &self,
         r: UpdateWorkScheduleRequest,
+        t: AccessTokenPayload
     ) -> Result<Response, AppErr> {
         let mut result: Vec<ProjectScheduleItems> = Vec::new();
 
@@ -368,6 +367,7 @@ impl IProjectScheduleService for ProjectScheduleService {
             work_to_schedule.target_volume = Set(elem.target_volume);
             work_to_schedule.is_deleted = Set(false);
             work_to_schedule.is_completed = Set(elem.is_complete);
+            work_to_schedule.updated_by = Set(Some(t.uuid));
 
             // TODO: починить токены и сделать логику выбора
             work_to_schedule.is_draft = Set(false);
@@ -406,14 +406,15 @@ impl IProjectScheduleService for ProjectScheduleService {
         return Ok((StatusCode::OK, Json(result)).into_response());
     }
 
-    //, t: AccessTokenPayload
     async fn update_work_in_schedule(
         &self,
         r: UpdateWorksInScheduleRequest,
+        t: AccessTokenPayload
     ) -> Result<Response, AppErr> {
         let mut work_to_update = ActiveProjectScheduleItems::default();
         work_to_update.end_date = Set(r.end_date);
         work_to_update.start_date = Set(r.start_date);
+        work_to_update.updated_by = Set(Some(t.uuid));
 
         if let Some(uuid) = r.uuid {
             work_to_update.uuid = Set(uuid);
@@ -435,8 +436,7 @@ impl IProjectScheduleService for ProjectScheduleService {
         return Ok((StatusCode::OK, Json(res)).into_response());
     }
 
-    //, t: AccessTokenPayload and created_by = $2
-    async fn get_project_schedule(&self, r: GetProjectScheduleRequest) -> Result<Response, AppErr> {
+    async fn get_project_schedule(&self, r: GetProjectScheduleRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
         // Получаем график проекта
         let raw = self
             .state
@@ -445,9 +445,13 @@ impl IProjectScheduleService for ProjectScheduleService {
             .select(
                 "SELECT ps.* FROM journal.project_schedule ps
              INNER JOIN project.project pj ON ps.project_uuid = pj.uuid
-             WHERE ps.project_uuid = $1 LIMIT 1",
+             WHERE ps.project_uuid = $1 
+             AND created_by = $2
+             LIMIT 1
+             ",
             )
             .bind(r.uuid)
+            .bind(t.uuid)
             .fetch()
             .await
             .into_app_err()?;

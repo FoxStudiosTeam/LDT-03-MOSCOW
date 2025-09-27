@@ -217,7 +217,7 @@ async fn main() -> anyhow::Result<()> {
                         controllers::handle_get_project_statuses
                     )
                 )
-                //.layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+                .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
                 .with_state(state)
         )
         // .routes(
