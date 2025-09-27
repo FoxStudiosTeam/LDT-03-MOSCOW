@@ -1,8 +1,12 @@
 package ru.foxstudios.digital_building_journal
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.VectorPainter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -14,6 +18,7 @@ import ru.foxstudios.digital_building_journal.di.normalBuilder
 import ru.foxstudios.digital_building_journal.screens.*
 import ru.foxstudios.digital_building_journal.screens.material.MaterialsScreen
 import ru.foxstudios.digital_building_journal.screens.auth.AuthScreen
+import ru.foxstudios.digital_building_journal.screens.ocr.OcrScreen
 import ru.foxstudios.digital_building_journal.screens.subject.ObjectScreen
 import ru.foxstudios.digital_building_journal.screens.punishment.PunishmentsScreen
 import ru.foxstudios.digital_building_journal.screens.report.ReportsScreen
@@ -26,8 +31,10 @@ enum class Screen {
     REPORT,
     MATERIALS,
     PUNISHMENT,
-    VIOLATION
+    VIOLATION,
+    TEST_OCR
 }
+
 @Composable
 @Preview
 fun App() {
@@ -45,6 +52,7 @@ fun App() {
         MainAppContent()
     }
 }
+
 @Composable
 fun MainAppContent(){
     val di = normalBuilder(DependencyBuilder)
@@ -59,17 +67,20 @@ fun MainAppContent(){
             Screen.MATERIALS -> MaterialsScreen(di, { next -> startScreen = next }) {}
             Screen.PUNISHMENT -> PunishmentsScreen(di, { next -> startScreen = next }) {}
             Screen.VIOLATION -> ViolantionsScreen(di, { next -> startScreen = next }) {}
+            Screen.TEST_OCR -> OcrScreen(di, { next -> startScreen = next }) {}
         }
     }
 }
 
 fun checkCurrentScreen(di : IContainer): Screen {
-    val authStorageProvider = di.get<IAuthStorageProvider>(IAuthStorageProviderDIToken)
-    val refreshToken = runBlocking { authStorageProvider.getRefreshToken() }
-    if (refreshToken.isNotEmpty()){
-        return Screen.MAIN
-    }
-    return Screen.AUTH
+//    val authStorageProvider = di.get<IAuthStorageProvider>(IAuthStorageProviderDIToken)
+//    val refreshToken = runBlocking { authStorageProvider.getRefreshToken() }
+//    if (refreshToken.isNotEmpty()){
+//        return Screen.MAIN
+//    }
+//    return Screen.AUTH
+    
+    return Screen.TEST_OCR
 }
 
 @Composable

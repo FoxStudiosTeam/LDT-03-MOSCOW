@@ -529,7 +529,7 @@ impl IProjectScheduleService for ProjectScheduleService {
 
         // Группируем элементы по категории: ключ (category_uuid, category_title)
         let mut grouped: HashMap<(Uuid, String), Vec<ProjectScheduleItemResponse>> = HashMap::new();
-
+        
         for item in project_schedule_items {
             if let Some(work) = work_map.get(&item.work_uuid) {
                 let category_uuid = work.work_category;
