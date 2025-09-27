@@ -8,7 +8,7 @@ use axum::{Json, http::StatusCode, response::Response};
 use orm::prelude::Optional::{NotSet, Set};
 use orm::prelude::SaveMode::{Insert, Update, Upsert};
 use schema::prelude::{
-    ActiveIkoRelationship, ActiveProject, ActiveProjectSchedule, ActiveProjectScheduleItems, ActiveWorkCategory, ActiveWorks, OrmIkoRelationship, OrmKpgz, OrmProject, OrmProjectSchedule, OrmProjectScheduleItems, OrmProjectStatuses, OrmWorkCategory, OrmWorks, ProjectScheduleItems, Works
+    ActiveIkoRelationship, ActiveProject, ActiveProjectSchedule, ActiveProjectScheduleItems, ActiveWorkCategory, ActiveWorks, OrmIkoRelationship, OrmKpgz, OrmMeasurements, OrmProject, OrmProjectSchedule, OrmProjectScheduleItems, OrmProjectStatuses, OrmWorkCategory, OrmWorks, ProjectScheduleItems, Works
 };
 use shared::prelude::AppErr;
 use shared::prelude::IntoAppErr;
@@ -414,6 +414,7 @@ impl IProjectScheduleService for ProjectScheduleService {
         work_to_update.end_date = Set(r.end_date);
         work_to_update.start_date = Set(r.start_date);
         work_to_update.updated_by = Set(Some(t.uuid));
+        work_to_update.measurement = Set(r.measurement);
 
         if let Some(uuid) = r.uuid {
             work_to_update.uuid = Set(uuid);
@@ -550,6 +551,8 @@ impl IProjectScheduleService for ProjectScheduleService {
                         is_deleted: item.is_deleted,
                         is_draft: item.is_draft,
                         is_completed: item.is_completed,
+                        measurement: item.measurement,
+                        target_volume: item.target_volume,
                     });
             } else {
                 tracing::warn!("Не найден work для work_uuid = {}", item.work_uuid);
@@ -563,7 +566,7 @@ impl IProjectScheduleService for ProjectScheduleService {
                 |((category_uuid, title), items)| ProjectScheduleCategoryPartResponse {
                     uuid: category_uuid,
                     title,
-                    items: Some(items),
+                    items: items,
                 },
             )
             .collect();
@@ -682,6 +685,7 @@ pub trait IWorkService: Send + Sync {
     async fn save_work(&self, r: CreateUpdateWorkRequest) -> Result<Response, AppErr>;
     async fn get_works_by_category(&self, r: GetWorksByCategoryRequest)
     -> Result<Response, AppErr>;
+    async fn get_measurements(&self) -> Result<Response, AppErr>;
 }
 
 #[derive(Clone)]
@@ -690,6 +694,9 @@ struct WorkService {
 }
 #[async_trait]
 impl IWorkService for WorkService {
+    async fn get_measurements(&self) -> Result<Response, AppErr> {
+        Ok((StatusCode::OK, Json(self.state.orm().measurements().select("").fetch().await.into_app_err()?)).into_response())
+    }
     async fn save_work(&self, r: CreateUpdateWorkRequest) -> Result<Response, AppErr> {
         let save_mode = r.uuid.map(|_| Update).unwrap_or(Insert);
         let mut work = ActiveWorks {

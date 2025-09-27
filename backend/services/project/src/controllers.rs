@@ -288,6 +288,23 @@ pub async fn handle_get_work_categories(State(state): State<AppState>) -> Result
 pub async fn handle_get_kpgz_vec(State(state) : State<AppState>) -> Result<Response, AppErr> {
     return state.work_category_service().get_kpgz_vec().await;
 }
+
+
+#[utoipa::path(
+    get,
+    path = "/get-measurements",
+    tag = crate::MAIN_TAG,
+    summary = "get measurement dictionary as vec",
+    responses (
+        (status = 200, description = "Measurement dictionary as vec", body = Vec<Measurements>),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_get_measurements(State(state) : State<AppState>) -> Result<Response, AppErr> {
+    return state.work_service().get_measurements().await;
+}
+
 #[utoipa::path(
     post,
     path = "/works/save",

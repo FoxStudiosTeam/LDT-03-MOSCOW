@@ -116,7 +116,8 @@ pub struct UpdateWorksInScheduleRequest {
     pub work_uuid : Uuid,
     pub target_volume : f64,
     pub is_complete: bool,
-    pub project_schedule_uuid : Uuid
+    pub project_schedule_uuid : Uuid,
+    pub measurement : i32,
 }
 
 #[derive(ToSchema, Deserialize)]
@@ -132,7 +133,7 @@ pub struct GetProjectScheduleResponse {
 pub struct ProjectScheduleCategoryPartResponse {
     pub uuid: Uuid,
     pub title: String,
-    pub items: Option<Vec<ProjectScheduleItemResponse>>,
+    pub items: Vec<ProjectScheduleItemResponse>,
 }
 
 #[derive(ToSchema, Serialize)]
@@ -143,7 +144,9 @@ pub struct ProjectScheduleItemResponse {
     pub end_date: chrono::NaiveDate,
     pub is_deleted: bool,
     pub is_draft: bool,
-    pub is_completed: bool
+    pub is_completed: bool,
+    pub target_volume: f64,
+    pub measurement: i32
 }
 
 // ProjectStatus - таблица статусов проекта.

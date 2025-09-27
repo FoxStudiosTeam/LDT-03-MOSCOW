@@ -212,6 +212,11 @@ async fn main() -> anyhow::Result<()> {
                             controllers::handle_get_work_categories
                         )
                     )
+                    .routes(
+                        routes!(
+                            controllers::handle_get_measurements
+                        )
+                    )
                     .routes (
                         routes!(
                             controllers::handle_get_project_statuses
