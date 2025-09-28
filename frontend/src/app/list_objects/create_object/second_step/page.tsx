@@ -21,19 +21,26 @@ export default function SecondStep() {
             try {
                 if (uuid){
                     const {success, message: respMessage, result} = await GetProjectSchedule(uuid);
-                    if (success && result && result.data.length > 0) {
-                        result.data.forEach((block: DataBlock) => {
-                            addDataBlock({
-                                uuid: block.uuid,
-                                title: block.title,
-                                items: block.items,
+                    console.log(result)
+                    console.log(uuid)
+                    if (success && result && Array.isArray(result.data)) {
+                        if (result.data.length > 0) {
+                            result.data.forEach((block: DataBlock) => {
+                                addDataBlock({
+                                    uuid: block.uuid,
+                                    title: block.title,
+                                    items: block.items,
+                                });
                             });
-                        });
+                        } else {
+                            setIsEmpty(true);
+                        }
                     } else if (!success && respMessage === "not found project_schedule") {
                         setIsEmpty(true);
                     } else {
                         setMessage(respMessage || "Ошибка загрузки этапов");
                     }
+
                 } else {
                     setMessage("Ошибка загрузки этапов");
                 }

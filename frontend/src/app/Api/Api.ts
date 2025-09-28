@@ -63,7 +63,7 @@ export async function CreateObject(address: string, polygon: string, ssk: string
     }
 }
 
-export async function GetProjectSchedule(uuid:string){
+export async function GetProjectSchedule(project_uuid:string){
     try {
         const token = localStorage.getItem("access_token");
 
@@ -78,7 +78,7 @@ export async function GetProjectSchedule(uuid:string){
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify({ uuid})
+            body: JSON.stringify({ project_uuid })
         });
         if(response.ok){
             const result = await response.json();

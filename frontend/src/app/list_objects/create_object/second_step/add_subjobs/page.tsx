@@ -2,7 +2,6 @@
 
 import { Header } from "@/app/components/header";
 import React, { useEffect, useRef, useState } from "react";
-import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from "next/navigation";
 import { Getkpgz, GetMeasurement, GetWorkCategories } from "@/app/Api/Api";
 import { Kpgz, Measurement, Works } from "@/models";
@@ -32,6 +31,8 @@ export default function AddSubjobs() {
     const [selectedWork, setSelectedWork] = useState<Works | null>(null);
     const [editingCell, setEditingCell] = useState<{ row: number; col: keyof SubJob } | null>(null);
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+    const [messages, setMessages] = useState<string[]>([]);
+
 
     useEffect(() => {
         if (inputRef.current) {
@@ -77,17 +78,36 @@ export default function AddSubjobs() {
 
     useEffect(() => {
         const getData = async () => {
-            const { successCategories, messageCategories, resultCategories } = await GetWorkCategories()
-            setWorks(resultCategories);
-            const { successMeasurement, messageMeasurement, resultMeasurement } = await GetMeasurement()
-            setMeasurement(resultMeasurement);
-            const { successkpgz, messagekpgz, resultkpgz } = await Getkpgz();
-            setkpgz(resultkpgz);
-        }
-        getData();
-    }, [])
+            const msgs: string[] = [];
 
-    // ✅ onSubmit
+            const { successCategories, messageCategories, resultCategories } = await GetWorkCategories();
+            if (successCategories) {
+                setWorks(resultCategories);
+            } else {
+                msgs.push(messageCategories || "Ошибка загрузки этапов работ");
+            }
+
+            const { successMeasurement, messageMeasurement, resultMeasurement } = await GetMeasurement();
+            if (successMeasurement) {
+                setMeasurement(resultMeasurement);
+            } else {
+                msgs.push(messageMeasurement || "Ошибка загрузки единиц измерения");
+            }
+
+            const { successkpgz, messagekpgz, resultkpgz } = await Getkpgz();
+            if (successkpgz) {
+                setkpgz(resultkpgz);
+            } else {
+                msgs.push(messagekpgz || "Ошибка загрузки КПГЗ");
+            }
+
+            setMessages(msgs);
+        };
+        getData();
+    }, []);
+
+
+
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         // const {success, message, result} = await GetWorkCategories()
@@ -256,11 +276,24 @@ export default function AddSubjobs() {
                             </tbody>
                         </table>
                     </div>
-                    {/* Кнопки */}
+
                     <div className="w-full flex items-center justify-between gap-4">
                         <button type="button" className="bg-red-700 text-white px-6 py-2 rounded-lg" onClick={addRow}>Добавить строку</button>
                         <button type="submit" className="bg-red-700 text-white px-6 py-2 rounded-lg">Сохранить</button>
                     </div>
+                    {messages.length > 0 && (
+                        <div className="w-full flex flex-col items-center gap-1 pt-2">
+                            {messages.map((msg, idx) => (
+                                <p
+                                    key={idx}
+                                    className={`text-sm ${msg.includes("успешно") ? "text-green-600" : "text-red-600"}`}
+                                >
+                                    {msg}
+                                </p>
+                            ))}
+                        </div>
+                    )}
+
                 </form>
             </main>
         </div>
