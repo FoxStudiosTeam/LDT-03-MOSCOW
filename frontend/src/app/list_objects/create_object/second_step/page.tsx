@@ -5,7 +5,7 @@ import { useActionsStore } from "@/storage/jobsStorage";
 import Link from "next/link";
 import Image from "next/image";
 import {useEffect, useState} from "react";
-import {GetProjectSchedule} from "@/app/Api/Api";
+import {DeleteProjectSchedule, GetProjectSchedule} from "@/app/Api/Api";
 import {DataBlock} from "@/models";
 
 export default function SecondStep() {
@@ -103,7 +103,21 @@ export default function SecondStep() {
                                                     width={20}
                                                 />
                                             </Link>
-                                            <button onClick={() => deleteDataBlock(block.uuid)}>
+                                            <button
+                                                onClick={async () => {
+                                                    if (!block.uuid) return;
+                                                    const isConfirmed = window.confirm("Вы действительно хотите удалить этот элемент?");
+                                                    if (!isConfirmed) return;
+                                                    const {success, message} = await DeleteProjectSchedule(block.uuid);
+
+                                                    if (success) {
+                                                        deleteDataBlock(block.uuid);
+                                                        setMessage(null);
+                                                    } else {
+                                                        setMessage(message);
+                                                    }
+                                                }}
+                                            >
                                                 <Image
                                                     alt="Удаление"
                                                     src="/Tables/delete.svg"
@@ -111,6 +125,7 @@ export default function SecondStep() {
                                                     width={20}
                                                 />
                                             </button>
+
                                         </div>
                                     </td>
 
@@ -127,9 +142,9 @@ export default function SecondStep() {
                     </table>
                 </div>
 
-                <button className="self-end bg-red-700 text-white px-6 py-2 rounded-lg">
+                <Link href={"/list_objects/"} className="self-end bg-red-700 text-white px-6 py-2 rounded-lg">
                     Создать объект
-                </button>
+                </Link>
                 {message && <p className="w-full text-center text-red-600 pt-2">{message}</p>}
             </main>
         </div>

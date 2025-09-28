@@ -1,133 +1,142 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/app/components/header";
 import Link from "next/link";
+import { GetProjects, GetStatuses } from "@/app/Api/Api";
 
-
-interface Project {
-    id: number;
-    address: string;
-    status: string;
-    customer?: string;
-    contractor?: string;
-    inspector?: string;
-    coordinates?: { x: number; y: number; z: number };
-    mapUrl?: string;
+interface ProjectData {
+    uuid: string;
+    address: string | null;
+    status: number;
+    ssk: string | null;
+    foreman: string | null;
+    created_by: string | null;
+    start_date: string | null;
+    end_date: string | null;
 }
 
-const projects: Project[] = [
-    {
-        id: 1,
-        address: "ул. Волковское шоссе, д. 12",
-        status: "В работе",
-        customer: "ГКУ МСК Представитель: Иванов И.И.",
-        contractor: "ООО СтройГрад Исполнитель: Сидоров И.И.",
-        inspector: "Петров П.П.",
-        coordinates: { x: -123, y: 45, z: -999 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Openstreetmap_map.png/640px-Openstreetmap_map.png",
-    },
-    {
-        id: 2,
-        address: "ул. Флотская, д. 54, 58к1",
-        status: "В норме",
-        customer: "ГУП МОСИНЖПРОЕКТ Представитель: Смирнов А.А.",
-        contractor: "ООО Мир Пива Исполнитель: Сидоров И.И.",
-        inspector: "Бугалин И.И.",
-        coordinates: { x: -1230, y: 68, z: -99993 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/OpenStreetMap_logo.svg/512px-OpenStreetMap_logo.svg.png",
-    },
-    {
-        id: 3,
-        address: "пр-т Мира, д. 150",
-        status: "На проверке",
-        customer: "ГКУ МосАвтоДор Представитель: Васильев В.В.",
-        contractor: "АО ИнжСтрой Исполнитель: Кузнецов К.К.",
-        inspector: "Фёдоров Ф.Ф.",
-        coordinates: { x: 100, y: -50, z: 2500 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/640px-World_map_blank_without_borders.svg.png",
-    },
-
-];
+interface Status {
+    id: number;
+    title: string;
+}
 
 export default function ProjectsPage() {
-    const [openProject, setOpenProject] = useState<number | null>(null);
+    const [projects, setProjects] = useState<ProjectData[]>([]);
+    const [statuses, setStatuses] = useState<Status[]>([]);
+    const [openProject, setOpenProject] = useState<string | null>(null);
+    const [offset, setOffset] = useState(0);
+    const limit = 10;
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(false);
 
-    const toggleProject = (id: number) => {
-        setOpenProject(openProject === id ? null : id);
+    const toggleProject = (uuid: string) => {
+        setOpenProject(openProject === uuid ? null : uuid);
+    };
+
+    useEffect(() => {
+        const loadProjects = async () => {
+            setLoading(true);
+            const data = await GetProjects(offset, limit);
+            if (data.success) {
+                setProjects(data.result);
+                setTotal(data.total);
+            } else {
+                console.error("Ошибка при загрузке проектов:", data.message);
+            }
+            setLoading(false);
+        };
+
+        const loadStatuses = async () => {
+            const data = await GetStatuses();
+            if (data.success) {
+                setStatuses(data.result);
+            } else {
+                console.error("Ошибка при загрузке статусов:", data.message);
+            }
+        };
+
+        loadProjects();
+        loadStatuses();
+    }, [offset]);
+
+    const getStatusTitle = (statusId: number) => {
+        const status = statuses.find(s => s.id === statusId);
+        return status ? status.title : "Неизвестно";
     };
 
     return (
-        <div className="flex justify-center bg-[#D0D0D0]">
+        <div className="min-h-screen flex flex-col bg-[#D0D0D0]">
             <Header />
-
-            <main className="w-[80%] bg-white px-8 pt-[50px]">
+            <main className="flex-1 w-full max-w-6xl mx-auto bg-white px-6 sm:px-8 py-6 sm:py-10">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-xl font-semibold">Ваши объекты</h1>
+                    <h1 className="text-2xl sm:text-3xl font-semibold">Ваши объекты</h1>
                 </div>
 
-                <div className="flex gap-4 mb-6">
-                    <button className="bg-red-700 text-white px-4 py-2 rounded-md">
+                <div className="flex flex-wrap gap-3 mb-6">
+                    <button className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition">
                         В процессе
                     </button>
-                    <button className="bg-red-700 text-white px-4 py-2 rounded-md">
+                    <button className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition">
                         Завершенные
                     </button>
-                    <Link className="bg-red-700 text-white px-4 py-2 rounded-md" href={"/list_objects/create_object/first_step/"}>
+                    <Link
+                        className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
+                        href={"/list_objects/create_object/first_step/"}
+                    >
                         Создать новый
                     </Link>
                 </div>
 
+                {loading && <p className="text-center text-gray-600">Загрузка проектов...</p>}
+
                 <div className="space-y-4">
-                    {projects.map((project) => (
+                    {projects.map(project => (
                         <div
-                            key={project.id}
-                            className="border rounded-md p-4 bg-white shadow-sm"
+                            key={project.uuid}
+                            className="border rounded-md p-4 bg-white shadow-md hover:shadow-lg transition"
                         >
                             <div
                                 className="flex justify-between items-center cursor-pointer"
-                                onClick={() => toggleProject(project.id)}
+                                onClick={() => toggleProject(project.uuid)}
                             >
                                 <div>
-                                    <p className="font-medium">{project.address}</p>
+                                    <p className="font-medium">{project.address || "Адрес не указан"}</p>
                                     <p className="text-sm text-gray-600">
-                                        Статус: {project.status}
+                                        Статус: {getStatusTitle(project.status)}
                                     </p>
                                 </div>
-                                <span className="text-xl">
-                                    {openProject === project.id ? "▲" : "▼"}
-                                </span>
+                                <span className="text-xl">{openProject === project.uuid ? "▲" : "▼"}</span>
                             </div>
 
-                            {openProject === project.id && (
-                                <div className="mt-4 space-y-2 text-sm">
-                                    {project.customer && <p>Заказчик: {project.customer}</p>}
-                                    {project.contractor && <p>Подрядчик: {project.contractor}</p>}
-                                    {project.inspector && (
-                                        <p>Ответственный инспектор: {project.inspector}</p>
-                                    )}
-                                    {/*{project.mapUrl && (*/}
-                                    {/*    <Image*/}
-                                    {/*        src={project.mapUrl}*/}
-                                    {/*        alt="Карта"*/}
-                                    {/*        className="w-full h-64 object-cover rounded-md"*/}
-                                    {/*        width={50}*/}
-                                    {/*        height={50}*/}
-                                    {/*    />*/}
-                                    {/*)}*/}
-                                    {project.coordinates && (
-                                        <p>
-                                            Координаты: X: {project.coordinates.x}, Y:{" "}
-                                            {project.coordinates.y}, Z: {project.coordinates.z}
-                                        </p>
-                                    )}
+                            {openProject === project.uuid && (
+                                <div className="mt-4 space-y-2 text-sm text-gray-700">
+                                    {project.ssk && <p>Заказчик: {project.ssk}</p>}
+                                    {project.foreman && <p>Подрядчик: {project.foreman}</p>}
+                                    {project.start_date && <p>Дата начала: {project.start_date}</p>}
+                                    {project.end_date && <p>Дата окончания: {project.end_date}</p>}
                                 </div>
                             )}
                         </div>
                     ))}
+                </div>
+
+                <div className="flex justify-center mt-6 gap-2">
+                    <button
+                        disabled={offset === 0}
+                        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+                        onClick={() => setOffset(offset - limit)}
+                    >
+                        Назад
+                    </button>
+
+                    <button
+                        disabled={offset + limit >= total}
+                        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+                        onClick={() => setOffset(offset + limit)}
+                    >
+                        Вперед
+                    </button>
                 </div>
             </main>
         </div>

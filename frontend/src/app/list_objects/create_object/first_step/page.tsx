@@ -48,9 +48,8 @@ export default function FirstStep() {
         }
 
         try {
-            const {success, message, result} = await CreateObject(data.address, data.polygon, userData.uuid);
+            const {success, message, result} = await CreateObject(data.address, data.polygon);
             if (success && result) {
-                console.log(result)
                 localStorage.setItem("projectUuid", result);
                 router.push("/list_objects/create_object/second_step");
             } else {

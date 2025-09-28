@@ -33,7 +33,7 @@ export async function AuthUser(login: string, password: string) {
     }
 }
 
-export async function CreateObject(address: string, polygon: string, ssk: string) {
+export async function CreateObject(address: string, polygon: string) {
     try {
         const token = localStorage.getItem("access_token");
 
@@ -48,7 +48,7 @@ export async function CreateObject(address: string, polygon: string, ssk: string
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify({ address, polygon, ssk })
+            body: JSON.stringify({ address, polygon })
         });
 
         if (!response.ok) {
@@ -222,7 +222,7 @@ export async function UpdateWorksInSchedule(items: WorkItem[], projectScheduleUu
             return { success: false, message: "Нет access_token в localStorage" };
         }
 
-        const response = await fetch(`${baseURL}/project/update-works-in-schedule`, {
+        const response = await fetch(`${baseURL}/project/set-works-in-schedule`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -245,4 +245,81 @@ export async function UpdateWorksInSchedule(items: WorkItem[], projectScheduleUu
         console.error("Ошибка при обновлении works-in-schedule:", error);
         return { success: false, message: String(error) };
     }
+}
+
+export async function DeleteProjectSchedule(uuid: string) {
+    try {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
+        const response = await fetch(`${baseURL}/project/project-schedule?project_schedule_uuid=${uuid}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (response.ok) {
+            return { success: true, message: "Этап успешно удалён" };
+        } else {
+            const result = await response.json();
+            return { success: false, message: result.message || "Ошибка при удалении" };
+        }
+    } catch (error) {
+        console.error("Ошибка удаления:", error);
+        return { success: false, message: String(error) };
+    }
+}
+
+export async function GetProjects(offset: number, limit: number) {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        return { success: false, message: "Нет access_token в localStorage", result: [] };
+    }
+
+    const response = await fetch(`${baseURL}/project/get-project`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            address: null,
+            pagination: { limit, offset },
+        }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && Array.isArray(data.result)) {
+        const projects = data.result.map((item: { project: unknown }) => item.project);
+        return { success: true, message: null, result: projects, total: data.total || 0 };
+    } else {
+        return { success: false, message: data.message || "Ошибка при получении проектов", result: [] };
+    }
+}
+
+export async function GetStatuses() {
+
+    const response = await fetch(`${baseURL}/project/get-statuses`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    const data = await response.json();
+
+    if (response.ok && Array.isArray(data.data)) {
+        return { success: true, message: null, result: data.data };
+    }
+
+    return { success: false, message: data.message || "Ошибка при получении статусов", result: [] };
 }
