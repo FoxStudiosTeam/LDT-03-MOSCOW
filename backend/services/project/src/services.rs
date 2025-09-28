@@ -379,15 +379,14 @@ impl IProjectScheduleService for ProjectScheduleService {
         }
         
         let res = sqlx::query_as::<_, LocalProjectFields>("UPDATE journal.project_schedule_items psi
-                    SET is_deleted = TRUE
-                    FROM journal.project_schedule ps
-                    JOIN project.project p
-                    ON ps.project_uuid = p.uuid
-                    WHERE psi.project_schedule_uuid = ps.uuid
-                    AND psi.project_schedule_uuid = $1
-                    AND p.created_by = $2
-                    AND p.status = $3
-                    p.uuid AS project_id")
+SET is_deleted = TRUE
+FROM journal.project_schedule ps
+JOIN project.project p ON ps.project_uuid = p.uuid
+WHERE psi.project_schedule_uuid = ps.uuid
+  AND psi.project_schedule_uuid = $1
+  AND p.created_by = $2
+  AND p.status = $3
+RETURNING p.uuid AS project_id")
             .bind(&r.project_schedule_uuid)
             .bind(&t.org)
             .bind(&(ProjectStatus::New as i32))
@@ -455,15 +454,14 @@ impl IProjectScheduleService for ProjectScheduleService {
         }
         
         let res = sqlx::query_as::<_, ProjectId>("UPDATE journal.project_schedule_items psi
-                    SET is_deleted = TRUE
-                    FROM journal.project_schedule ps
-                    JOIN project.project p
-                    ON ps.project_uuid = p.uuid
-                    WHERE psi.project_schedule_uuid = ps.uuid
-                    AND psi.project_schedule_uuid = $1
-                    AND p.created_by = $2
-                    AND p.status = $3
-                    p.uuid AS project_id")
+SET is_deleted = TRUE
+FROM journal.project_schedule ps
+JOIN project.project p ON ps.project_uuid = p.uuid
+WHERE psi.project_schedule_uuid = ps.uuid
+  AND psi.project_schedule_uuid = $1
+  AND p.created_by = $2
+  AND p.status = $3
+RETURNING p.uuid AS project_id")
             .bind(&r.project_schedule_uuid)
             .bind(&t.org)
             .bind(&(ProjectStatus::New as i32))
