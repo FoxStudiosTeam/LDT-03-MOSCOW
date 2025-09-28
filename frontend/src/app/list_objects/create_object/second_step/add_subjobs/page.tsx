@@ -3,16 +3,11 @@
 import { Header } from "@/app/components/header";
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Getkpgz, GetMeasurement, GetWorkCategories } from "@/app/Api/Api";
-import { Kpgz, Measurement, Works } from "@/models";
+import {CreateProjectSchedule, Getkpgz, GetMeasurement, GetWorkCategories, UpdateWorksInSchedule} from "@/app/Api/Api";
+import {Kpgz, Measurement, SubJob, WorkItem, Works} from "@/models";
+import Image from "next/image";
 
-interface SubJob {
-    title: string;
-    volume: number;
-    unitOfMeasurement: string;
-    startDate: string;
-    endDate: string;
-}
+
 
 export default function AddSubjobs() {
     const [tableData, setTableData] = useState<SubJob[]>([{
@@ -32,8 +27,7 @@ export default function AddSubjobs() {
     const [editingCell, setEditingCell] = useState<{ row: number; col: keyof SubJob } | null>(null);
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
     const [messages, setMessages] = useState<string[]>([]);
-
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (inputRef.current) {
@@ -77,6 +71,16 @@ export default function AddSubjobs() {
         if (editingCell?.row === idx) stopEdit();
     };
 
+    const formatDate = (value: string): string => {
+        if (!value) return "";
+        const d = new Date(value);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    };
+
+
     useEffect(() => {
         const getData = async () => {
             const msgs: string[] = [];
@@ -109,53 +113,50 @@ export default function AddSubjobs() {
 
     useEffect(() => {
         if (tableData.length > 0) {
-            const firstStart = tableData[0].startDate || '';
-            const lastEnd = tableData[tableData.length - 1].endDate || '';
+            const validStarts = tableData
+                .map(r => r.startDate)
+                .filter(Boolean)
+                .map(d => new Date(d).getTime());
 
-            setStartDate(firstStart);
-            setEndDate(lastEnd);
+            const validEnds = tableData
+                .map(r => r.endDate)
+                .filter(Boolean)
+                .map(d => new Date(d).getTime());
+
+            const minStart = validStarts.length ? new Date(Math.min(...validStarts)) : null;
+            const maxEnd = validEnds.length ? new Date(Math.max(...validEnds)) : null;
+
+            setStartDate(minStart ? formatDate(minStart.toISOString()) : "");
+            setEndDate(maxEnd ? formatDate(maxEnd.toISOString()) : "");
         } else {
-            setStartDate('');
-            setEndDate('');
+            setStartDate("");
+            setEndDate("");
         }
     }, [tableData]);
 
-
-
-
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (isSubmitting) return; // защита от двойных кликов
+        setIsSubmitting(true);
+
         try {
-            const token = localStorage.getItem("access_token");
             const projectUuid = localStorage.getItem("projectUuid");
 
-            if (!token || !projectUuid || !selectedWork) {
+            if (!projectUuid || !selectedWork) {
                 setMessages(["Не хватает данных для сохранения"]);
+                setIsSubmitting(false);
                 return;
             }
 
-            const response1 = await fetch("https://test.foxstudios.ru:32460/api/project/create-project-schedule", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    project_uuid: projectUuid,
-                    work_uuid: selectedWork.uuid,
-                }),
-            });
-
-            if (!response1.ok) {
-                setMessages(["Ошибка при создании project_schedule"]);
+            const { success, message, result } = await CreateProjectSchedule(projectUuid, selectedWork.uuid);
+            if (!success || !result) {
+                setMessages([message || "Ошибка при создании project_schedule"]);
+                setIsSubmitting(false);
                 return;
             }
+            const projectScheduleUuid = result.uuid;
 
-            console.log("✅ Первый запрос выполнен");
-            const data1: { uuid: string } = await response1.json();
-            const projectScheduleUuid = data1.uuid;
-
-            const items = tableData.map(row => {
+            const items: WorkItem[] = tableData.map(row => {
                 const meas = measurement.find(m => m.title === row.unitOfMeasurement);
                 return {
                     end_date: row.endDate,
@@ -168,41 +169,21 @@ export default function AddSubjobs() {
                 };
             });
 
-            console.log("📦 Items для второго запроса:", items);
-
-            const response2 = await fetch("https://test.foxstudios.ru:32460/api/project/update-works-in-schedule", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    items,
-                    project_schedule_uuid: projectScheduleUuid,
-                }),
-            });
-
-            if (!response2.ok) {
-                setMessages(["Ошибка при обновлении work-schedule"]);
+            const { success: successUpd, message: messageUpd } = await UpdateWorksInSchedule(items, projectScheduleUuid);
+            if (!successUpd) {
+                setMessages([messageUpd || "Ошибка при обновлении work-schedule"]);
+                setIsSubmitting(false);
                 return;
             }
-
-            console.log("✅ Второй запрос выполнен");
-            await response2.json();
 
             setMessages(["Этапы успешно сохранены"]);
             router.push('/list_objects/create_object/second_step/');
         } catch (err: unknown) {
-            if (err instanceof Error) {
-                setMessages([`Ошибка: ${err.message}`]);
-            } else {
-                setMessages(["Неизвестная ошибка"]);
-            }
+            console.error("Ошибка при сохранении:", err);
+            setMessages(["Непредвиденная ошибка"]);
+            setIsSubmitting(false);
         }
     };
-
-
-
 
     const kpgzTitle = selectedWork ? kpgz.find(k => k.id === selectedWork.kpgz)?.code || '' : '';
 
@@ -263,7 +244,6 @@ export default function AddSubjobs() {
                             />
                         </div>
                     </div>
-                    <p>Даты вводить строго в формате год-месяц-день (пример: 2025-10-31)</p>
                     <div className="w-full overflow-x-auto">
                         <table className="w-full table-fixed border-collapse">
                             <thead>
@@ -315,49 +295,74 @@ export default function AddSubjobs() {
                                                     <select
                                                         value={item.unitOfMeasurement}
                                                         onChange={(e) => updateCell(itemIdx, "unitOfMeasurement", e.target.value)}
-                                                        onBlur={stopEdit}
                                                         className="w-full h-10 p-2 outline-none border rounded"
                                                     >
+                                                        <option value="" disabled>Выберите единицу</option>
                                                         {measurement.map((meas) => (
-                                                            <option value={meas.title} key={meas.title}>{meas.title}</option>
+                                                            <option value={meas.title}
+                                                                    key={meas.title}>{meas.title}</option>
                                                         ))}
                                                     </select>
+
                                                 ) : (
-                                                    <div className="min-h-[36px]">{item.unitOfMeasurement || <span className="text-slate-400">—</span>}</div>
+                                                    <div className="min-h-[36px]">{item.unitOfMeasurement ||
+                                                        <span className="text-slate-400">—</span>}</div>
                                                 )}
                                             </td>
                                             <td onClick={() => startEdit(itemIdx, "startDate")}>
                                                 {editing && editingCell?.col === "startDate" ? (
                                                     <input
-                                                        ref={(el) => { inputRef.current = el; }}
-                                                        type="text"
+                                                        ref={(el) => {
+                                                            inputRef.current = el;
+                                                        }}
+                                                        type="date"
                                                         value={item.startDate}
-                                                        onChange={(e) => updateCell(itemIdx, "startDate", e.target.value)}
+                                                        onChange={(e) => updateCell(itemIdx, "startDate", formatDate(e.target.value))}
                                                         onBlur={stopEdit}
                                                         onKeyDown={handleKeyDown}
                                                         className="w-full h-10 p-2 outline-none border rounded"
                                                     />
                                                 ) : (
-                                                    <div className="min-h-[36px]">{item.startDate || <span className="text-slate-400">—</span>}</div>
+                                                    <div className="min-h-[36px]">
+                                                        {item.startDate || <span className="text-slate-400">—</span>}
+                                                    </div>
                                                 )}
                                             </td>
+
                                             <td onClick={() => startEdit(itemIdx, "endDate")}>
                                                 {editing && editingCell?.col === "endDate" ? (
                                                     <input
-                                                        ref={(el) => { inputRef.current = el; }}
-                                                        type="text"
+                                                        ref={(el) => {
+                                                            inputRef.current = el;
+                                                        }}
+                                                        type="date"
                                                         value={item.endDate}
-                                                        onChange={(e) => updateCell(itemIdx, "endDate", e.target.value)}
+                                                        onChange={(e) => updateCell(itemIdx, "endDate", formatDate(e.target.value))}
                                                         onBlur={stopEdit}
                                                         onKeyDown={handleKeyDown}
                                                         className="w-full h-10 p-2 outline-none border rounded"
                                                     />
                                                 ) : (
-                                                    <div className="min-h-[36px]">{item.endDate || <span className="text-slate-400">—</span>}</div>
+                                                    <div className="min-h-[36px]">
+                                                    {item.endDate || <span className="text-slate-400">—</span>}
+                                                    </div>
                                                 )}
                                             </td>
-                                            <td className="text-center">
-                                                <button type="button" onClick={() => deleteRow(itemIdx)} className="h-9 px-3 rounded bg-white border hover:bg-red-50">🗑</button>
+
+                                            <td className="text-center align-middle">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => deleteRow(itemIdx)}
+                                                    className="flex h-12 w-12 items-center justify-center "
+                                                >
+                                                    <Image
+                                                        alt="Удаление"
+                                                        src="/Tables/delete.svg"
+                                                        height={20}
+                                                        width={20}
+                                                        className="transition"
+                                                    />
+                                                </button>
                                             </td>
                                         </tr>
                                     );
@@ -368,7 +373,15 @@ export default function AddSubjobs() {
 
                     <div className="w-full flex items-center justify-between gap-4">
                         <button type="button" className="bg-red-700 text-white px-6 py-2 rounded-lg" onClick={addRow}>Добавить строку</button>
-                        <button type="submit" className="bg-red-700 text-white px-6 py-2 rounded-lg">Сохранить</button>
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className={`px-6 py-2 rounded-lg text-white ${
+                                isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-red-700 hover:bg-red-800"
+                            }`}
+                        >
+                            {isSubmitting ? "Сохранение..." : "Сохранить"}
+                        </button>
                     </div>
                     {messages.length > 0 && (
                         <div className="w-full flex flex-col items-center gap-1 pt-2">

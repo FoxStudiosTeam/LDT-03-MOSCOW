@@ -12,6 +12,7 @@ export default function SecondStep() {
     const data = useActionsStore((state) => state.data);
     const deleteDataBlock = useActionsStore((state) => state.deleteDataBlock);
     const addDataBlock = useActionsStore((state) => state.addDataBlock);
+    const clearData = useActionsStore((state) => state.clearData)
     const uuid = localStorage.getItem("projectUuid");
     const [message, setMessage] = useState<string | null>(null);
     const [isEmpty, setIsEmpty] = useState(false);
@@ -25,6 +26,7 @@ export default function SecondStep() {
                     console.log(uuid)
                     if (success && result && Array.isArray(result.data)) {
                         if (result.data.length > 0) {
+                            clearData();
                             result.data.forEach((block: DataBlock) => {
                                 addDataBlock({
                                     uuid: block.uuid,
@@ -33,6 +35,7 @@ export default function SecondStep() {
                                 });
                             });
                         } else {
+                            clearData();
                             setIsEmpty(true);
                         }
                     } else if (!success && respMessage === "not found project_schedule") {
@@ -51,7 +54,7 @@ export default function SecondStep() {
         }
 
         loadData();
-    }, [addDataBlock, uuid]);
+    }, [addDataBlock, clearData, uuid]);
 
     return (
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
@@ -90,26 +93,27 @@ export default function SecondStep() {
                                     <td>{block.title}</td>
                                     <td>{block.start_date}</td>
                                     <td>{block.end_date}</td>
-                                    <td className="flex flex-row gap-3">
-                                        <Link
-                                            href={`/list_objects/create_object/second_step/edit/${block.uuid}`}
-                                        >
-                                            <Image
-                                                alt="Редактирование"
-                                                src={"/Tables/edit.svg"}
-                                                height={15}
-                                                width={15}
-                                            />
-                                        </Link>
-                                        <button onClick={() => deleteDataBlock(block.uuid)}>
-                                            <Image
-                                                alt="Удаление"
-                                                src={"/Tables/delete.svg"}
-                                                height={15}
-                                                width={15}
-                                            />
-                                        </button>
+                                    <td className="px-4 py-2 text-center">
+                                        <div className="flex items-center justify-center gap-3">
+                                            <Link href={`/list_objects/create_object/second_step/edit/${block.uuid}`}>
+                                                <Image
+                                                    alt="Редактирование"
+                                                    src="/Tables/edit.svg"
+                                                    height={20}
+                                                    width={20}
+                                                />
+                                            </Link>
+                                            <button onClick={() => deleteDataBlock(block.uuid)}>
+                                                <Image
+                                                    alt="Удаление"
+                                                    src="/Tables/delete.svg"
+                                                    height={20}
+                                                    width={20}
+                                                />
+                                            </button>
+                                        </div>
                                     </td>
+
                                 </tr>
                             ))
                         ) : isEmpty ? (

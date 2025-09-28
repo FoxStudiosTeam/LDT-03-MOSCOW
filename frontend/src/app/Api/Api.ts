@@ -1,6 +1,7 @@
 "use client"
 
 import {jwtDecode} from "jwt-decode";
+import {WorkItem} from "@/models";
 
 const baseURL = "https://test.foxstudios.ru:32460/api";
 
@@ -51,7 +52,8 @@ export async function CreateObject(address: string, polygon: string, ssk: string
         });
 
         if (!response.ok) {
-            throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
+            const result = await response.json();
+            return { success: false, message: result.message }
         }
 
         const result = await response.json();
@@ -181,3 +183,66 @@ export async function Getkpgz(){
     }
 }
 
+export async function CreateProjectSchedule(projectUuid: string, workUuid: string): Promise<{ success: boolean; message: string | null; result?: { uuid: string }; }> {
+    try {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
+        const response = await fetch(`${baseURL}/project/create-project-schedule`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                project_uuid: projectUuid,
+                work_uuid: workUuid,
+            }),
+        });
+
+        if (response.ok) {
+            const result: { uuid: string } = await response.json();
+            return { success: true, message: null, result };
+        } else {
+            const result = await response.json();
+            return { success: false, message: result.message };
+        }
+    } catch (error) {
+        console.error("Ошибка при создании project_schedule:", error);
+        return { success: false, message: String(error) };
+    }
+}
+
+export async function UpdateWorksInSchedule(items: WorkItem[], projectScheduleUuid: string){
+    try {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
+        const response = await fetch(`${baseURL}/project/update-works-in-schedule`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                items,
+                project_schedule_uuid: projectScheduleUuid,
+            }),
+        });
+
+        if (response.ok) {
+            await response.json();
+            return { success: true, message: null };
+        } else {
+            const result = await response.json();
+            return { success: false, message: result.message };
+        }
+    } catch (error) {
+        console.error("Ошибка при обновлении works-in-schedule:", error);
+        return { success: false, message: String(error) };
+    }
+}

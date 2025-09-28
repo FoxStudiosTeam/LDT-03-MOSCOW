@@ -1,5 +1,3 @@
-import { title } from "process";
-import { string } from "yup";
 
 export interface LoginFormData {
   email: string;
@@ -45,4 +43,23 @@ export interface Kpgz {
   code: string;
   id: number;
   title: string;
+}
+
+
+export interface WorkItem {
+  end_date: string;
+  is_complete: boolean;
+  measurement: number | undefined;
+  start_date: string;
+  target_volume: number;
+  title: string;
+  uuid: string | null;
+}
+
+export interface SubJob {
+  title: string;
+  volume: number;
+  unitOfMeasurement: string;
+  startDate: string;
+  endDate: string;
 }
