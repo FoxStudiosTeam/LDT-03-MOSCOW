@@ -388,7 +388,7 @@ impl IProjectScheduleService for ProjectScheduleService {
 
         let mut tx = self.state.orm().begin_tx().await.ok().unwrap();
 
-        sqlx::query("update norm.project_schedule_items set is_deleted = true where project_schedule_uuid = $1")
+        sqlx::query("update journal.project_schedule_items set is_deleted = true where project_schedule_uuid = $1")
             .bind(&r.project_schedule_uuid)
             .execute(tx.get_inner())
             .await
