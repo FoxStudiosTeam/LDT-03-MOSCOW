@@ -1,27 +1,27 @@
 insert into norm.project_statuses (title, id)
 values
-    ('New', 0),
-    ('PreActive', 1),
-    ('Normal', 2),
-    ('SomeWarnings', 3),
-    ('LowPunishmnet', 4),
-    ('NormalPunishmnet', 5),
-    ('HighPunishmnet', 6),
-    ('Suspend', 7);
+    ('Новый', 0),
+    ('Ожидает активации', 1),
+    ('В норме', 2),
+    ('Есть замечания', 3),
+    ('Есть незначительные нарушения', 4),
+    ('Есть нарушения', 5),
+    ('Есть грубые нарушения', 6),
+    ('Приостановлен', 7);
 
 insert into norm.punishment_statuses (title, id)
 values
-    ('Resolved', 0),
-    ('SomeWarnings', 1),
-    ('LowPunishmnet', 2),
-    ('NormalPunishmnet', 3),
-    ('HighPunishmnet', 4);
+    ('Устранено', 0),
+    ('Замечание', 1),
+    ('Незначительное нарушение', 2),
+    ('Простое нарушение', 3),
+    ('Грубое нарушение', 4);
 
 insert into norm.report_statuses (title, id)
 values
-    ('Resolved', 0),
-    ('InCheck', 1),
-    ('Canceled', 2);
+    ('Завершен', 0),
+    ('Проверяется', 1),
+    ('Отклонен', 2);
 
 insert into norm.kpgz (code, title, id)
 values ('02.03.01.02.02','СТРОИТЕЛЬСТВО СПОРТИВНЫХ СООРУЖЕНИЙ',638862539),
