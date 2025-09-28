@@ -133,7 +133,7 @@ pub async fn handle_create_project_schedule(
     summary = "Add subwork to schedule.",
     security(("bearer_access" = [])),
     responses(
-        (status = 200, description = "work was added into schedule.", body = ProjectScheduleItems),
+        (status = 200, description = "work subwork added into schedule.", body = ProjectScheduleItems),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -288,6 +288,23 @@ pub async fn handle_get_work_categories(State(state): State<AppState>) -> Result
 pub async fn handle_get_kpgz_vec(State(state) : State<AppState>) -> Result<Response, AppErr> {
     return state.work_category_service().get_kpgz_vec().await;
 }
+
+
+#[utoipa::path(
+    get,
+    path = "/get-measurements",
+    tag = crate::MAIN_TAG,
+    summary = "get measurement dictionary as vec",
+    responses (
+        (status = 200, description = "easurement dictionary as vec", body = Vec<Measurements>),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_get_measurements(State(state) : State<AppState>) -> Result<Response, AppErr> {
+    return state.work_service().get_measurements().await;
+}
+
 #[utoipa::path(
     post,
     path = "/works/save",

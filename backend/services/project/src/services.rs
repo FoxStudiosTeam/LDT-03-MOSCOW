@@ -8,7 +8,7 @@ use axum::{Json, http::StatusCode, response::Response};
 use orm::prelude::Optional::{NotSet, Set};
 use orm::prelude::SaveMode::{Insert, Update, Upsert};
 use schema::prelude::{
-    ActiveIkoRelationship, ActiveProject, ActiveProjectSchedule, ActiveProjectScheduleItems, ActiveWorkCategory, ActiveWorks, OrmIkoRelationship, OrmKpgz, OrmProject, OrmProjectSchedule, OrmProjectScheduleItems, OrmProjectStatuses, OrmWorkCategory, OrmWorks, ProjectScheduleItems, Works
+    ActiveIkoRelationship, ActiveProject, ActiveProjectSchedule, ActiveProjectScheduleItems, ActiveWorkCategory, ActiveWorks, OrmIkoRelationship, OrmKpgz, OrmMeasurements, OrmProject, OrmProjectSchedule, OrmProjectScheduleItems, OrmProjectStatuses, OrmWorkCategory, OrmWorks, ProjectScheduleItems, Works
 };
 use shared::prelude::AppErr;
 use shared::prelude::IntoAppErr;
@@ -304,6 +304,7 @@ impl IProjectScheduleService for ProjectScheduleService {
     ) -> Result<Response, AppErr> {
         let mut project_schedule = ActiveProjectSchedule::default();
         project_schedule.project_uuid = Set(r.project_uuid);
+        project_schedule.work_uuid = Set(r.work_uuid);
         // project_schedule.created_by = Set(t.uuid); // TODO!
 
         let res = self
@@ -324,11 +325,11 @@ impl IProjectScheduleService for ProjectScheduleService {
     async fn add_work_to_schedule(&self, r: AddWorkToScheduleRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
         let mut work_to_schedule = ActiveProjectScheduleItems::default();
         work_to_schedule.created_by = Set(r.created_by);
-        work_to_schedule.work_uuid = Set(r.work_uuid);
         work_to_schedule.start_date = Set(r.start_date);
         work_to_schedule.end_date = Set(r.end_date);
         work_to_schedule.target_volume = Set(r.target_volume);
         work_to_schedule.is_draft = Set(r.is_draft);
+        work_to_schedule.title = Set(r.title);
         work_to_schedule.created_by = Set(t.uuid);
 
         let res = self
@@ -357,16 +358,15 @@ impl IProjectScheduleService for ProjectScheduleService {
 
         for (index, elem) in r.items.into_iter().enumerate() {
             let mut work_to_schedule = ActiveProjectScheduleItems::default();
-            elem.uuid.map(|uuid| work_to_schedule.work_uuid = Set(uuid));
             work_to_schedule.start_date = Set(elem.start_date);
             work_to_schedule.end_date = Set(elem.end_date);
             work_to_schedule.project_schedule_uuid = Set(elem.project_schedule_uuid);
-            work_to_schedule.work_uuid = Set(elem.work_uuid);
             work_to_schedule.is_completed = Set(false);
             work_to_schedule.target_volume = Set(elem.target_volume);
             work_to_schedule.is_deleted = Set(false);
             work_to_schedule.is_completed = Set(elem.is_complete);
             work_to_schedule.updated_by = Set(Some(t.uuid));
+            work_to_schedule.title = Set(elem.title);
 
             // TODO: починить токены и сделать логику выбора
             work_to_schedule.is_draft = Set(false);
@@ -414,6 +414,8 @@ impl IProjectScheduleService for ProjectScheduleService {
         work_to_update.end_date = Set(r.end_date);
         work_to_update.start_date = Set(r.start_date);
         work_to_update.updated_by = Set(Some(t.uuid));
+        work_to_update.measurement = Set(r.measurement);
+        work_to_update.title = Set(r.title);
 
         if let Some(uuid) = r.uuid {
             work_to_update.uuid = Set(uuid);
@@ -436,141 +438,36 @@ impl IProjectScheduleService for ProjectScheduleService {
     }
 
     async fn get_project_schedule(&self, r: GetProjectScheduleRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
-        // Получаем график проекта
-        let raw = self
-            .state
-            .orm()
-            .project_schedule()
-            .select(
-                "SELECT ps.* FROM journal.project_schedule ps
-             INNER JOIN project.project pj ON ps.project_uuid = pj.uuid
-             WHERE ps.project_uuid = $1 
-             AND created_by = $2
-             LIMIT 1
-             ",
-            )
-            .bind(r.uuid)
-            .bind(t.uuid)
-            .fetch()
-            .await
-            .into_app_err()?;
-
-        tracing::warn!("raw size: {}", raw.len());
-
-        let project_schedule = raw.first().ok_or_else(|| {
-            AppErr::default()
-                .with_err_response("not found project_schedule")
-                .with_status(StatusCode::INTERNAL_SERVER_ERROR)
-        })?;
-
-        tracing::warn!(
-            "current schedule, project_schedule_uuid: {}",
-            project_schedule.uuid
-        );
-
-        // Загружаем все категории
-        let categories = self
-            .state
-            .orm()
-            .work_category()
-            .select("SELECT * FROM norm.work_category")
-            .fetch()
-            .await
-            .into_app_err()?;
-
-        tracing::warn!("category list size: {}", categories.len());
-
-        let category_map: HashMap<Uuid, String> = categories
-            .into_iter()
-            .map(|cat| (cat.uuid, cat.title))
-            .collect();
-
-        for (k, v) in category_map.iter() {
-            tracing::warn!("category uuid :{}, value: {}", k, v);
+        let sch = sqlx::query_as::<_, TitledSchedule>("
+        SELECT ps.uuid AS uuid,
+            wc.title AS title
+        FROM journal.project_schedule ps
+        JOIN norm.works w
+        ON ps.work_uuid = w.uuid
+        JOIN norm.work_category wc
+        ON w.work_category = wc.uuid
+        WHERE ps.project_uuid = $1")
+        .bind(&r.project_uuid)
+        .fetch_all(self.state.orm().get_executor())
+        .await
+        .into_app_err()?;
+        let mut result = vec![];
+        for schedule in sch {
+            let items = self.state.orm().project_schedule_items()
+                .select("select * from journal.project_schedule_items where project_schedule_uuid = $1")
+                .bind(schedule.uuid)
+                .fetch().await
+                .into_app_err()?
+                .into_iter()
+                .map(|v| ProjectScheduleItemResponse::from_items(v))
+                .collect();
+            result.push(ProjectScheduleCategoryPartResponse {
+                uuid: schedule.uuid,
+                title: schedule.title,
+                items
+            })
         }
-
-        // Получаем элементы расписания
-        let project_schedule_items = self
-            .state
-            .orm()
-            .project_schedule_items()
-            .select("SELECT * FROM journal.project_schedule_items WHERE project_schedule_uuid = $1 and is_deleted != true")
-            .bind(project_schedule.uuid)
-            .fetch()
-            .await
-            .into_app_err()?;
-
-        // Собираем список всех work_uuid из элементов расписания
-        let work_uuids: Vec<Uuid> = project_schedule_items
-            .iter()
-            .map(|item| item.work_uuid)
-            .collect();
-
-        // Если work_uuids пуст, возвращаем пустой ответ сразу
-        if work_uuids.is_empty() {
-            let result = GetProjectScheduleResponse { data: Vec::new() };
-            return Ok((StatusCode::OK, Json(result)).into_response());
-        }
-
-        // Получаем работы только для этих work_uuid
-        let works = self
-            .state
-            .orm()
-            .works()
-            .select("SELECT * FROM norm.works WHERE uuid = ANY($1)")
-            .bind(&work_uuids)
-            .fetch()
-            .await
-            .into_app_err()?;
-
-        // Создаём map: work_uuid -> Works
-        let work_map: HashMap<Uuid, Works> =
-            works.into_iter().map(|work| (work.uuid, work)).collect();
-
-        // Группируем элементы по категории: ключ (category_uuid, category_title)
-        let mut grouped: HashMap<(Uuid, String), Vec<ProjectScheduleItemResponse>> = HashMap::new();
-        
-        for item in project_schedule_items {
-            if let Some(work) = work_map.get(&item.work_uuid) {
-                let category_uuid = work.work_category;
-
-                let category_title = category_map
-                    .get(&category_uuid)
-                    .cloned()
-                    .unwrap_or_else(|| "Без категории".to_string());
-
-                grouped
-                    .entry((category_uuid, category_title))
-                    .or_default()
-                    .push(ProjectScheduleItemResponse {
-                        uuid: item.uuid.clone(),
-                        title: work.title.clone(),
-                        start_date: item.start_date,
-                        end_date: item.end_date,
-                        is_deleted: item.is_deleted,
-                        is_draft: item.is_draft,
-                        is_completed: item.is_completed,
-                    });
-            } else {
-                tracing::warn!("Не найден work для work_uuid = {}", item.work_uuid);
-            }
-        }
-
-        // Формируем ответ
-        let result_items: Vec<ProjectScheduleCategoryPartResponse> = grouped
-            .into_iter()
-            .map(
-                |((category_uuid, title), items)| ProjectScheduleCategoryPartResponse {
-                    uuid: category_uuid,
-                    title,
-                    items: Some(items),
-                },
-            )
-            .collect();
-
-        let result = GetProjectScheduleResponse { data: result_items };
-
-        Ok((StatusCode::OK, Json(result)).into_response())
+        return Ok((StatusCode::OK, Json(GetProjectScheduleResponse{data: result})).into_response());
     }
 }
 
@@ -682,6 +579,7 @@ pub trait IWorkService: Send + Sync {
     async fn save_work(&self, r: CreateUpdateWorkRequest) -> Result<Response, AppErr>;
     async fn get_works_by_category(&self, r: GetWorksByCategoryRequest)
     -> Result<Response, AppErr>;
+    async fn get_measurements(&self) -> Result<Response, AppErr>;
 }
 
 #[derive(Clone)]
@@ -690,6 +588,9 @@ struct WorkService {
 }
 #[async_trait]
 impl IWorkService for WorkService {
+    async fn get_measurements(&self) -> Result<Response, AppErr> {
+        Ok((StatusCode::OK, Json(self.state.orm().measurements().select("").fetch().await.into_app_err()?)).into_response())
+    }
     async fn save_work(&self, r: CreateUpdateWorkRequest) -> Result<Response, AppErr> {
         let save_mode = r.uuid.map(|_| Update).unwrap_or(Insert);
         let mut work = ActiveWorks {
