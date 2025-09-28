@@ -151,6 +151,7 @@ async fn main() -> anyhow::Result<()> {
         .routes(routes!(controllers::handle_create_project))
         .routes(routes!(controllers::handle_set_project_foreman))
 
+        .routes(routes!(controllers::commit_project))
 
         .routes(routes!(controllers::handle_set_works_in_schedule))
 
@@ -188,12 +189,14 @@ async fn main() -> anyhow::Result<()> {
         .with_state(state.clone());
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .merge(iko_router)
-        .merge(customer_router)
-        .merge(any_router)
-        .merge(foreman_router)
-        .merge(guest_router)
-        .merge(dev_router)
+        .nest("/api/project", OpenApiRouter::new()
+            .merge(iko_router)
+            .merge(customer_router)
+            .merge(any_router)
+            .merge(foreman_router)
+            .merge(guest_router)
+            .merge(dev_router)
+        )
         .split_for_parts();
     
     let app = axum::Router::new()
