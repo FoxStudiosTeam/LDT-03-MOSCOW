@@ -378,16 +378,26 @@ impl IProjectScheduleService for ProjectScheduleService {
             pub end_date: Option<chrono::NaiveDate>,
         }
         
-        let res = sqlx::query_as::<_, LocalProjectFields>("UPDATE journal.project_schedule_items psi
-                    SET is_deleted = TRUE
-                    FROM journal.project_schedule ps
-                    JOIN project.project p
-                    ON ps.project_uuid = p.uuid
-                    WHERE psi.project_schedule_uuid = ps.uuid
-                    AND psi.project_schedule_uuid = $1
-                    AND p.created_by = $2
-                    AND p.status = $3
-                    p.uuid AS project_id")
+        let res = sqlx::query_as::<_, LocalProjectFields>("WITH updated AS (
+    UPDATE journal.project_schedule_items psi
+    SET is_deleted = TRUE
+    FROM journal.project_schedule ps
+    JOIN project.project p ON ps.project_uuid = p.uuid
+    WHERE psi.project_schedule_uuid = ps.uuid
+      AND psi.project_schedule_uuid = $1
+      AND p.created_by = $2
+      AND p.status = $3
+    RETURNING p.uuid AS project_id
+)
+SELECT project_id FROM updated
+UNION ALL
+SELECT p.uuid AS project_id
+FROM journal.project_schedule ps
+JOIN project.project p ON ps.project_uuid = p.uuid
+WHERE ps.uuid = $1
+  AND p.created_by = $2
+  AND p.status = $3
+LIMIT 1")
             .bind(&r.project_schedule_uuid)
             .bind(&t.org)
             .bind(&(ProjectStatus::New as i32))
@@ -454,16 +464,26 @@ impl IProjectScheduleService for ProjectScheduleService {
             pub project_id: Uuid,
         }
         
-        let res = sqlx::query_as::<_, ProjectId>("UPDATE journal.project_schedule_items psi
-                    SET is_deleted = TRUE
-                    FROM journal.project_schedule ps
-                    JOIN project.project p
-                    ON ps.project_uuid = p.uuid
-                    WHERE psi.project_schedule_uuid = ps.uuid
-                    AND psi.project_schedule_uuid = $1
-                    AND p.created_by = $2
-                    AND p.status = $3
-                    p.uuid AS project_id")
+        let res = sqlx::query_as::<_, ProjectId>("WITH updated AS (
+    UPDATE journal.project_schedule_items psi
+    SET is_deleted = TRUE
+    FROM journal.project_schedule ps
+    JOIN project.project p ON ps.project_uuid = p.uuid
+    WHERE psi.project_schedule_uuid = ps.uuid
+      AND psi.project_schedule_uuid = $1
+      AND p.created_by = $2
+      AND p.status = $3
+    RETURNING p.uuid AS project_id
+)
+SELECT project_id FROM updated
+UNION ALL
+SELECT p.uuid AS project_id
+FROM journal.project_schedule ps
+JOIN project.project p ON ps.project_uuid = p.uuid
+WHERE ps.uuid = $1
+  AND p.created_by = $2
+  AND p.status = $3
+LIMIT 1")
             .bind(&r.project_schedule_uuid)
             .bind(&t.org)
             .bind(&(ProjectStatus::New as i32))
@@ -603,13 +623,13 @@ impl IProjectScheduleService for ProjectScheduleService {
             SET is_deleted = TRUE
             FROM project.project p
             WHERE ps.project_uuid = p.uuid
-            AND ps.project_uuid = $1
-            AND ps.project_status = $2
+            AND ps.uuid = $1
+            AND p.status = $2
             AND p.created_by = $3
             RETURNING ps.*")
             .bind(&r.project_schedule_uuid)
             .bind(&(ProjectStatus::New as i32))
-            .bind(&t.uuid)
+            .bind(&t.org)
             .fetch_optional(tx.get_inner())
             .await
             .into_app_err();
