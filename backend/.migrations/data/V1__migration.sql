@@ -11,17 +11,17 @@ values
 
 insert into norm.punishment_statuses (title, id)
 values
-    ('Resolved', 0),
-    ('SomeWarnings', 1),
-    ('LowPunishmnet', 2),
-    ('NormalPunishmnet', 3),
-    ('HighPunishmnet', 4);
+    ('Устранено', 0),
+    ('Замечание', 1),
+    ('Незначительное нарушение', 2),
+    ('Простое нарушение', 3),
+    ('Грубое нарушение', 4);
 
 insert into norm.report_statuses (title, id)
 values
-    ('Resolved', 0),
-    ('InCheck', 1),
-    ('Canceled', 2);
+    ('Завершен', 0),
+    ('Проверяется', 1),
+    ('Отклонен', 2);
 
 insert into norm.kpgz (code, title, id)
 values ('02.03.01.02.02','СТРОИТЕЛЬСТВО СПОРТИВНЫХ СООРУЖЕНИЙ',638862539),

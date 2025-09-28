@@ -10,7 +10,7 @@ use crate::{AppState, api::{ErrorExample,UuidResponse}};
 #[utoipa::path(
     put,
     path = "/update_punishment",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     summary = "Update punishment with status",
     responses(
         (status = 200, description = "Punishment updated", body=UuidResponse),

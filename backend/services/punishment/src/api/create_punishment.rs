@@ -11,7 +11,7 @@ use crate::{AppState, api::{ErrorExample, UuidResponse}};
 #[utoipa::path(
     post,
     path = "/create_punishment",
-    tag = crate::MAIN_TAG,
+    tag = crate::MANAGER_TAG,
     summary = "Create punishment with status & date",
     responses(
         (status = 200, description = "Punishment created", body=UuidResponse),
