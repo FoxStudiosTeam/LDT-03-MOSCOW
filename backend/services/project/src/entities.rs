@@ -1,7 +1,8 @@
 use schema::prelude::*;
 use serde::{Deserialize, Serialize};
-use sqlx::prelude::FromRow;
-use utoipa::ToSchema;
+use serde_json::Value;
+use sqlx::prelude::{FromRow, Type};
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 #[derive(ToSchema, Deserialize)]
@@ -63,15 +64,13 @@ pub struct GetProjectRequest {
 #[derive(ToSchema, Deserialize)]
 pub struct CreateProjectRequest {
     pub address : Option<String>,
-    pub polygon : Option<String>,
-    pub ssk : Option<String>
+    pub polygon : Option<sqlx::types::JsonValue>,
 }
 
 #[derive(ToSchema, Deserialize)]
-pub struct UpdateProjectRequest {
-    pub foreman : Option<String>,
-    pub status : Option<i32>,
-    pub uuid: String
+pub struct SetProjectForemanRequest {
+    pub foreman : Uuid,
+    pub uuid: Uuid
 }
 
 #[derive(ToSchema, Deserialize)]
@@ -80,14 +79,13 @@ pub struct Pagination {
     pub limit : i32
 }
 
-#[derive(ToSchema,Deserialize)]
-pub struct ActivateProjectRequest {
-    pub uuid : Uuid
+#[derive(ToSchema, Deserialize, IntoParams)]
+pub struct ProjectRequest {
+    pub project_uuid : Uuid
 }
 #[derive(ToSchema, Deserialize)]
 pub struct AddIkoToProjectRequest {
-    pub project_uuid : Uuid,
-    pub iko_uuid : Uuid
+    pub project_uuid : Uuid
 }
 
 #[derive(ToSchema, Deserialize)]
@@ -96,33 +94,25 @@ pub struct CreateProjectScheduleRequest {
     pub work_uuid : Uuid,
 }
 
-#[derive(ToSchema, Deserialize)]
-pub struct AddWorkToScheduleRequest {
-    pub created_by : Uuid,
-    pub start_date : chrono::NaiveDate,
-    pub end_date : chrono::NaiveDate,
-    pub target_volume : f64,
-    pub is_draft : bool,
-    pub title: String,
-}
 
 #[derive(ToSchema, Deserialize)]
-pub struct UpdateWorksInScheduleRequest {
+pub struct SetWorksInScheduleRequest {
     pub project_schedule_uuid : Uuid,
-    pub items : Vec<UpdateWorkInScheduleRequest>
+    pub items : Vec<SetWorkInScheduleRequest>
 }
+
 
 #[derive(ToSchema,Deserialize)]
-pub struct UpdateWorkInScheduleRequest {
+pub struct SetWorkInScheduleRequest {
     pub start_date : chrono::NaiveDate,
     pub end_date : chrono::NaiveDate,
     pub uuid : Option<Uuid>,
-    // pub work_uuid : Uuid,
     pub title : String,
     pub target_volume : f64,
     pub is_complete: bool,
     pub measurement : i32,
 }
+
 
 #[derive(ToSchema, Deserialize)]
 pub struct GetProjectScheduleRequest {
@@ -174,13 +164,13 @@ impl ProjectScheduleItemResponse {
 #[derive(Debug, Clone, Copy)]
 pub enum ProjectStatus {
     New,
-    InActive, 
-    Suspend,
+    PreActive, 
     Normal,
+    SomeWarnings,
     LowPunishment,
     NormalPunishment,
     HighPunishment,
-    SomeWarnings
+    Suspend
 }
 
 impl TryFrom<i32> for ProjectStatus {
@@ -189,7 +179,7 @@ impl TryFrom<i32> for ProjectStatus {
     fn try_from(v: i32) -> Result<Self, Self::Error> {
         match v {
             x if x == ProjectStatus::New as i32 => Ok(ProjectStatus::New),
-            x if x == ProjectStatus::InActive as i32 => Ok(ProjectStatus::InActive),
+            x if x == ProjectStatus::PreActive as i32 => Ok(ProjectStatus::PreActive),
             x if x == ProjectStatus::Suspend as i32 => Ok(ProjectStatus::Suspend),
             x if x == ProjectStatus::Normal as i32 => Ok(ProjectStatus::Normal),
             x if x == ProjectStatus::LowPunishment as i32 => Ok(ProjectStatus::LowPunishment),
@@ -251,10 +241,14 @@ impl OptionalAttachments {
     }
 }
 
-
+#[derive(Default, Debug, ToSchema, Deserialize, IntoParams)]
+pub struct DeleteProjectScheduleRequest{
+    pub project_schedule_uuid : Uuid
+}
 
 #[derive(Deserialize, FromRow)]
 pub struct TitledSchedule {
     pub uuid : Uuid,
     pub title : String,
 }
+

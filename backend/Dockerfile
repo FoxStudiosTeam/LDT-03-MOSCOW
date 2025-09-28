@@ -27,13 +27,15 @@ COPY --from=planner /build/recipe.json ./recipe.json
 RUN apt-get update && apt-get install -y mold cmake
 ENV RUSTFLAGS="-C link-arg=-fuse-ld=mold"
 
-RUN --mount=type=ssh cargo chef cook --release --recipe-path recipe.json
+# --release
+RUN --mount=type=ssh cargo chef cook --recipe-path recipe.json
 
 COPY ./backend/libs ./backend/libs
 COPY ./backend/services/$SERVICE_NAME ./backend/services/$SERVICE_NAME
 COPY ./Cargo.toml ./Cargo.lock ./
 
-RUN --mount=type=ssh cargo build --bin $SERVICE_NAME -F certs_in_env --release
+# --release
+RUN --mount=type=ssh cargo build --bin $SERVICE_NAME -F certs_in_env
 
 FROM debian:bookworm-slim
 

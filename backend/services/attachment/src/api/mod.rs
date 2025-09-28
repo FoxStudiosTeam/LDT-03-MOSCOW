@@ -15,7 +15,7 @@ pub fn router(state: AppState) -> OpenApiRouter {
         .routes(routes!(upload_reports))
         .routes(routes!(upload_punishment_item))
         .with_state(state)
-        // .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::Customer | Role::Inspector))
+        // .layer(auth_jwt::prelude::AuthLayer::new(Role::Foreman | Role::Customer | Role::Inspector))
         .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
 }
 

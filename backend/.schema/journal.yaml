@@ -56,18 +56,10 @@ tables:
 - name: project_schedule
   schema: journal
   fields:
-  - name: start_date
-    type: date
-    nullable: true
-    default: null
   - name: uuid
     type: uuid
     isPrimary: true
     default: "gen_random_uuid()"
-  - name: end_date
-    type: date
-    nullable: true
-    default: null
   - name: project_uuid
     type: uuid
   - name: work_category
