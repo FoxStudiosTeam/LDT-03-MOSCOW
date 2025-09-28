@@ -1,7 +1,7 @@
 /target
 .DS_store
 /.env
-/certs/*.pem
+/certs
 .certs
 refinery.toml
 /.idea

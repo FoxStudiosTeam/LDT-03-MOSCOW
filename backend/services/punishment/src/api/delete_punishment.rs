@@ -1,14 +1,16 @@
-use axum::{Json, extract::{Path, State}, http::StatusCode, response::{IntoResponse, Response}};
-use serde::Serialize;
+use axum::{Json, extract::{Query, State}, http::StatusCode, response::{IntoResponse, Response}};
+use serde::{Deserialize, Serialize};
 use shared::prelude::{AppErr};
 use schema::prelude::*;
+use utoipa::IntoParams;
 use uuid::Uuid;
 use crate::{AppState, api::ErrorExample};
 
 #[utoipa::path(
     delete,
-    path = "/delete/{uuid}",
-    tag = crate::MAIN_TAG,
+    path = "/delete",
+    tag = crate::ANY_TAG,
+    params(DeletePunishmentRequest),
     summary = "Delete punishment by uuid",
     responses(
         (status = 200, description = "Punishment deleted", body=OkMessage),
@@ -18,11 +20,19 @@ use crate::{AppState, api::ErrorExample};
 
 pub async fn delete_punishment(
     State(app): State<AppState>,
-    Path(r): Path<Uuid>
+    Query(r): Query<DeletePunishmentRequest>
 ) -> Result<Response, AppErr> {
-        app.orm.punishment().delete_by_pk(&r).await?
+        app.orm.punishment().delete_by_pk(&r.uuid).await?
         .ok_or_else(||AppErr::default().with_status(StatusCode::NOT_FOUND).with_response("Punishment not found"))?;
         Ok((StatusCode::OK, Json(OkMessage{message:"Punishment deleted".to_string()})).into_response())
+}
+
+#[derive(utoipa::ToSchema, Deserialize, Debug, IntoParams)]
+
+pub struct DeletePunishmentRequest {
+    #[schema(example=Uuid::new_v4)]
+    #[param(example=Uuid::new_v4)]
+    uuid: Uuid
 }
 
 #[derive(utoipa::ToSchema, Serialize, Debug)]
