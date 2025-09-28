@@ -38,21 +38,21 @@ alter table norm.work_category
     add constraint work_category_kpgz_id_fk
         foreign key (kpgz) references norm.kpgz;
 
-alter table norm.works
-    add constraint works_work_category_uuid_fk
-        foreign key (work_category) references norm.work_category;
-
 alter table journal.project_schedule
     add constraint project_schedule_project_uuid_fk
         foreign key (project_uuid) references project.project;
+
+alter table journal.project_schedule
+    add constraint project_schedule_work_category_fk
+        foreign key (work_category) references norm.work_category;
 
 alter table journal.project_schedule_items
     add constraint project_schedule_items_project_schedule_uuid_fk
         foreign key (project_schedule_uuid) references journal.project_schedule;
 
 alter table journal.project_schedule_items
-    add constraint project_schedule_items_works_uuid_fk
-        foreign key (work_uuid) references norm.works;
+    add constraint project_schedule_items_measurements_id_fk
+        foreign key (measurement) references norm.measurements;
 
 alter table journal.punishment
     add constraint punishment_project_uuid_fk

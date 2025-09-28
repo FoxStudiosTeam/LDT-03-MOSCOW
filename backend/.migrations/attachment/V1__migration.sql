@@ -1,32 +1,10 @@
-
-
-
-
 CREATE SCHEMA IF NOT EXISTS attachment;
-CREATE TABLE IF NOT EXISTS attachment.attachments (
-  original_filename text
-    
-    
-     NOT NULL
-    ,
-  uuid uuid
-     PRIMARY KEY
-    
-     NOT NULL
-     DEFAULT gen_random_uuid(),
-  base_entity_uuid uuid
-    
-    
-     NOT NULL
-    ,
-  file_uuid uuid
-    
-    
-     NOT NULL
-    ,
-  content_type text
-    
-    
-    
-    
+CREATE TABLE IF NOT EXISTS attachment.attachments
+(
+    original_filename text                           not null,
+    uuid              uuid default gen_random_uuid() not null
+        primary key,
+    base_entity_uuid  uuid                           not null,
+    file_uuid         uuid                           not null,
+    content_type      text
 );
