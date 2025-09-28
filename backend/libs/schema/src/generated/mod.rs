@@ -9,8 +9,6 @@ pub mod materials;
 pub use materials::*;
 pub mod measurements;
 pub use measurements::*;
-pub mod product;
-pub use product::*;
 pub mod project;
 pub use project::*;
 pub mod project_schedule;

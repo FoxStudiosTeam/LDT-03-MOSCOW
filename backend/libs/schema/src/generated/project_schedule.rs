@@ -9,9 +9,7 @@ use sqlx::types::*;
 impl ProjectSchedule {
     pub fn into_active(self) -> ActiveProjectSchedule {
         ActiveProjectSchedule {
-            start_date: Set(self.start_date),
             uuid: Set(self.uuid),
-            end_date: Set(self.end_date),
             project_uuid: Set(self.project_uuid),
             work_category: Set(self.work_category),
         }
@@ -22,18 +20,14 @@ impl ProjectSchedule {
 #[cfg_attr(feature = "utoipa_gen", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, FromRow)]
 pub struct ProjectSchedule {
-    pub start_date: Option<chrono::NaiveDate>,
     pub uuid: uuid::Uuid,
-    pub end_date: Option<chrono::NaiveDate>,
     pub project_uuid: uuid::Uuid,
     pub work_category: uuid::Uuid,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveProjectSchedule {
-    pub start_date: Optional<Option<chrono::NaiveDate>>,
     pub uuid: Optional<uuid::Uuid>,
-    pub end_date: Optional<Option<chrono::NaiveDate>>,
     pub project_uuid: Optional<uuid::Uuid>,
     pub work_category: Optional<uuid::Uuid>,
 }
@@ -41,9 +35,7 @@ pub struct ActiveProjectSchedule {
 impl ActiveProjectSchedule {
     pub fn into_project_schedule(self) -> Option<ProjectSchedule> {
         Some(ProjectSchedule {
-            start_date: self.start_date.into_option()?,
             uuid: self.uuid.into_option()?,
-            end_date: self.end_date.into_option()?,
             project_uuid: self.project_uuid.into_option()?,
             work_category: self.work_category.into_option()?,
         })
@@ -69,9 +61,7 @@ impl TableSelector for ActiveProjectSchedule {
     }
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
-            "start_date" => self.start_date.is_set(),
             "uuid" => self.uuid.is_set(),
-            "end_date" => self.end_date.is_set(),
             "project_uuid" => self.project_uuid.is_set(),
             "work_category" => self.work_category.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
@@ -80,25 +70,11 @@ impl TableSelector for ActiveProjectSchedule {
     fn columns() -> &'static [ColumnDef] {
         &[
             ColumnDef{
-                name: "start_date",
-                nullable: true,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
                 name: "uuid",
                 nullable: false,
                 default: Some("gen_random_uuid()"),
                 is_unique: false,
                 is_primary: true,
-            },
-            ColumnDef{
-                name: "end_date",
-                nullable: true,
-                default: None,
-                is_unique: false,
-                is_primary: false,
             },
             ColumnDef{
                 name: "project_uuid",
@@ -153,9 +129,7 @@ impl ModelOps<sqlx::Postgres> for ActiveProjectSchedule
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
         if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
         q
@@ -274,9 +248,7 @@ impl ModelOps<sqlx::MySql> for ActiveProjectSchedule
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
         if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
         q
@@ -395,9 +367,7 @@ impl ModelOps<sqlx::Sqlite> for ActiveProjectSchedule
 
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
-        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
         if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
         q

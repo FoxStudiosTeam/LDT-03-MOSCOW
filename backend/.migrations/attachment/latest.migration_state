@@ -1,0 +1,97 @@
+{
+  "latest": 1,
+  "state": {
+    "tables": {
+      "attachments": {
+        "name": "attachments",
+        "schema": "attachment",
+        "fields": [
+          {
+            "name": "original_filename",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "uuid",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": true,
+            "default": "gen_random_uuid()",
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "base_entity_uuid",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "file_uuid",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "content_type",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          }
+        ]
+      }
+    },
+    "types": {
+      "date": {
+        "rustType": "chrono::NaiveDate",
+        "pgType": "date"
+      },
+      "timestamp": {
+        "rustType": "chrono::NaiveDateTime",
+        "pgType": "timestamp"
+      },
+      "boolean": {
+        "rustType": "bool",
+        "pgType": "boolean"
+      },
+      "jsonb": {
+        "rustType": "serde_json::Value",
+        "pgType": "jsonb"
+      },
+      "bigint": {
+        "rustType": "i64",
+        "pgType": "bigint"
+      },
+      "float8": {
+        "rustType": "f64",
+        "pgType": "float8"
+      },
+      "integer": {
+        "rustType": "i32",
+        "pgType": "integer"
+      },
+      "text": {
+        "rustType": "String",
+        "pgType": "text"
+      },
+      "uuid": {
+        "rustType": "uuid::Uuid",
+        "pgType": "uuid"
+      }
+    },
+    "type_mapping": "Pg"
+  }
+}
