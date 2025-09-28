@@ -40,11 +40,8 @@ impl IProjectService for ProjectService {
     async fn get_project(&self, r: GetProjectRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
         let (offset, limit) = r.pagination.map(|p| (p.offset, p.limit)).unwrap_or((0, 0));
 
-        let address = r.address.map(|addr| (addr)).ok_or(
-            AppErr::default()
-                .with_err_response("address is empty")
-                .with_status(StatusCode::BAD_REQUEST),
-        )?;
+        let address = r.address.unwrap_or_default();
+
 
         if limit <= 0 {
             let total: (i64,) = sqlx::query_as::<_, (i64,)>(
@@ -75,7 +72,8 @@ impl IProjectService for ProjectService {
             COUNT(*) OVER() AS total_count
             FROM project.project p
             LEFT JOIN attachment.attachments a ON a.base_entity_uuid = p.uuid
-            WHERE p.address like $2 offset $3 limit $4 {{ROLE_RULE}}".to_string();
+            WHERE p.address like $2 {{ROLE_RULE}} offset $3 limit $4".to_string();
+        
         let q = 
         match t.role.as_str() {
             FOREMAN_ROLE => {
@@ -91,7 +89,7 @@ impl IProjectService for ProjectService {
                 sqlx::query_as::<_, RowProjectWithAttachment>(&qstr).bind(t.uuid)
             }
             ADMINISTRATOR_ROLE => {
-                qstr = qstr.replace("{{ROLE_RULE}}", "AND $1 = $1");
+                qstr = qstr.replace("{{ROLE_RULE}}", "AND $1::boolean IS NOT NULL");
                 sqlx::query_as::<_, RowProjectWithAttachment>(&qstr).bind(true)
             }
             _ => {
@@ -214,11 +212,10 @@ impl IProjectService for ProjectService {
         let mut tx : OrmTX<crate::DB> = self.state.orm().begin_tx().await.into_app_err()?;
         let project = sqlx::query_as::<_, Project>("
             UPDATE project.project 
-            SET ssk = $1, status = $2
-            WHERE uuid = $3 AND status = $4
+            SET status = $1
+            WHERE uuid = $2 AND status = $3
             RETURNING *
         ")
-            .bind(&t.uuid)
             .bind(ProjectStatus::Normal as i32)
             .bind(&r.project_uuid)
             .bind(ProjectStatus::PreActive as i32)
