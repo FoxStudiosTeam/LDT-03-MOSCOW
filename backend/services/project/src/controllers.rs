@@ -154,10 +154,10 @@ pub async fn handle_add_work_to_schedule(
     post,
     path = "/update-work-schedule",
     tag = crate::MAIN_TAG,
-    summary = "Update single work in schedule",
+    summary = "Update single subwork in schedule",
     security(("bearer_access" = [])),
     responses(
-        (status = 200, description = "single work in schedule was updated.", body = ProjectScheduleItems),
+        (status = 200, description = "single subwork in schedule was updated.", body = ProjectScheduleItems),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -177,10 +177,10 @@ pub async fn handle_update_works_in_schedule(
     post,
     path = "/update-works-in-schedule",
     tag = crate::MAIN_TAG,
-    summary = "Update group of works in schedule",
+    summary = "Update group of subwork in schedule",
     security(("bearer_access" = [])),
     responses(
-        (status = 200, description = "group of works in schedule was updated.", body = ProjectScheduleItems),
+        (status = 200, description = "group of subwork in schedule was updated.", body = ProjectScheduleItems),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
