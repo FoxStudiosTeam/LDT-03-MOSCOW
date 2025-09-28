@@ -34,6 +34,7 @@ export default function AddSubjobs() {
     const [messages, setMessages] = useState<string[]>([]);
 
 
+
     useEffect(() => {
         if (inputRef.current) {
             inputRef.current.focus();
@@ -106,14 +107,102 @@ export default function AddSubjobs() {
         getData();
     }, []);
 
+    useEffect(() => {
+        if (tableData.length > 0) {
+            const firstStart = tableData[0].startDate || '';
+            const lastEnd = tableData[tableData.length - 1].endDate || '';
+
+            setStartDate(firstStart);
+            setEndDate(lastEnd);
+        } else {
+            setStartDate('');
+            setEndDate('');
+        }
+    }, [tableData]);
 
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // const {success, message, result} = await GetWorkCategories()
-        // console.log(result)
-        router.push('/list_objects/create_object/second_step/');
+        try {
+            const token = localStorage.getItem("access_token");
+            const projectUuid = localStorage.getItem("projectUuid");
+
+            if (!token || !projectUuid || !selectedWork) {
+                setMessages(["Не хватает данных для сохранения"]);
+                return;
+            }
+
+            const response1 = await fetch("https://test.foxstudios.ru:32460/api/project/create-project-schedule", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    project_uuid: projectUuid,
+                    work_uuid: selectedWork.uuid,
+                }),
+            });
+
+            if (!response1.ok) {
+                setMessages(["Ошибка при создании project_schedule"]);
+                return;
+            }
+
+            console.log("✅ Первый запрос выполнен");
+            const data1: { uuid: string } = await response1.json();
+            const projectScheduleUuid = data1.uuid;
+
+            const items = tableData.map(row => {
+                const meas = measurement.find(m => m.title === row.unitOfMeasurement);
+                return {
+                    end_date: row.endDate,
+                    is_complete: false,
+                    measurement: meas?.id,
+                    start_date: row.startDate,
+                    target_volume: row.volume,
+                    title: row.title,
+                    uuid: null,
+                };
+            });
+
+            console.log("📦 Items для второго запроса:", items);
+
+            const response2 = await fetch("https://test.foxstudios.ru:32460/api/project/update-works-in-schedule", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    items,
+                    project_schedule_uuid: projectScheduleUuid,
+                }),
+            });
+
+            if (!response2.ok) {
+                setMessages(["Ошибка при обновлении work-schedule"]);
+                return;
+            }
+
+            console.log("✅ Второй запрос выполнен");
+            await response2.json();
+
+            setMessages(["Этапы успешно сохранены"]);
+            router.push('/list_objects/create_object/second_step/');
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setMessages([`Ошибка: ${err.message}`]);
+            } else {
+                setMessages(["Неизвестная ошибка"]);
+            }
+        }
     };
+
+
+
 
     const kpgzTitle = selectedWork ? kpgz.find(k => k.id === selectedWork.kpgz)?.code || '' : '';
 
@@ -174,7 +263,7 @@ export default function AddSubjobs() {
                             />
                         </div>
                     </div>
-                    {/* Таблица */}
+                    <p>Даты вводить строго в формате год-месяц-день (пример: 2025-10-31)</p>
                     <div className="w-full overflow-x-auto">
                         <table className="w-full table-fixed border-collapse">
                             <thead>
@@ -182,8 +271,8 @@ export default function AddSubjobs() {
                                     <th className="px-4 py-3">Название работы</th>
                                     <th className="px-4 py-3 w-32">Объем</th>
                                     <th className="px-4 py-3">Единицы измерения</th>
-                                    <th className="px-4 py-3">Дата начала</th>
-                                    <th className="px-4 py-3">Дата окончание</th>
+                                    <th className="px-4 py-3">Дата начала*</th>
+                                    <th className="px-4 py-3">Дата окончания*</th>
                                     <th className="px-4 py-3 w-[80px]"></th>
                                 </tr>
                             </thead>
