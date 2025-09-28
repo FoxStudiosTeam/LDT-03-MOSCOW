@@ -27,7 +27,7 @@ pub fn everyone(state: AppState) -> OpenApiRouter {
         .routes(routes!(get_statuses::get_punishment_statuses))
         .routes(routes!(get_regulation_docs::get_regulation_docs))
         .layer(auth_jwt::prelude::AuthLayer::new(Role::Foreman | Role::AdministratorOnly | Role::Customer | Role::Inspector))
-        .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
+        .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
         .with_state(state)
 }
 
@@ -36,7 +36,7 @@ pub fn inspector_customer(state: AppState) -> OpenApiRouter {
         .routes(routes!(create_punishment::create_punishment))
         .routes(routes!(create_punishment_item::create_punishment_item))
         .layer(auth_jwt::prelude::AuthLayer::new(Role::Customer | Role::Inspector | Role::AdministratorOnly ))
-        .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
+        .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
         .with_state(state)
 }
 
