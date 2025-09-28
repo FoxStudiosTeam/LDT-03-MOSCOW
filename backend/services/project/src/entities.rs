@@ -29,15 +29,16 @@ pub struct CreateUpdateWorkRequest {
     pub title : String,
     pub uuid : Option<Uuid>
 }
-#[derive(ToSchema, Serialize)]
-pub struct SaveWorkResponse {
-    pub items : Option<Works>
-}
 
-#[derive(ToSchema, Serialize)]
-pub struct GetWorksByCategoryResponse {
-    pub items: Vec<Works>
-}
+// #[derive(ToSchema, Serialize)]
+// pub struct SaveWorkResponse {
+//     pub items : Option<Works>
+// }
+
+// #[derive(ToSchema, Serialize)]
+// pub struct GetWorksByCategoryResponse {
+//     pub items: Vec<Works>
+// }
 
 #[derive(ToSchema, Deserialize)]
 pub struct GetWorksByCategoryRequest {
@@ -106,12 +107,13 @@ pub struct AddWorkToScheduleRequest {
 }
 
 #[derive(ToSchema, Deserialize)]
-pub struct UpdateWorkScheduleRequest {
-    pub items : Vec<UpdateWorksInScheduleRequest>
+pub struct UpdateWorksInScheduleRequest {
+    pub project_schedule_uuid : Uuid,
+    pub items : Vec<UpdateWorkInScheduleRequest>
 }
 
 #[derive(ToSchema,Deserialize)]
-pub struct UpdateWorksInScheduleRequest {
+pub struct UpdateWorkInScheduleRequest {
     pub start_date : chrono::NaiveDate,
     pub end_date : chrono::NaiveDate,
     pub uuid : Option<Uuid>,
@@ -119,7 +121,6 @@ pub struct UpdateWorksInScheduleRequest {
     pub title : String,
     pub target_volume : f64,
     pub is_complete: bool,
-    pub project_schedule_uuid : Uuid,
     pub measurement : i32,
 }
 

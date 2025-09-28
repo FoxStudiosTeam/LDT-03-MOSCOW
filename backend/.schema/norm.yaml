@@ -1,15 +1,4 @@
 tables:
-- name: works
-  schema: norm
-  fields:
-  - name: uuid
-    type: uuid
-    isPrimary: true
-    default: "gen_random_uuid()"
-  - name: work_category
-    type: uuid
-  - name: title
-    type: text
 - name: measurements
   schema: norm
   fields:
@@ -83,10 +72,10 @@ tables:
   fields:
   - name: kpgz
     type: integer
-  - name: id
-    type: integer
-    nullable: true
-    default: null
+  # - name: id
+  #   type: integer
+  #   nullable: true
+  #   default: null
   - name: uuid
     type: uuid
     isPrimary: true
