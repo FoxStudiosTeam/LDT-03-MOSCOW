@@ -2,13 +2,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use auth_jwt::structs::AccessTokenPayload;
+use auth_jwt::structs::{AccessTokenPayload, OPERATOR_ROLE};
 use axum::response::IntoResponse;
 use axum::{Json, http::StatusCode, response::Response};
 use orm::prelude::Optional::{NotSet, Set};
 use orm::prelude::SaveMode::{Insert, Update, Upsert};
 use schema::prelude::{
-    ActiveIkoRelationship, ActiveProject, ActiveProjectSchedule, ActiveProjectScheduleItems, ActiveWorkCategory, ActiveWorks, OrmIkoRelationship, OrmKpgz, OrmMeasurements, OrmProject, OrmProjectSchedule, OrmProjectScheduleItems, OrmProjectStatuses, OrmWorkCategory, OrmWorks, ProjectScheduleItems, Works
+    ActiveIkoRelationship, ActiveProject, ActiveProjectSchedule, ActiveProjectScheduleItems, ActiveWorkCategory, OrmIkoRelationship, OrmKpgz, OrmMeasurements, OrmProject, OrmProjectSchedule, OrmProjectScheduleItems, OrmProjectStatuses, OrmWorkCategory, ProjectScheduleItems
 };
 use shared::prelude::AppErr;
 use shared::prelude::IntoAppErr;
@@ -279,12 +279,12 @@ pub trait IProjectScheduleService: Send + Sync {
     async fn add_work_to_schedule(&self, r: AddWorkToScheduleRequest, t: AccessTokenPayload) -> Result<Response, AppErr>;
     async fn update_works_in_schedule(
         &self,
-        r: UpdateWorkScheduleRequest,
+        r: UpdateWorksInScheduleRequest,
         t: AccessTokenPayload
     ) -> Result<Response, AppErr>;
     async fn update_work_in_schedule(
         &self,
-        r: UpdateWorksInScheduleRequest,
+        r: UpdateWorkInScheduleRequest,
         t: AccessTokenPayload
     ) -> Result<Response, AppErr>;
 
@@ -304,7 +304,7 @@ impl IProjectScheduleService for ProjectScheduleService {
     ) -> Result<Response, AppErr> {
         let mut project_schedule = ActiveProjectSchedule::default();
         project_schedule.project_uuid = Set(r.project_uuid);
-        project_schedule.work_uuid = Set(r.work_uuid);
+        project_schedule.work_category = Set(r.work_uuid);
         // project_schedule.created_by = Set(t.uuid); // TODO!
 
         let res = self
@@ -347,33 +347,65 @@ impl IProjectScheduleService for ProjectScheduleService {
         return Ok((StatusCode::OK, Json(res)).into_response());
     }
 
+    async fn update_work_in_schedule(
+        &self,
+        r: UpdateWorkInScheduleRequest,
+        t: AccessTokenPayload
+    ) -> Result<Response, AppErr> {
+        let mut work_to_update = ActiveProjectScheduleItems::default();
+        work_to_update.end_date = Set(r.end_date);
+        work_to_update.start_date = Set(r.start_date);
+        work_to_update.updated_by = Set(Some(t.uuid));
+        work_to_update.measurement = Set(r.measurement);
+        work_to_update.title = Set(r.title);
+
+        if let Some(uuid) = r.uuid {
+            work_to_update.uuid = Set(uuid);
+        }
+
+        let res = self
+            .state
+            .orm()
+            .project_schedule_items()
+            .save(work_to_update, Upsert)
+            .await
+            .into_app_err()?
+            .ok_or(
+                AppErr::default()
+                    .with_err_response("internal database error")
+                    .with_status(StatusCode::INTERNAL_SERVER_ERROR),
+            )?;
+
+        return Ok((StatusCode::OK, Json(res)).into_response());
+    }
+
     async fn update_works_in_schedule(
         &self,
-        r: UpdateWorkScheduleRequest,
+        r: UpdateWorksInScheduleRequest,
         t: AccessTokenPayload
     ) -> Result<Response, AppErr> {
         let mut result: Vec<ProjectScheduleItems> = Vec::new();
 
-        let tx = self.state.orm().begin_tx().await.ok().unwrap();
+        let mut tx = self.state.orm().begin_tx().await.ok().unwrap();
+
+        sqlx::query("update norm.project_schedule_items set is_deleted = true where project_schedule_uuid = $1")
+            .bind(&r.project_schedule_uuid)
+            .execute(tx.get_inner())
+            .await
+            .into_app_err()?;
 
         for (index, elem) in r.items.into_iter().enumerate() {
             let mut work_to_schedule = ActiveProjectScheduleItems::default();
             work_to_schedule.start_date = Set(elem.start_date);
             work_to_schedule.end_date = Set(elem.end_date);
-            work_to_schedule.project_schedule_uuid = Set(elem.project_schedule_uuid);
             work_to_schedule.is_completed = Set(false);
             work_to_schedule.target_volume = Set(elem.target_volume);
             work_to_schedule.is_deleted = Set(false);
             work_to_schedule.is_completed = Set(elem.is_complete);
             work_to_schedule.updated_by = Set(Some(t.uuid));
             work_to_schedule.title = Set(elem.title);
-
-            // TODO: починить токены и сделать логику выбора
-            work_to_schedule.is_draft = Set(false);
-
-            //TODO: починить токены и заменить это
-            work_to_schedule.created_by =
-                Set(Uuid::parse_str("cc867b0b-324b-4dec-a1d3-632efb588edd").unwrap());
+            work_to_schedule.is_draft = Set(t.role == OPERATOR_ROLE);
+            work_to_schedule.created_by = Set(t.uuid);
 
             let maybe_elem = self
                 .state
@@ -405,47 +437,13 @@ impl IProjectScheduleService for ProjectScheduleService {
         return Ok((StatusCode::OK, Json(result)).into_response());
     }
 
-    async fn update_work_in_schedule(
-        &self,
-        r: UpdateWorksInScheduleRequest,
-        t: AccessTokenPayload
-    ) -> Result<Response, AppErr> {
-        let mut work_to_update = ActiveProjectScheduleItems::default();
-        work_to_update.end_date = Set(r.end_date);
-        work_to_update.start_date = Set(r.start_date);
-        work_to_update.updated_by = Set(Some(t.uuid));
-        work_to_update.measurement = Set(r.measurement);
-        work_to_update.title = Set(r.title);
-
-        if let Some(uuid) = r.uuid {
-            work_to_update.uuid = Set(uuid);
-        }
-
-        let res = self
-            .state
-            .orm()
-            .project_schedule_items()
-            .save(work_to_update, Upsert)
-            .await
-            .into_app_err()?
-            .ok_or(
-                AppErr::default()
-                    .with_err_response("internal database error")
-                    .with_status(StatusCode::INTERNAL_SERVER_ERROR),
-            )?;
-
-        return Ok((StatusCode::OK, Json(res)).into_response());
-    }
-
     async fn get_project_schedule(&self, r: GetProjectScheduleRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
         let sch = sqlx::query_as::<_, TitledSchedule>("
         SELECT ps.uuid AS uuid,
-            wc.title AS title
+            w.title AS title
         FROM journal.project_schedule ps
-        JOIN norm.works w
-        ON ps.work_uuid = w.uuid
-        JOIN norm.work_category wc
-        ON w.work_category = wc.uuid
+        JOIN norm.work_category w
+        ON ps.work_category = w.uuid
         WHERE ps.project_uuid = $1")
         .bind(&r.project_uuid)
         .fetch_all(self.state.orm().get_executor())
@@ -576,9 +574,9 @@ pub fn new_work_category_service(state: AppState) -> Arc<dyn IWorkCategoryServic
 
 #[async_trait]
 pub trait IWorkService: Send + Sync {
-    async fn save_work(&self, r: CreateUpdateWorkRequest) -> Result<Response, AppErr>;
-    async fn get_works_by_category(&self, r: GetWorksByCategoryRequest)
-    -> Result<Response, AppErr>;
+    // async fn save_work(&self, r: CreateUpdateWorkRequest) -> Result<Response, AppErr>;
+    // async fn get_works_by_category(&self, r: GetWorksByCategoryRequest)
+    // -> Result<Response, AppErr>;
     async fn get_measurements(&self) -> Result<Response, AppErr>;
 }
 
@@ -591,45 +589,46 @@ impl IWorkService for WorkService {
     async fn get_measurements(&self) -> Result<Response, AppErr> {
         Ok((StatusCode::OK, Json(self.state.orm().measurements().select("").fetch().await.into_app_err()?)).into_response())
     }
-    async fn save_work(&self, r: CreateUpdateWorkRequest) -> Result<Response, AppErr> {
-        let save_mode = r.uuid.map(|_| Update).unwrap_or(Insert);
-        let mut work = ActiveWorks {
-            title: Set(r.title),
-            work_category: Set(r.work_category_uuid),
-            ..Default::default()
-        };
 
-        if let Some(uuid) = r.uuid {
-            work.uuid = Set(uuid)
-        }
+    // async fn save_work(&self, r: CreateUpdateWorkRequest) -> Result<Response, AppErr> {
+    //     let save_mode = r.uuid.map(|_| Update).unwrap_or(Insert);
+    //     let mut work = ActiveWork {
+    //         title: Set(r.title),
+    //         work_category: Set(r.work_category_uuid),
+    //         ..Default::default()
+    //     };
 
-        let raw = self
-            .state
-            .orm()
-            .works()
-            .save(work, save_mode)
-            .await
-            .into_app_err()?;
-        let res = SaveWorkResponse { items: raw };
-        return Ok((StatusCode::OK, Json(res)).into_response());
-    }
+    //     if let Some(uuid) = r.uuid {
+    //         work.uuid = Set(uuid)
+    //     }
 
-    async fn get_works_by_category(
-        &self,
-        r: GetWorksByCategoryRequest,
-    ) -> Result<Response, AppErr> {
-        let raw = self
-            .state
-            .orm()
-            .works()
-            .select("select * from norm.works where work_category = $1")
-            .bind(r.work_category_uuid)
-            .fetch()
-            .await
-            .into_app_err()?;
-        let res = GetWorksByCategoryResponse { items: raw };
-        return Ok((StatusCode::OK, Json(res)).into_response());
-    }
+    //     let raw = self
+    //         .state
+    //         .orm()
+    //         .works()
+    //         .save(work, save_mode)
+    //         .await
+    //         .into_app_err()?;
+    //     let res = SaveWorkResponse { items: raw };
+    //     return Ok((StatusCode::OK, Json(res)).into_response());
+    // }
+
+    // async fn get_works_by_category(
+    //     &self,
+    //     r: GetWorksByCategoryRequest,
+    // ) -> Result<Response, AppErr> {
+    //     let raw = self
+    //         .state
+    //         .orm()
+    //         .works()
+    //         .select("select * from norm.works where work_category = $1")
+    //         .bind(r.work_category_uuid)
+    //         .fetch()
+    //         .await
+    //         .into_app_err()?;
+    //     let res = GetWorksByCategoryResponse { items: raw };
+    //     return Ok((StatusCode::OK, Json(res)).into_response());
+    // }
 }
 
 pub fn new_work_service(state: AppState) -> Arc<dyn IWorkService> {

@@ -70,7 +70,7 @@ tables:
     default: null
   - name: project_uuid
     type: uuid
-  - name: work_uuid
+  - name: work_category
     type: uuid
 - name: project_schedule_items
   schema: journal

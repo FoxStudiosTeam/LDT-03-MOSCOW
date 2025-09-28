@@ -13,7 +13,7 @@ impl ProjectSchedule {
             uuid: Set(self.uuid),
             end_date: Set(self.end_date),
             project_uuid: Set(self.project_uuid),
-            work_uuid: Set(self.work_uuid),
+            work_category: Set(self.work_category),
         }
     }
 }
@@ -26,7 +26,7 @@ pub struct ProjectSchedule {
     pub uuid: uuid::Uuid,
     pub end_date: Option<chrono::NaiveDate>,
     pub project_uuid: uuid::Uuid,
-    pub work_uuid: uuid::Uuid,
+    pub work_category: uuid::Uuid,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
@@ -35,7 +35,7 @@ pub struct ActiveProjectSchedule {
     pub uuid: Optional<uuid::Uuid>,
     pub end_date: Optional<Option<chrono::NaiveDate>>,
     pub project_uuid: Optional<uuid::Uuid>,
-    pub work_uuid: Optional<uuid::Uuid>,
+    pub work_category: Optional<uuid::Uuid>,
 }
 
 impl ActiveProjectSchedule {
@@ -45,7 +45,7 @@ impl ActiveProjectSchedule {
             uuid: self.uuid.into_option()?,
             end_date: self.end_date.into_option()?,
             project_uuid: self.project_uuid.into_option()?,
-            work_uuid: self.work_uuid.into_option()?,
+            work_category: self.work_category.into_option()?,
         })
     }
 }
@@ -73,7 +73,7 @@ impl TableSelector for ActiveProjectSchedule {
             "uuid" => self.uuid.is_set(),
             "end_date" => self.end_date.is_set(),
             "project_uuid" => self.project_uuid.is_set(),
-            "work_uuid" => self.work_uuid.is_set(),
+            "work_category" => self.work_category.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
@@ -108,7 +108,7 @@ impl TableSelector for ActiveProjectSchedule {
                 is_primary: false,
             },
             ColumnDef{
-                name: "work_uuid",
+                name: "work_category",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -157,7 +157,7 @@ impl ModelOps<sqlx::Postgres> for ActiveProjectSchedule
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.work_uuid {tracing::debug!("Binded work_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
         q
     }
     
@@ -278,7 +278,7 @@ impl ModelOps<sqlx::MySql> for ActiveProjectSchedule
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.work_uuid {tracing::debug!("Binded work_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
         q
     }
     
@@ -399,7 +399,7 @@ impl ModelOps<sqlx::Sqlite> for ActiveProjectSchedule
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.work_uuid {tracing::debug!("Binded work_uuid"); q = q.bind(v);}
+        if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
         q
     }
     
