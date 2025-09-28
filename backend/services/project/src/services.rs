@@ -395,18 +395,20 @@ impl IProjectScheduleService for ProjectScheduleService {
             .into_app_err()?;
 
         for (index, elem) in r.items.into_iter().enumerate() {
-            let mut work_to_schedule = ActiveProjectScheduleItems::default();
-            work_to_schedule.start_date = Set(elem.start_date);
-            work_to_schedule.end_date = Set(elem.end_date);
-            work_to_schedule.target_volume = Set(elem.target_volume);
-            work_to_schedule.is_deleted = Set(false);
-            work_to_schedule.project_schedule_uuid = Set(r.project_schedule_uuid.clone());
-            work_to_schedule.is_completed = Set(elem.is_complete);
-            work_to_schedule.updated_by = Set(Some(t.uuid));
-            work_to_schedule.title = Set(elem.title);
-            work_to_schedule.is_draft = Set(t.role == OPERATOR_ROLE);
-            work_to_schedule.created_by = Set(t.uuid);
-            work_to_schedule.uuid = elem.uuid.map(|u| Set(u)).unwrap_or_default();
+            let work_to_schedule = ActiveProjectScheduleItems{
+                start_date: Set(elem.start_date),
+                end_date: Set(elem.end_date),
+                target_volume: Set(elem.target_volume),
+                is_deleted: Set(false),
+                project_schedule_uuid: Set(r.project_schedule_uuid.clone()),
+                is_completed: Set(elem.is_complete),
+                updated_by: Set(Some(t.uuid)),
+                title: Set(elem.title),
+                is_draft: Set(t.role == OPERATOR_ROLE),
+                created_by: Set(t.uuid),
+                measurement: Set(elem.measurement),
+                uuid: elem.uuid.map(|u| Set(u)).unwrap_or_default(),
+            };
 
             let maybe_elem = self
                 .state
