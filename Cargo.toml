@@ -7,7 +7,7 @@ orm = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="07f
 schema_reader = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="07f50fc", package = "schema_reader" }
 utils = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="07f50fc", package = "utils" }
 di = { git = "ssh://git@github.com/FoxStudiosTeam/rust-commons.git" , rev ="07f50fc", package = "di" }
-auth_jwt = { git = "ssh://git@github.com/FoxStudiosTeam/sso.git", rev="1631e67", package = "auth_jwt" }
+auth_jwt = { git = "ssh://git@github.com/FoxStudiosTeam/sso.git", rev="5836e02", package = "auth_jwt" }
 
 # be careful adding new local deps - all of it need to be added into dockerfile!
 shared = { path = "backend/libs/shared" }

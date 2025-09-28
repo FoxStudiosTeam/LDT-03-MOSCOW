@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use auth_jwt::prelude::Role;
 use axum::http::StatusCode;
 use axum::routing::get;
 use axum_extra::TypedHeader;
@@ -24,6 +23,7 @@ mod controllers;
 mod services;
 mod entities;
 
+use auth_jwt::prelude::*;
 // Hover to see docs
 env_config!(
     ".env" => pub(crate) ENV = pub(crate) Env {
@@ -36,9 +36,9 @@ env_config!(
     }
 );
 
-pub const FOREMAN_TAG: &str = auth_jwt::prelude::FOREMAN_ROLE;
-pub const INSPECTOR_TAG: &str = auth_jwt::prelude::INSPECTOR_ROLE;
-pub const CUSTOMER_TAG: &str = auth_jwt::prelude::CUSTOMER_ROLE;
+pub const FOREMAN_TAG: &str = FOREMAN_ROLE;
+pub const INSPECTOR_TAG: &str = INSPECTOR_ROLE;
+pub const CUSTOMER_TAG: &str = CUSTOMER_ROLE;
 pub const CUSTOMER_NEW_PROJECT_TAG: &str = "new project";
 pub const ANY_TAG: &str = "any_authed";
 pub const GUEST_TAG: &str = "any";
@@ -144,7 +144,7 @@ async fn main() -> anyhow::Result<()> {
     let iko_router = OpenApiRouter::new()
         .routes(routes!(controllers::handle_activate_project))
         .routes(routes!(controllers::handle_add_iko_to_project))
-        .layer(auth_jwt::prelude::AuthLayer::new(Role::Inspector)).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .layer(AuthLayer::new(Role::Inspector)).layer(axum::middleware::from_fn(token_extractor))
         .with_state(state.clone());
 
     let customer_router = OpenApiRouter::new()
@@ -161,18 +161,18 @@ async fn main() -> anyhow::Result<()> {
 
         .routes(routes!(controllers::handle_create_project_schedule))
         .routes(routes!(controllers::delete_project_schedule))
-        .layer(auth_jwt::prelude::AuthLayer::new(Role::Customer)).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .layer(AuthLayer::new(Role::Customer)).layer(axum::middleware::from_fn(token_extractor))
         .with_state(state.clone());
 
     let foreman_router = OpenApiRouter::new()
         // TODO: update subworks (is_draft change)
-        .layer(auth_jwt::prelude::AuthLayer::new(Role::Foreman)).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .layer(AuthLayer::new(Role::Foreman)).layer(axum::middleware::from_fn(token_extractor))
         .with_state(state.clone());
 
     let any_router = OpenApiRouter::new()
         .routes(routes!(controllers::handle_get_project))
         .routes(routes!(controllers::handle_get_project_schedule)) // todo: check relationship!
-        .layer(auth_jwt::prelude::AuthLayer::new(Role::Inspector | Role::Customer | Role::Foreman)).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .layer(AuthLayer::new(Role::Inspector | Role::Customer | Role::Foreman)).layer(axum::middleware::from_fn(token_extractor))
         .with_state(state.clone());
     
     let guest_router = OpenApiRouter::new()
@@ -185,7 +185,7 @@ async fn main() -> anyhow::Result<()> {
     let dev_router = OpenApiRouter::new()
         .routes(routes!(controllers::handle_create_work_category))
         .routes(routes!(controllers::handle_update_work_category))
-        .layer(auth_jwt::prelude::AuthLayer::new(Role::AdministratorOnly)).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .layer(AuthLayer::new(Role::AdministratorOnly)).layer(axum::middleware::from_fn(token_extractor))
         .with_state(state.clone());
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
