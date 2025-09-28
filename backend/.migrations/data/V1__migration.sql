@@ -1,21 +1,21 @@
 insert into norm.project_statuses (title, id)
 values
     ('New', 0),
-    ('InActive', 1),
-    ('Suspend', 2),
-    ('Normal', 3),
-    ('LowPunishmnet', 5),
-    ('NormalPunishmnet', 6),
-    ('HighPunishmnet', 7),
-    ('SomeWarnings', 4);
+    ('PreActive', 1),
+    ('Normal', 2),
+    ('SomeWarnings', 3),
+    ('LowPunishmnet', 4),
+    ('NormalPunishmnet', 5),
+    ('HighPunishmnet', 6),
+    ('Suspend', 7);
 
 insert into norm.punishment_statuses (title, id)
 values
     ('Resolved', 0),
+    ('SomeWarnings', 1),
     ('LowPunishmnet', 2),
     ('NormalPunishmnet', 3),
-    ('HighPunishmnet', 4),
-    ('SomeWarnings', 1);
+    ('HighPunishmnet', 4);
 
 insert into norm.report_statuses (title, id)
 values
@@ -119,3 +119,15 @@ INSERT INTO norm.measurements (id, title) values
 (4, 'Литры'),
 (5, 'Килограммы'),
 (6, 'Тонны') on conflict do nothing;
+
+INSERT INTO norm.work_category (kpgz, uuid, title)
+VALUES  (925749427, gen_random_uuid(), 'Устройство АБП'),
+        (925749427, gen_random_uuid(), 'Ремонт АБП'),
+        (925749427, gen_random_uuid(), 'Устройство бортового камня'),
+        (925749427, gen_random_uuid(), 'Замена бортового камня'),
+        (638872897, gen_random_uuid(), 'Ремонт газона'),
+        (925749443, gen_random_uuid(), 'Замена ограждений'),
+        (925749443, gen_random_uuid(), 'Установка МАФ'),
+        (925749405, gen_random_uuid(), 'Ремонт элементов инженерных коммуникаций'),
+        (925749427, gen_random_uuid(), 'Замена резинового покрытия'),
+        (925749443, gen_random_uuid(), 'Установка игровых элементов') on conflict do nothing;
