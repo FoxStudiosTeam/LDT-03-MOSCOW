@@ -22,6 +22,11 @@ pub async fn delete_punishment(
     State(app): State<AppState>,
     Query(r): Query<DeletePunishmentRequest>
 ) -> Result<Response, AppErr> {
+        app.orm.punishment().select_by_pk(&r.uuid).await?
+        .ok_or_else(||AppErr::default().with_status(StatusCode::NOT_FOUND).with_response("Punishment not found"))?;
+
+        app.orm.punishment_item().delete("delete from journal.punishment_item Where punishment = $1").bind(r.uuid).fetch().await?;
+
         app.orm.punishment().delete_by_pk(&r.uuid).await?
         .ok_or_else(||AppErr::default().with_status(StatusCode::NOT_FOUND).with_response("Punishment not found"))?;
         Ok((StatusCode::OK, Json(OkMessage{message:"Punishment deleted".to_string()})).into_response())

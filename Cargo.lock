@@ -208,7 +208,7 @@ dependencies = [
 [[package]]
 name = "auth_jwt"
 version = "0.1.1"
-source = "git+ssh://git@github.com/FoxStudiosTeam/sso.git?rev=1631e67#1631e67f7705055e9b13a6dca33460e4e41d657f"
+source = "git+ssh://git@github.com/FoxStudiosTeam/sso.git?rev=5836e02#5836e02a055b6cb81bd2cefa067b01cd63eefb1c"
 dependencies = [
  "anyhow",
  "axum",
@@ -2839,7 +2839,7 @@ dependencies = [
 
 [[package]]
 name = "punishment"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "anyhow",
  "async-trait",
