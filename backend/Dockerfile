@@ -46,6 +46,7 @@ RUN apt-get update && \
 WORKDIR /usr/local/bin
 
 ARG SERVICE_NAME=unspecified
-COPY --from=builder /build/target/release/$SERVICE_NAME /usr/local/bin/artifact
+# release
+COPY --from=builder /build/target/debug/$SERVICE_NAME /usr/local/bin/artifact
 
 ENTRYPOINT ["/usr/local/bin/artifact"]
