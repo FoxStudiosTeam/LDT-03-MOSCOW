@@ -1,13 +1,13 @@
 insert into norm.project_statuses (title, id)
 values
-    ('New', 0),
-    ('PreActive', 1),
-    ('Normal', 2),
-    ('SomeWarnings', 3),
-    ('LowPunishmnet', 4),
-    ('NormalPunishmnet', 5),
-    ('HighPunishmnet', 6),
-    ('Suspend', 7);
+    ('Новый', 0),
+    ('Ожидает активации', 1),
+    ('В норме', 2),
+    ('Есть замечания', 3),
+    ('Есть незначительные нарушения', 4),
+    ('Есть нарушения', 5),
+    ('Есть грубые нарушения', 6),
+    ('Приостановлен', 7);
 
 insert into norm.punishment_statuses (title, id)
 values
