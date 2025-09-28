@@ -208,7 +208,7 @@ dependencies = [
 [[package]]
 name = "auth_jwt"
 version = "0.1.1"
-source = "git+ssh://git@github.com/FoxStudiosTeam/sso.git?rev=979dd042#979dd042e916216302c8ec819ff08081764c9361"
+source = "git+ssh://git@github.com/FoxStudiosTeam/sso.git?rev=1631e67#1631e67f7705055e9b13a6dca33460e4e41d657f"
 dependencies = [
  "anyhow",
  "axum",
@@ -2803,7 +2803,7 @@ dependencies = [
 
 [[package]]
 name = "project"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "async-trait",

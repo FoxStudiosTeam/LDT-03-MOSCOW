@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use auth_jwt::prelude::Role;
 use axum::http::StatusCode;
 use axum::routing::get;
 use axum_extra::TypedHeader;
@@ -35,16 +36,27 @@ env_config!(
     }
 );
 
-pub const MAIN_TAG: &str = "project";
+pub const FOREMAN_TAG: &str = auth_jwt::prelude::FOREMAN_ROLE;
+pub const INSPECTOR_TAG: &str = auth_jwt::prelude::INSPECTOR_ROLE;
+pub const CUSTOMER_TAG: &str = auth_jwt::prelude::CUSTOMER_ROLE;
+pub const CUSTOMER_NEW_PROJECT_TAG: &str = "new project";
+pub const ANY_TAG: &str = "any_authed";
+pub const GUEST_TAG: &str = "any";
+pub const DEV_ONLY_TAG: &str = "dev";
 
 #[derive(OpenApi)]
 #[openapi(
     modifiers(&SecurityAddon),
     tags(
-        (name = MAIN_TAG, description = "API"),
+        (name = CUSTOMER_NEW_PROJECT_TAG, description = "API for creation and editing new project"),
+        (name = FOREMAN_TAG, description = "API for foreman only"),
+        (name = INSPECTOR_TAG, description = "API for inspector only"),
+        (name = CUSTOMER_TAG, description = "API for customer only"),
+        (name = ANY_TAG, description = "API access with auth (any role)"),
+        (name = GUEST_TAG, description = "API access without auth"),
+        (name = DEV_ONLY_TAG, description = "API access only for development via admin"),
     )
 )]
-
 struct ApiDoc;
 
 pub type DB = sqlx::Postgres;
@@ -129,119 +141,59 @@ async fn main() -> anyhow::Result<()> {
         }),
     );
 
+    let iko_router = OpenApiRouter::new()
+        .routes(routes!(controllers::handle_activate_project))
+        .routes(routes!(controllers::handle_add_iko_to_project))
+        .layer(auth_jwt::prelude::AuthLayer::new(Role::Inspector)).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .with_state(state.clone());
+
+    let customer_router = OpenApiRouter::new()
+        .routes(routes!(controllers::handle_create_project))
+        .routes(routes!(controllers::handle_set_project_foreman))
+
+
+        .routes(routes!(controllers::handle_set_works_in_schedule))
+
+        // .routes(routes!(controllers::handle_add_work_to_schedule))
+        .routes(routes!(controllers::handle_update_works_in_schedule))
+
+
+        .routes(routes!(controllers::handle_create_project_schedule))
+        .routes(routes!(controllers::delete_project_schedule))
+        .layer(auth_jwt::prelude::AuthLayer::new(Role::Customer)).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .with_state(state.clone());
+
+    let foreman_router = OpenApiRouter::new()
+        // TODO: update subworks (is_draft change)
+        .layer(auth_jwt::prelude::AuthLayer::new(Role::Foreman)).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .with_state(state.clone());
+
+    let any_router = OpenApiRouter::new()
+        .routes(routes!(controllers::handle_get_project))
+        .routes(routes!(controllers::handle_get_project_schedule)) // todo: check relationship!
+        .layer(auth_jwt::prelude::AuthLayer::new(Role::Inspector | Role::Customer | Role::Foreman)).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .with_state(state.clone());
+    
+    let guest_router = OpenApiRouter::new()
+        .routes(routes!(controllers::handle_get_work_categories))
+        .routes(routes!(controllers::handle_get_measurements))
+        .routes (routes!(controllers::handle_get_project_statuses))
+        .routes(routes!(controllers::handle_get_kpgz_vec))
+        .with_state(state.clone());
+
+    let dev_router = OpenApiRouter::new()
+        .routes(routes!(controllers::handle_create_work_category))
+        .routes(routes!(controllers::handle_update_work_category))
+        .layer(auth_jwt::prelude::AuthLayer::new(Role::AdministratorOnly)).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
+        .with_state(state.clone());
+
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .nest("/api/project", 
-            OpenApiRouter::new()
-                .routes(
-                    routes!(
-                        controllers::handle_get_project,
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_create_project
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_update_project
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_activate_project
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_add_iko_to_project
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_create_project_schedule
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_add_work_to_schedule
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_update_works_in_schedule
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_update_work_in_schedule
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_get_project_schedule
-                    )
-                )
-                .routes(
-                    routes!(
-                        controllers::handle_create_work_category
-                    )
-                )
-                
-                .routes(
-                    routes!(
-                        controllers::handle_update_work_category
-                    )
-                )
-                // .routes (
-                //     routes!(
-                //         controllers::handle_save_work
-                //     )
-                // )
-                // .routes (
-                //     routes!(
-                //         controllers::handle_get_works_by_category
-                //     )
-                // )
-                .with_state(state.clone())
-                .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
-                .merge(
-                    OpenApiRouter::new()
-                    .routes(
-                        routes!(
-                            controllers::handle_get_work_categories
-                        )
-                    )
-                    .routes(
-                        routes!(
-                            controllers::handle_get_measurements
-                        )
-                    )
-                    .routes (
-                        routes!(
-                            controllers::handle_get_project_statuses
-                        )
-                    )
-                    .routes(
-                        routes!(
-                            controllers::handle_get_kpgz_vec
-                        )
-                    )
-                    .with_state(state)
-                )
-        )
-        // .routes(
-        //     routes!(
-        //         secured_route
-        //     ).layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
-        // )
-        // .routes(
-        //     routes!(
-        //         role_secured_route
-        //     )
-        //     .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::Inspector))
-        //     .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
-        // )
+        .merge(iko_router)
+        .merge(customer_router)
+        .merge(any_router)
+        .merge(foreman_router)
+        .merge(guest_router)
+        .merge(dev_router)
         .split_for_parts();
     
     let app = axum::Router::new()

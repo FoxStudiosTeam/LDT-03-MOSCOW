@@ -1,4 +1,5 @@
 use auth_jwt::structs::AccessTokenPayload;
+use axum::extract::Query;
 use axum::{Extension, Json};
 use axum::{extract::State, response::Response};
 use schema::prelude::*;
@@ -10,7 +11,7 @@ use crate::entities::*;
 #[utoipa::path(
     post,
     path = "/get-project",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     summary = "Get project.",
     security(("bearer_access" = [])),
     responses(
@@ -21,16 +22,17 @@ use crate::entities::*;
 )]
 pub async fn handle_get_project(
     State(state): State<AppState>,
+    Extension(payload): Extension<AccessTokenPayload>,
     Json(r): Json<GetProjectRequest>,
 ) -> Result<Response, AppErr> {
-    return state.project_service().get_project(r).await;
+    return state.project_service().get_project(r, payload).await;
 }
 
 #[utoipa::path(
     post,
     path = "/create-project",
-    tag = crate::MAIN_TAG,
-    summary = "Create project. Only users with SSK role can access it.",
+    tag = crate::CUSTOMER_TAG,
+    summary = "Create project.",
     security(("bearer_access" = [])),
     responses(
         (status = 200, description = "Project created.", body = Project),
@@ -48,8 +50,8 @@ pub async fn handle_create_project(
 
 #[utoipa::path(
     post,
-    path = "/update-project",
-    tag = crate::MAIN_TAG,
+    path = "/set-foreman",
+    tag = crate::CUSTOMER_NEW_PROJECT_TAG,
     summary = "Update project.",
     security(("bearer_access" = [])),
     responses(
@@ -58,18 +60,19 @@ pub async fn handle_create_project(
         (status = 401, description = "Unauthorized"),
     )
 )]
-pub async fn handle_update_project(
+pub async fn handle_set_project_foreman(
     State(state): State<AppState>,
-    Json(r): Json<UpdateProjectRequest>,
+    Extension(t) : Extension<AccessTokenPayload>,
+    Json(r): Json<SetProjectForemanRequest>,
 ) -> Result<Response, AppErr> {
-    return state.project_service().update_project(r).await;
+    return state.project_service().set_project_foreman(r, t).await;
 }
 
 #[utoipa::path(
-    post,
+    put,
     path = "/activate-project",
-    tag = crate::MAIN_TAG,
-    summary = "Activate project.",
+    tag = crate::INSPECTOR_TAG,
+    summary = "Activate project. Only users with IKO role can access it.",
     security(("bearer_access" = [])),
     responses(
         (status = 200, description = "Project Activated.", body = Project),
@@ -79,16 +82,17 @@ pub async fn handle_update_project(
 )]
 pub async fn handle_activate_project(
     State(state): State<AppState>,
-    Json(r): Json<ActivateProjectRequest>,
+    Extension(t) : Extension<AccessTokenPayload>,
+    Json(r): Json<ProjectRequest>,
 ) -> Result<Response, AppErr> {
-    return state.project_service().activate_project(r).await;
+    return state.project_service().activate_project(r, t).await;
 }
 
 #[utoipa::path(
     post,
     path = "/add-iko-to-project",
-    tag = crate::MAIN_TAG,
-    summary = "Add IKO into project.",
+    tag = crate::INSPECTOR_TAG,
+    summary = "Add IKO into project. Called by iko itself",
     security(("bearer_access" = [])),
     responses(
         (status = 200, description = "IKO added into project.", body = IkoRelationship),
@@ -98,15 +102,16 @@ pub async fn handle_activate_project(
 )]
 pub async fn handle_add_iko_to_project(
     State(state): State<AppState>,
+    Extension(t) : Extension<AccessTokenPayload>,
     Json(r): Json<AddIkoToProjectRequest>,
 ) -> Result<Response, AppErr> {
-    return state.project_service().add_iko_to_project(r).await;
+    return state.project_service().add_iko_to_project(r, t).await;
 }
 
 #[utoipa::path(
     post,
     path = "/create-project-schedule",
-    tag = crate::MAIN_TAG,
+    tag = crate::CUSTOMER_TAG,
     summary = "Create project schedule.",
     security(("bearer_access" = [])),
     responses(
@@ -117,70 +122,24 @@ pub async fn handle_add_iko_to_project(
 )]
 pub async fn handle_create_project_schedule(
     State(state): State<AppState>,
-    Extension(payload) : Extension<AccessTokenPayload>,
+    Extension(t) : Extension<AccessTokenPayload>,
     Json(r): Json<CreateProjectScheduleRequest>,
 ) -> Result<Response, AppErr> {
     return state
         .project_schedule_service()
-        .create_project_schedule(r, payload)
+        .create_project_schedule(r, t)
         .await;
 }
 
-#[utoipa::path(
-    post,
-    path = "/add-work-to-schedule-request",
-    tag = crate::MAIN_TAG,
-    summary = "Add subwork to schedule.",
-    security(("bearer_access" = [])),
-    responses(
-        (status = 200, description = "work subwork added into schedule.", body = ProjectScheduleItems),
-        (status = 500, description = "Internal server error."),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-//,Extension(payload) : Extension<AccessTokenPayload>
-pub async fn handle_add_work_to_schedule(
-    State(state): State<AppState>,
-    Extension(payload) : Extension<AccessTokenPayload>,
-    Json(r): Json<AddWorkToScheduleRequest>,
-) -> Result<Response, AppErr> {
-    return state
-        .project_schedule_service()
-        .add_work_to_schedule(r, payload)
-        .await;
-}
 
 #[utoipa::path(
     post,
     path = "/update-work-schedule",
-    tag = crate::MAIN_TAG,
-    summary = "Update single subwork in schedule",
+    tag = crate::CUSTOMER_TAG,
+    summary = "Set subworks for schedule after init project. State must be >=Normal to use this endpoint. This endpoints check bounds for every subwork and throw error if out of bounds.",
     security(("bearer_access" = [])),
     responses(
-        (status = 200, description = "single work in schedule was updated.", body = UpdateWorkInScheduleRequest),
-        (status = 500, description = "Internal server error."),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-pub async fn handle_update_work_in_schedule(
-    State(state): State<AppState>,
-    Extension(payload) : Extension<AccessTokenPayload>,
-    Json(r): Json<UpdateWorkInScheduleRequest>,
-) -> Result<Response, AppErr> {
-    return state
-        .project_schedule_service()
-        .update_work_in_schedule(r, payload)
-        .await;
-}
-
-#[utoipa::path(
-    post,
-    path = "/update-works-in-schedule",
-    tag = crate::MAIN_TAG,
-    summary = "Update group of subwork in schedule",
-    security(("bearer_access" = [])),
-    responses(
-        (status = 200, description = "group of works in schedule was updated.", body = UpdateWorksInScheduleRequest),
+        (status = 200, description = "Works in schedule was updated.", body = Vec<ProjectScheduleItems>),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -188,7 +147,7 @@ pub async fn handle_update_work_in_schedule(
 pub async fn handle_update_works_in_schedule(
     State(state): State<AppState>,
     Extension(payload) : Extension<AccessTokenPayload>,
-    Json(r): Json<UpdateWorksInScheduleRequest>,
+    Json(r): Json<SetWorksInScheduleRequest>,
 ) -> Result<Response, AppErr> {
     return state
         .project_schedule_service()
@@ -196,10 +155,34 @@ pub async fn handle_update_works_in_schedule(
         .await;
 }
 
+
+#[utoipa::path(
+    post,
+    path = "/set-works-in-schedule",
+    tag = crate::CUSTOMER_NEW_PROJECT_TAG,
+    summary = "Set subworks for schedule (soft override - will delete every work that not presented in request, add new and update existing. Work marked as new if uuid is not set.)",
+    security(("bearer_access" = [])),
+    responses(
+        (status = 200, description = "group of works in schedule was updated.", body = Vec<ProjectScheduleItems>),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_set_works_in_schedule(
+    State(state): State<AppState>,
+    Extension(payload) : Extension<AccessTokenPayload>,
+    Json(r): Json<SetWorksInScheduleRequest>,
+) -> Result<Response, AppErr> {
+    return state
+        .project_schedule_service()
+        .set_works_in_schedule(r, payload)
+        .await;
+}
+
 #[utoipa::path(
     post,
     path = "/get-project-schedule",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     summary = "Get project schedule by uuid.",
     security(("bearer_access" = [])),
     responses(
@@ -222,13 +205,11 @@ pub async fn handle_get_project_schedule(
 #[utoipa::path(
     post,
     path = "/create-work-category",
-    tag = crate::MAIN_TAG,
+    tag = crate::DEV_ONLY_TAG,
     summary = "create work category",
     security(("bearer_access" = [])),
     responses(
-        (status = 200, description = "Work category are successfully created", body = CreateProjectRequest,
-            example = json!({"title": "some title", "kpgz": 638862539})
-        ),
+        (status = 200, description = "Work category are successfully created", body = Option<WorkCategory>),
         (status = 400, description = "Kpgz id not found"),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
@@ -243,6 +224,7 @@ pub async fn handle_create_work_category(
 
 #[utoipa::path(
     put,
+    tag = crate::DEV_ONLY_TAG,
     path = "/update-work-category",
     summary = "update one work category",
     security(("bearer_access" = [])),
@@ -262,7 +244,7 @@ pub async fn handle_update_work_category(
 #[utoipa::path(
     get,
     path = "/get-work-category",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     summary = "get work categories as vec",
     responses (
         (status = 200, description = "Work Categories as vec", body = GetWorkCategoriesResponse),
@@ -277,7 +259,7 @@ pub async fn handle_get_work_categories(State(state): State<AppState>) -> Result
 #[utoipa::path(
     get,
     path = "/get-kpgz-vec",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     summary = "get kpgz dictionary as vec",
     responses (
         (status = 200, description = "kpgz dictionary as vec", body = GetKpgz),
@@ -293,10 +275,10 @@ pub async fn handle_get_kpgz_vec(State(state) : State<AppState>) -> Result<Respo
 #[utoipa::path(
     get,
     path = "/get-measurements",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     summary = "get measurement dictionary as vec",
     responses (
-        (status = 200, description = "easurement dictionary as vec", body = Vec<Measurements>),
+        (status = 200, description = "Measurement dictionary as vec", body = Vec<Measurements>),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -305,42 +287,10 @@ pub async fn handle_get_measurements(State(state) : State<AppState>) -> Result<R
     return state.work_service().get_measurements().await;
 }
 
-// #[utoipa::path(
-//     post,
-//     path = "/works/save",
-//     tag = crate::MAIN_TAG,
-//     summary = "save work using work_category_uuid and title",
-//     security(("bearer_access" = [])),
-//     responses (
-//         (status = 200, description = "work successfully saved", body = SaveWorkResponse),
-//         (status = 500, description = "Internal server error."),
-//         (status = 401, description = "Unauthorized"),
-//     )
-// )]
-// pub async fn handle_save_work(State(state) : State<AppState>, Json(r): Json<CreateUpdateWorkRequest>) -> Result<Response, AppErr> {
-//     return state.work_service().save_work(r).await;
-// }
-
-// #[utoipa::path(
-//     post,
-//     path = "/works/get",
-//     tag = crate::MAIN_TAG,
-//     summary = "get work using work_category_uuid",
-//     security(("bearer_access" = [])),
-//     responses (
-//         (status = 200, description = "works list by work_category_uuid", body = GetWorksByCategoryResponse),
-//         (status = 500, description = "Internal server error."),
-//         (status = 401, description = "Unauthorized"),
-//     )
-// )]
-// pub async fn handle_get_works_by_category(State(state) : State<AppState>, Json(r) : Json<GetWorksByCategoryRequest>) -> Result<Response, AppErr> {
-//     return state.work_service().get_works_by_category(r).await;
-// }
-
 #[utoipa::path(
     get,
     path = "/statuses/get",
-    tag = crate::MAIN_TAG,
+    tag = crate::GUEST_TAG,
     summary = "get project statuses",
     responses (
         (status = 200, description = "project statuses list", body = ProjectStatusesResponse),
@@ -350,4 +300,47 @@ pub async fn handle_get_measurements(State(state) : State<AppState>) -> Result<R
 )]
 pub async fn handle_get_project_statuses(State(state) : State<AppState>) -> Result<Response, AppErr> {
     return state.project_service().get_project_statuses().await;
+}
+
+
+#[utoipa::path(
+    put,
+    path = "/project-commit",
+    tag = crate::CUSTOMER_NEW_PROJECT_TAG,
+    params(ProjectRequest),
+    summary = "Commit project request",
+    security(("bearer_access" = [])),
+    responses (
+        (status = 200, description = "Commited"),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn commit_project(
+    State(state) : State<AppState>,
+    Extension(t) : Extension<AccessTokenPayload>,
+    Query(r) : Query<ProjectRequest>,
+) -> Result<Response, AppErr> {
+    return state.project_service().commit_project(r, t).await;
+}
+
+#[utoipa::path(
+    delete,
+    path = "/project-schedule",
+    tag = crate::CUSTOMER_NEW_PROJECT_TAG,
+    params(DeleteProjectScheduleRequest),
+    summary = "Delete project schedule",
+    security(("bearer_access" = [])),
+    responses (
+        (status = 200, description = "Deleted"),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn delete_project_schedule(
+    State(state) : State<AppState>,
+    Extension(t) : Extension<AccessTokenPayload>,
+    Query(r) : Query<DeleteProjectScheduleRequest>,
+) -> Result<Response, AppErr> {
+    return state.project_schedule_service().delete_project_schedule(r, t).await;
 }
