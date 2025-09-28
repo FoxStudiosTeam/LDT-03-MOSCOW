@@ -48,7 +48,7 @@ impl OptionalAttachments {
 #[utoipa::path(
     get,
     path = "/get_punishment_items",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     params(PunishmentItemsRequest),
     summary = "Get all items in punishment",
     responses(

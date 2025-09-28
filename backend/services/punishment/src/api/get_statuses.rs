@@ -6,7 +6,7 @@ use crate::AppState;
 #[utoipa::path(
     get,
     path = "/get_statuses",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     summary = "Get all punishment statuses",
     responses(
         (status = 200, description = "Punishment statuses fetched", body=Vec<PunishmentStatuses>),

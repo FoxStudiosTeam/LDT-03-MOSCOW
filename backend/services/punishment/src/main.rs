@@ -29,13 +29,15 @@ env_config!(
     }
 );
 
-pub const MAIN_TAG: &str = "punishment";
+pub const ANY_TAG: &str = "Any authed";
+pub const MANAGER_TAG: &str = "Inspector and Customer";
 
 #[derive(OpenApi)]
 #[openapi(
     modifiers(&SecurityAddon),
     tags(
-        (name = MAIN_TAG, description = "API"),
+        (name = ANY_TAG, description = "API access with auth (any role)"),
+        (name = MANAGER_TAG, description = "API access for inspector and customer")
     )
 )]
 

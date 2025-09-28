@@ -26,7 +26,7 @@ pub fn everyone(state: AppState) -> OpenApiRouter {
         ))
         .routes(routes!(get_statuses::get_punishment_statuses))
         .routes(routes!(get_regulation_docs::get_regulation_docs))
-        .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::AdministratorOnly | Role::Customer | Role::Inspector))
+        .layer(auth_jwt::prelude::AuthLayer::new(Role::Foreman | Role::AdministratorOnly | Role::Customer | Role::Inspector))
         .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
         .with_state(state)
 }

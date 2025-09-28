@@ -11,7 +11,7 @@ use crate::{AppState, api::{ErrorExample, UuidResponse}};
 #[utoipa::path(
     put,
     path = "/update_punishment_item",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     summary = "Update punishment item",
     responses(
         (status = 200, description = "Punishment item updated", body=UuidResponse),

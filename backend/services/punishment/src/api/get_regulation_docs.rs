@@ -8,7 +8,7 @@ use crate::AppState;
 #[utoipa::path(
     get,
     path = "/get_regulation_docs",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     params(DocsRequest),
     summary = "Get all regulation documents",
     responses(

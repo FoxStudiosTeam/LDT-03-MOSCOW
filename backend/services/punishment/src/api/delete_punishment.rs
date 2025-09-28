@@ -9,7 +9,7 @@ use crate::{AppState, api::ErrorExample};
 #[utoipa::path(
     delete,
     path = "/delete",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     params(DeletePunishmentRequest),
     summary = "Delete punishment by uuid",
     responses(

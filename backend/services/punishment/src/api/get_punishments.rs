@@ -9,7 +9,7 @@ use crate::{AppState, api::ErrorExample};
 #[utoipa::path(
     get,
     path = "/get_punishments",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     params(PunishmentsRequest),
     summary = "Get all punishments in project",
     responses(
