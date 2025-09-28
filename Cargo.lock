@@ -172,7 +172,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8)",
+ "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc)",
  "utoipa",
  "utoipa-axum",
  "utoipa-scalar",
@@ -198,7 +198,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8)",
+ "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc)",
  "utoipa",
  "utoipa-axum",
  "utoipa-scalar",
@@ -1326,7 +1326,7 @@ dependencies = [
 [[package]]
 name = "di"
 version = "0.1.0"
-source = "git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8#85fc4a869fbad8052cee10d1fe729e708a016ee7"
+source = "git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc#07f50fc9fffb233bc36fb0cdf94730f4ab843e19"
 dependencies = [
  "hashbrown 0.16.0",
 ]
@@ -2322,7 +2322,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8)",
+ "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc)",
  "utoipa",
  "utoipa-axum",
  "utoipa-scalar",
@@ -2561,7 +2561,7 @@ checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 [[package]]
 name = "orm"
 version = "0.2.0"
-source = "git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8#85fc4a869fbad8052cee10d1fe729e708a016ee7"
+source = "git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc#07f50fc9fffb233bc36fb0cdf94730f4ab843e19"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2574,6 +2574,7 @@ dependencies = [
  "hashbrown 0.16.0",
  "schema_reader",
  "serde",
+ "serde_json",
  "serde_yaml",
  "sqlx",
  "tokio",
@@ -2829,7 +2830,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8)",
+ "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc)",
  "utoipa",
  "utoipa-axum",
  "utoipa-scalar",
@@ -2865,7 +2866,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8)",
+ "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc)",
  "utoipa",
  "utoipa-axum",
  "utoipa-scalar",
@@ -3073,7 +3074,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8)",
+ "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc)",
  "utoipa",
  "utoipa-axum",
  "utoipa-scalar",
@@ -3271,7 +3272,7 @@ dependencies = [
  "sqlx",
  "tracing",
  "tracing-subscriber",
- "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8)",
+ "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc)",
  "utoipa",
  "uuid",
 ]
@@ -3290,13 +3291,13 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
- "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8)",
+ "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc)",
 ]
 
 [[package]]
 name = "schema_reader"
 version = "0.2.0"
-source = "git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8#85fc4a869fbad8052cee10d1fe729e708a016ee7"
+source = "git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc#07f50fc9fffb233bc36fb0cdf94730f4ab843e19"
 dependencies = [
  "anyhow",
  "handlebars",
@@ -3304,7 +3305,7 @@ dependencies = [
  "serde",
  "serde_yaml",
  "tracing",
- "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8)",
+ "utils 0.2.0 (git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc)",
 ]
 
 [[package]]
@@ -4242,7 +4243,7 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 [[package]]
 name = "utils"
 version = "0.2.0"
-source = "git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=85fc4a8#85fc4a869fbad8052cee10d1fe729e708a016ee7"
+source = "git+ssh://git@github.com/FoxStudiosTeam/rust-commons.git?rev=07f50fc#07f50fc9fffb233bc36fb0cdf94730f4ab843e19"
 dependencies = [
  "dotenvy",
  "once_cell",
