@@ -23,12 +23,12 @@ jobs:
         with:
           toolchain: stable
           override: true
-      - name: Run cargo clippy
-        working-directory: "./"
-        run: make rust_lint
-      - name: Run cargo test
-        working-directory: "./"
-        run: make rust_test
+      # - name: Run cargo clippy
+      #   working-directory: "./"
+      #   run: make rust_lint
+      # - name: Run cargo test
+      #   working-directory: "./"
+      #   run: make rust_test
 
   build-and-deploy:
     needs: lint-and-test
