@@ -2803,7 +2803,7 @@ dependencies = [
 
 [[package]]
 name = "project"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2814,8 +2814,10 @@ dependencies = [
  "bb8",
  "bb8-redis",
  "bigdecimal",
+ "bitmask-enum",
  "chrono",
  "di",
+ "form_urlencoded",
  "jsonwebtoken",
  "once_cell",
  "orm",
