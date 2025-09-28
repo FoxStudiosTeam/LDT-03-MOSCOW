@@ -33,5 +33,3 @@ pub mod reports;
 pub use reports::*;
 pub mod work_category;
 pub use work_category::*;
-pub mod works;
-pub use works::*;

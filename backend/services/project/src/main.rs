@@ -193,16 +193,16 @@ async fn main() -> anyhow::Result<()> {
                         controllers::handle_update_work_category
                     )
                 )
-                .routes (
-                    routes!(
-                        controllers::handle_save_work
-                    )
-                )
-                .routes (
-                    routes!(
-                        controllers::handle_get_works_by_category
-                    )
-                )
+                // .routes (
+                //     routes!(
+                //         controllers::handle_save_work
+                //     )
+                // )
+                // .routes (
+                //     routes!(
+                //         controllers::handle_get_works_by_category
+                //     )
+                // )
                 .with_state(state.clone())
                 .layer(axum::middleware::from_fn(auth_jwt::prelude::token_extractor))
                 .merge(

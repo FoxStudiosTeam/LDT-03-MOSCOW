@@ -16,8 +16,6 @@ migrate_journal:
 	refinery migrate -p ./backend/.migrations/journal --table-name refinery_journal_history
 migrate_norm:
 	refinery migrate -p ./backend/.migrations/norm --table-name refinery_norm_history 
-migrate_product:
-	refinery migrate -p ./backend/.migrations/product --table-name refinery_product_history
 migrate_project:
 	refinery migrate -p ./backend/.migrations/project --table-name refinery_project_history
 migrate_fk:
@@ -28,7 +26,6 @@ migrate:
 	make migrate_attachment
 	make migrate_journal
 	make migrate_norm
-	make migrate_product
 	make migrate_project
 	make migrate_fk
 	make migrate_data

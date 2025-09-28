@@ -154,33 +154,10 @@ pub async fn handle_add_work_to_schedule(
     post,
     path = "/update-work-schedule",
     tag = crate::MAIN_TAG,
-    summary = "Update single work in schedule",
+    summary = "Update single subwork in schedule",
     security(("bearer_access" = [])),
     responses(
-        (status = 200, description = "single work in schedule was updated.", body = ProjectScheduleItems),
-        (status = 500, description = "Internal server error."),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-pub async fn handle_update_works_in_schedule(
-    State(state): State<AppState>,
-    Extension(payload) : Extension<AccessTokenPayload>,
-    Json(r): Json<UpdateWorkScheduleRequest>,
-) -> Result<Response, AppErr> {
-    return state
-        .project_schedule_service()
-        .update_works_in_schedule(r, payload)
-        .await;
-}
-
-#[utoipa::path(
-    post,
-    path = "/update-works-in-schedule",
-    tag = crate::MAIN_TAG,
-    summary = "Update group of works in schedule",
-    security(("bearer_access" = [])),
-    responses(
-        (status = 200, description = "group of works in schedule was updated.", body = ProjectScheduleItems),
+        (status = 200, description = "single work in schedule was updated.", body = UpdateWorkInScheduleRequest),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -188,11 +165,34 @@ pub async fn handle_update_works_in_schedule(
 pub async fn handle_update_work_in_schedule(
     State(state): State<AppState>,
     Extension(payload) : Extension<AccessTokenPayload>,
-    Json(r): Json<UpdateWorksInScheduleRequest>,
+    Json(r): Json<UpdateWorkInScheduleRequest>,
 ) -> Result<Response, AppErr> {
     return state
         .project_schedule_service()
         .update_work_in_schedule(r, payload)
+        .await;
+}
+
+#[utoipa::path(
+    post,
+    path = "/update-works-in-schedule",
+    tag = crate::MAIN_TAG,
+    summary = "Update group of subwork in schedule",
+    security(("bearer_access" = [])),
+    responses(
+        (status = 200, description = "group of works in schedule was updated.", body = UpdateWorksInScheduleRequest),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_update_works_in_schedule(
+    State(state): State<AppState>,
+    Extension(payload) : Extension<AccessTokenPayload>,
+    Json(r): Json<UpdateWorksInScheduleRequest>,
+) -> Result<Response, AppErr> {
+    return state
+        .project_schedule_service()
+        .update_works_in_schedule(r, payload)
         .await;
 }
 
@@ -305,37 +305,37 @@ pub async fn handle_get_measurements(State(state) : State<AppState>) -> Result<R
     return state.work_service().get_measurements().await;
 }
 
-#[utoipa::path(
-    post,
-    path = "/works/save",
-    tag = crate::MAIN_TAG,
-    summary = "save work using work_category_uuid and title",
-    security(("bearer_access" = [])),
-    responses (
-        (status = 200, description = "work successfully saved", body = SaveWorkResponse),
-        (status = 500, description = "Internal server error."),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-pub async fn handle_save_work(State(state) : State<AppState>, Json(r): Json<CreateUpdateWorkRequest>) -> Result<Response, AppErr> {
-    return state.work_service().save_work(r).await;
-}
+// #[utoipa::path(
+//     post,
+//     path = "/works/save",
+//     tag = crate::MAIN_TAG,
+//     summary = "save work using work_category_uuid and title",
+//     security(("bearer_access" = [])),
+//     responses (
+//         (status = 200, description = "work successfully saved", body = SaveWorkResponse),
+//         (status = 500, description = "Internal server error."),
+//         (status = 401, description = "Unauthorized"),
+//     )
+// )]
+// pub async fn handle_save_work(State(state) : State<AppState>, Json(r): Json<CreateUpdateWorkRequest>) -> Result<Response, AppErr> {
+//     return state.work_service().save_work(r).await;
+// }
 
-#[utoipa::path(
-    post,
-    path = "/works/get",
-    tag = crate::MAIN_TAG,
-    summary = "get work using work_category_uuid",
-    security(("bearer_access" = [])),
-    responses (
-        (status = 200, description = "works list by work_category_uuid", body = GetWorksByCategoryResponse),
-        (status = 500, description = "Internal server error."),
-        (status = 401, description = "Unauthorized"),
-    )
-)]
-pub async fn handle_get_works_by_category(State(state) : State<AppState>, Json(r) : Json<GetWorksByCategoryRequest>) -> Result<Response, AppErr> {
-    return state.work_service().get_works_by_category(r).await;
-}
+// #[utoipa::path(
+//     post,
+//     path = "/works/get",
+//     tag = crate::MAIN_TAG,
+//     summary = "get work using work_category_uuid",
+//     security(("bearer_access" = [])),
+//     responses (
+//         (status = 200, description = "works list by work_category_uuid", body = GetWorksByCategoryResponse),
+//         (status = 500, description = "Internal server error."),
+//         (status = 401, description = "Unauthorized"),
+//     )
+// )]
+// pub async fn handle_get_works_by_category(State(state) : State<AppState>, Json(r) : Json<GetWorksByCategoryRequest>) -> Result<Response, AppErr> {
+//     return state.work_service().get_works_by_category(r).await;
+// }
 
 #[utoipa::path(
     get,
