@@ -1,13 +1,15 @@
-use axum::{extract::State, http::StatusCode, response::{IntoResponse, Response}, Json};
+use axum::{Json, extract::{Query, State}, http::StatusCode, response::{IntoResponse, Response}};
 use serde::{Deserialize};
 use shared::prelude::{AppErr, IntoAppErr};
 use schema::prelude::*;
+use utoipa::IntoParams;
 use crate::AppState;
 
 #[utoipa::path(
-    post,
+    get,
     path = "/get_regulation_docs",
     tag = crate::MAIN_TAG,
+    params(DocsRequest),
     summary = "Get all regulation documents",
     responses(
         (status = 200, description = "Report added!", body=Vec<RegulationDocs>),
@@ -16,7 +18,7 @@ use crate::AppState;
 
 pub async fn get_regulation_docs(
     State(app): State<AppState>,
-    Json(r): Json<DocsRequest>
+    Query(r): Query<DocsRequest>
 ) -> Result<Response, AppErr> {
     let title_opt = r.title.as_ref()
     .map(|t| t.trim()).filter(|t| !t.is_empty() || *t == " "); 
@@ -35,9 +37,10 @@ pub async fn get_regulation_docs(
     }
 }
 
-#[derive(utoipa::ToSchema, Deserialize, Debug)]
+#[derive(utoipa::ToSchema, Deserialize, Debug, IntoParams)]
 
 pub struct DocsRequest{
     #[schema(example="Название документа или null")]
+    #[param(example="Название документа или null")]
     title: Option<String>,
 }

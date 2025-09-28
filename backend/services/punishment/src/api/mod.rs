@@ -1,42 +1,42 @@
 use serde::{Deserialize, Serialize};
-// use auth_jwt::prelude::Role;
+use auth_jwt::prelude::Role;
 use utoipa_axum::{router::OpenApiRouter, routes};
 use crate::{AppState};
 
-pub mod get_punishments;
-pub mod get_punishment_items;
 pub mod get_regulation_docs;
 pub mod get_statuses;
+pub mod get_punishments;
 pub mod create_punishment;
 pub mod update_punishment;
-pub mod create_punishment_item;
 pub mod delete_punishment;
+pub mod get_punishment_items;
+pub mod create_punishment_item;
 pub mod update_punishment_item;
 
-pub fn make_router(state: AppState) -> OpenApiRouter {
+pub fn everyone(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
         .routes(routes!(
             get_punishments::get_punishments,
             update_punishment::update_punishment,
-            get_statuses::get_punishment_statuses,
-            delete_punishment::delete_punishment,
+            delete_punishment::delete_punishment
         ))
         .routes(routes!(
             get_punishment_items::get_punishment_items,
-            update_punishment_item::update_punishment_item,
+            update_punishment_item::update_punishment_item
         ))
-        // .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
-        .routes(routes!(
-            get_regulation_docs::get_regulation_docs,
-        ))
-        .routes(routes!(
-            create_punishment::create_punishment,
-        ))
-        .routes(routes!(
-            create_punishment_item::create_punishment_item,
-        ))
-        // .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
-        //   .layer(auth_jwt::prelude::AuthLayer::new(Role::Customer | Role::Inspector ))
+        .routes(routes!(get_statuses::get_punishment_statuses))
+        .routes(routes!(get_regulation_docs::get_regulation_docs))
+        .layer(auth_jwt::prelude::AuthLayer::new(Role::Operator | Role::AdministratorOnly | Role::Customer | Role::Inspector))
+        .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
+        .with_state(state)
+}
+
+pub fn inspector_customer(state: AppState) -> OpenApiRouter {
+    OpenApiRouter::new()
+        .routes(routes!(create_punishment::create_punishment))
+        .routes(routes!(create_punishment_item::create_punishment_item))
+        .layer(auth_jwt::prelude::AuthLayer::new(Role::Customer | Role::Inspector | Role::AdministratorOnly ))
+        .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
         .with_state(state)
 }
 

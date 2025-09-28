@@ -83,7 +83,8 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .nest("/api/punishment", api::make_router(state.clone()))
+        .nest("/api/punishment", api::everyone(state.clone()))
+        .nest("/api/punishment", api::inspector_customer(state.clone()))
         .split_for_parts();
     
     let app = axum::Router::new()
