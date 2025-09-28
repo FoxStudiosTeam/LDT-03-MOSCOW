@@ -1,121 +1,7 @@
 {
-  "latest": 3,
+  "latest": 2,
   "state": {
     "tables": {
-      "punishment_item": {
-        "name": "punishment_item",
-        "schema": "journal",
-        "fields": [
-          {
-            "name": "punishment",
-            "type_name": "uuid",
-            "type_str": "uuid",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "uuid",
-            "type_name": "uuid",
-            "type_str": "uuid",
-            "is_primary": true,
-            "default": "gen_random_uuid()",
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "correction_date_fact",
-            "type_name": "date",
-            "type_str": "date",
-            "is_primary": false,
-            "default": null,
-            "nullable": true,
-            "is_unique": false
-          },
-          {
-            "name": "correction_date_info",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": true,
-            "is_unique": false
-          },
-          {
-            "name": "is_suspend",
-            "type_name": "boolean",
-            "type_str": "boolean",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "comment",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": true,
-            "is_unique": false
-          },
-          {
-            "name": "punish_datetime",
-            "type_name": "timestamp",
-            "type_str": "timestamp",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "regulation_doc",
-            "type_name": "uuid",
-            "type_str": "uuid",
-            "is_primary": false,
-            "default": null,
-            "nullable": true,
-            "is_unique": false
-          },
-          {
-            "name": "correction_date_plan",
-            "type_name": "date",
-            "type_str": "date",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "title",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "punishment_item_status",
-            "type_name": "integer",
-            "type_str": "integer",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "place",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          }
-        ]
-      },
       "project_schedule_items": {
         "name": "project_schedule_items",
         "schema": "journal",
@@ -230,6 +116,120 @@
           }
         ]
       },
+      "punishment_item": {
+        "name": "punishment_item",
+        "schema": "journal",
+        "fields": [
+          {
+            "name": "punishment",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "uuid",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": true,
+            "default": "gen_random_uuid()",
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "correction_date_fact",
+            "type_name": "date",
+            "type_str": "date",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          },
+          {
+            "name": "correction_date_info",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          },
+          {
+            "name": "is_suspend",
+            "type_name": "boolean",
+            "type_str": "boolean",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "comment",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          },
+          {
+            "name": "punish_datetime",
+            "type_name": "timestamp",
+            "type_str": "timestamp",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "regulation_doc",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          },
+          {
+            "name": "correction_date_plan",
+            "type_name": "date",
+            "type_str": "date",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "title",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "punishment_item_status",
+            "type_name": "integer",
+            "type_str": "integer",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "place",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          }
+        ]
+      },
       "punishment": {
         "name": "punishment",
         "schema": "journal",
@@ -311,55 +311,46 @@
             "default": null,
             "nullable": false,
             "is_unique": false
-          },
-          {
-            "name": "is_deleted",
-            "type_name": "boolean",
-            "type_str": "boolean",
-            "is_primary": false,
-            "default": "false",
-            "nullable": false,
-            "is_unique": false
           }
         ]
       }
     },
     "types": {
-      "date": {
-        "rustType": "chrono::NaiveDate",
-        "pgType": "date"
-      },
-      "float8": {
-        "rustType": "f64",
-        "pgType": "float8"
-      },
-      "timestamp": {
-        "rustType": "chrono::NaiveDateTime",
-        "pgType": "timestamp"
-      },
-      "jsonb": {
-        "rustType": "serde_json::Value",
-        "pgType": "jsonb"
+      "integer": {
+        "rustType": "i32",
+        "pgType": "integer"
       },
       "bigint": {
         "rustType": "i64",
         "pgType": "bigint"
       },
-      "integer": {
-        "rustType": "i32",
-        "pgType": "integer"
+      "boolean": {
+        "rustType": "bool",
+        "pgType": "boolean"
+      },
+      "timestamp": {
+        "rustType": "chrono::NaiveDateTime",
+        "pgType": "timestamp"
       },
       "uuid": {
         "rustType": "uuid::Uuid",
         "pgType": "uuid"
       },
-      "boolean": {
-        "rustType": "bool",
-        "pgType": "boolean"
+      "jsonb": {
+        "rustType": "serde_json::Value",
+        "pgType": "jsonb"
+      },
+      "float8": {
+        "rustType": "f64",
+        "pgType": "float8"
       },
       "text": {
         "rustType": "String",
         "pgType": "text"
+      },
+      "date": {
+        "rustType": "chrono::NaiveDate",
+        "pgType": "date"
       }
     },
     "type_mapping": "Pg"
