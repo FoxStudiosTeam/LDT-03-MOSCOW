@@ -74,8 +74,7 @@ fun MainScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("$refreshToken")
-
+                Text(refreshToken)
                 Button(onClick = { changeScreen(Screen.AUTH) }) {
                     Text("выход")
                 }

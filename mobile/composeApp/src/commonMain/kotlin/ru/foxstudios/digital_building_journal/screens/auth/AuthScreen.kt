@@ -32,6 +32,9 @@ import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import ru.foxstudios.digital_building_journal.Screen
+import ru.foxstudios.digital_building_journal.di.I_SSO_DI_TOKEN
+import ru.foxstudios.digital_building_journal.dummy.DummyAuthProvider
+import ru.foxstudios.digital_building_journal.dummy.DummyAuthStorageProvider
 
 @Composable
 fun AuthScreen(
@@ -153,7 +156,9 @@ fun AuthScreen(
 @Preview
 @Composable
 fun AuthScreenPreview() {
+    DependencyBuilder.registryDependency(IAuthProviderDIToken, DummyAuthProvider())
+    DependencyBuilder.registryDependency(IAuthStorageProviderDIToken, DummyAuthStorageProvider())
+    DependencyBuilder.registryDependency(I_SSO_DI_TOKEN, "dummy")
     val di = normalBuilder(DependencyBuilder)
-    AuthScreen(di,{}) {
-    }
+    AuthScreen(di,{}) {}
 }
