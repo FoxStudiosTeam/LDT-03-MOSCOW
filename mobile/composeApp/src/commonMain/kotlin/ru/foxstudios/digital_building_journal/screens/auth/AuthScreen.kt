@@ -72,7 +72,7 @@ fun AuthScreen(
                     "Авторизация",
                     style = MaterialTheme.typography.headlineSmall
                 )
-                Text("authStorageProvider.getRefreshToken(): ${authStorageProvider.getRefreshToken()}")
+                //Text("authStorageProvider.getRefreshToken(): ${authStorageProvider.getRefreshToken()}")
 
                 Spacer(Modifier.height(30.dp))
 

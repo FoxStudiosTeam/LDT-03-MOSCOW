@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,10 +48,11 @@ fun Header(changeScreen: (Screen) -> Unit) {
         Text(
             text = "\uD83D\uDCD6 ЭСЖ",
             color = Color(0xFF000000),
-            fontSize = 20.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
         )
+
         Button(
             onClick = { expanded = !expanded; buttonText = if (buttonText == "☰") "✕" else "☰"},
             colors = ButtonDefaults.buttonColors(
@@ -65,7 +68,7 @@ fun Header(changeScreen: (Screen) -> Unit) {
             Text(buttonText, color = Color(0xFF000000), fontSize = 28.sp)
         }
     }
-    Divider(
+    HorizontalDivider(
         color = Color.Gray,
         thickness = 1.dp,
         modifier = Modifier
@@ -100,7 +103,7 @@ fun Header(changeScreen: (Screen) -> Unit) {
                     Text("Главная", fontSize = 20.sp, textAlign = TextAlign.Left)
                 }
             }
-            Divider(
+            HorizontalDivider(
                 color = Color.Gray,
                 thickness = 1.dp,
                 modifier = Modifier
@@ -126,7 +129,7 @@ fun Header(changeScreen: (Screen) -> Unit) {
                     Text("О нас", fontSize = 20.sp, textAlign = TextAlign.Left)
                 }
             }
-            Divider(
+            HorizontalDivider(
                 color = Color.Gray,
                 thickness = 1.dp,
                 modifier = Modifier
@@ -152,7 +155,7 @@ fun Header(changeScreen: (Screen) -> Unit) {
                     Text("Выйти", fontSize = 20.sp, textAlign = TextAlign.Left)
                 }
             }
-            Divider(
+            HorizontalDivider(
                 color = Color.Gray,
                 thickness = 1.dp,
                 modifier = Modifier
@@ -160,7 +163,7 @@ fun Header(changeScreen: (Screen) -> Unit) {
                     .padding(vertical = 5.dp, horizontal = 15.dp)
             )
             Spacer(modifier = Modifier.height(250.dp))
-            Divider(
+            HorizontalDivider(
                 color = Color.Gray,
                 thickness = 1.dp,
                 modifier = Modifier

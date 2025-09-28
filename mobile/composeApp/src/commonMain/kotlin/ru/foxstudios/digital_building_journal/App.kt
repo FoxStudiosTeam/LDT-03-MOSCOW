@@ -14,7 +14,7 @@ import ru.foxstudios.digital_building_journal.di.normalBuilder
 import ru.foxstudios.digital_building_journal.screens.*
 import ru.foxstudios.digital_building_journal.screens.material.MaterialsScreen
 import ru.foxstudios.digital_building_journal.screens.auth.AuthScreen
-import ru.foxstudios.digital_building_journal.screens.subject.ObjectScreen
+import ru.foxstudios.digital_building_journal.screens.objectScreen.ObjectScreen
 import ru.foxstudios.digital_building_journal.screens.punishment.PunishmentsScreen
 import ru.foxstudios.digital_building_journal.screens.report.ReportsScreen
 import ru.foxstudios.digital_building_journal.screens.violation.ViolantionsScreen
@@ -22,7 +22,6 @@ import ru.foxstudios.digital_building_journal.screens.violation.ViolantionsScree
 enum class Screen {
     AUTH,
     MAIN,
-
     OBJECT,
     REPORT,
     MATERIALS,

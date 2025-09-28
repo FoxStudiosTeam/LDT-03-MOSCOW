@@ -22,11 +22,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import ru.foxstudios.authlib.auth.IAuthProviderDIToken
 import ru.foxstudios.authlib.auth.IAuthStorageProvider
 import ru.foxstudios.authlib.auth.IAuthStorageProviderDIToken
+import ru.foxstudios.dependency_container.DependencyBuilder
 import ru.foxstudios.dependency_container.IContainer
 import ru.foxstudios.digital_building_journal.Screen
+import ru.foxstudios.digital_building_journal.di.I_SSO_DI_TOKEN
+import ru.foxstudios.digital_building_journal.di.normalBuilder
+import ru.foxstudios.digital_building_journal.dummy.DummyAuthProvider
+import ru.foxstudios.digital_building_journal.dummy.DummyAuthStorageProvider
 import ru.foxstudios.digital_building_journal.screens.Header
+import ru.foxstudios.digital_building_journal.screens.MainScreen
 
 @Composable
 fun PunishmentsScreen(
@@ -60,7 +68,6 @@ fun PunishmentsScreen(
             Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = {
-                    // Navigate to add a new punishment
                 },
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
@@ -89,4 +96,13 @@ fun PunishmentsScreen(
             }
         }
     }
+}
+@Composable
+@Preview
+fun PunishmentsScreenPreview(){
+    DependencyBuilder.registryDependency(IAuthProviderDIToken, DummyAuthProvider())
+    DependencyBuilder.registryDependency(IAuthStorageProviderDIToken, DummyAuthStorageProvider())
+    DependencyBuilder.registryDependency(I_SSO_DI_TOKEN, "dummy")
+    val di = normalBuilder(DependencyBuilder)
+    PunishmentsScreen(di,{},{})
 }
