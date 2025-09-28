@@ -154,7 +154,7 @@ pub async fn handle_add_work_to_schedule(
     post,
     path = "/update-work-schedule",
     tag = crate::MAIN_TAG,
-    summary = "Update single work in schedule",
+    summary = "Update single subwork in schedule",
     security(("bearer_access" = [])),
     responses(
         (status = 200, description = "single work in schedule was updated.", body = UpdateWorkInScheduleRequest),
@@ -177,7 +177,7 @@ pub async fn handle_update_work_in_schedule(
     post,
     path = "/update-works-in-schedule",
     tag = crate::MAIN_TAG,
-    summary = "Update group of works in schedule",
+    summary = "Update group of subwork in schedule",
     security(("bearer_access" = [])),
     responses(
         (status = 200, description = "group of works in schedule was updated.", body = UpdateWorksInScheduleRequest),
