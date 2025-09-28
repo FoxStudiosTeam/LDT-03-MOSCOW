@@ -170,7 +170,11 @@ async fn get_report(
         a.base_entity_uuid,
         a.file_uuid,
         a.content_type
-        FROM norm.reports re
+        FROM (
+            SELECT rts.*, psi.title
+            FROM norm.reports rts 
+            LEFT JOIN journal.project_schedule_items psi ON psi.uuid = rts.project_schedule_item) 
+            AS re
         LEFT JOIN attachment.attachments a ON a.base_entity_uuid = re.uuid
         WHERE re.uuid = $1;
     ").bind(r.report_id).fetch_all(app.orm.get_executor()).await.into_app_err()?;
@@ -260,8 +264,6 @@ async fn update_report(
         .into_response())
 }
 
-//-----GET REPORTS-----
-
 #[derive(serde::Deserialize, utoipa::ToSchema, Debug)]
 pub struct UpdateReport { 
     #[schema(example=Uuid::new_v4)]
@@ -284,17 +286,38 @@ pub struct UpdateReport {
     pub status: Option<i32>,
 }
 
+#[derive(serde::Deserialize, utoipa::ToSchema, Debug, sqlx::FromRow, serde::Serialize)]
+pub struct ReportWithTitle { 
+    #[schema(example=Uuid::new_v4)]
+    pub uuid: Uuid,
+
+    #[schema(example = "2023-08-16")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub check_date: Option<chrono::NaiveDate>,
+
+    #[schema(example = "2023-08-17")]
+    pub report_date: chrono::NaiveDate,
+
+    #[schema(example = "a1b15396-7f4a-40e0-8afd-2785a0460d33")]
+    pub project_schedule_item: uuid::Uuid,
+
+    #[schema(example = 3)]
+    pub status: i32,
+
+    #[schema(example = "Work title")]
+    pub title: String,
+}
 
 #[derive(serde::Serialize, utoipa::ToSchema)]
 pub struct ReportWithAttachments {
-    report: Reports,
+    report: ReportWithTitle,
     attachments: Vec<Attachments>,
 }
 
 #[derive(sqlx::FromRow)]
 pub struct ReportWithAttachmentsRecord {
     #[sqlx(flatten)]
-    report: Reports,
+    report: ReportWithTitle,
     #[sqlx(flatten)]
     attachments: OptionalAttachments,
 }
@@ -322,7 +345,7 @@ impl OptionalAttachments {
     }
 }
 
-
+//-----GET REPORTS-----
 
 #[utoipa::path(
     get,
@@ -349,7 +372,11 @@ async fn get_reports(
         a.base_entity_uuid,
         a.file_uuid,
         a.content_type
-        FROM norm.reports re
+        FROM (
+            SELECT rts.*, psi.title
+            FROM norm.reports rts 
+            LEFT JOIN journal.project_schedule_items psi ON psi.uuid = rts.project_schedule_item) 
+            AS re
         LEFT JOIN attachment.attachments a ON a.base_entity_uuid = re.uuid
         WHERE re.project_schedule_item = $1;
     ").bind(r.project_schedule_item).fetch_all(app.orm.get_executor()).await.into_app_err()?;
