@@ -5,7 +5,6 @@ import { persist } from "zustand/middleware";
 interface Attachment {
     base_entity_uuid: string;
     content_type: string | null;
-    file_uuid: string;
     original_filename: string;
     uuid: string;
 }
