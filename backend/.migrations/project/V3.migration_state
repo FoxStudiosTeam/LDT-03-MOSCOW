@@ -1,5 +1,5 @@
 {
-  "latest": 4,
+  "latest": 3,
   "state": {
     "tables": {
       "project": {
@@ -61,21 +61,21 @@
             "is_unique": false
           },
           {
-            "name": "created_at",
-            "type_name": "timestamp",
-            "type_str": "timestamp",
-            "is_primary": false,
-            "default": "LOCALTIMESTAMP",
-            "nullable": false,
-            "is_unique": false
-          },
-          {
             "name": "address",
             "type_name": "text",
             "type_str": "text",
             "is_primary": false,
             "default": null,
             "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "ssk",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
             "is_unique": false
           },
           {
@@ -128,9 +128,9 @@
         "rustType": "i64",
         "pgType": "bigint"
       },
-      "date": {
-        "rustType": "chrono::NaiveDate",
-        "pgType": "date"
+      "boolean": {
+        "rustType": "bool",
+        "pgType": "boolean"
       },
       "text": {
         "rustType": "String",
@@ -140,25 +140,25 @@
         "rustType": "i32",
         "pgType": "integer"
       },
-      "jsonb": {
-        "rustType": "serde_json::Value",
-        "pgType": "jsonb"
-      },
-      "boolean": {
-        "rustType": "bool",
-        "pgType": "boolean"
-      },
       "timestamp": {
         "rustType": "chrono::NaiveDateTime",
         "pgType": "timestamp"
       },
-      "uuid": {
-        "rustType": "uuid::Uuid",
-        "pgType": "uuid"
+      "date": {
+        "rustType": "chrono::NaiveDate",
+        "pgType": "date"
       },
       "float8": {
         "rustType": "f64",
         "pgType": "float8"
+      },
+      "jsonb": {
+        "rustType": "serde_json::Value",
+        "pgType": "jsonb"
+      },
+      "uuid": {
+        "rustType": "uuid::Uuid",
+        "pgType": "uuid"
       }
     },
     "type_mapping": "Pg"
