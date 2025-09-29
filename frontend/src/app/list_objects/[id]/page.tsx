@@ -7,6 +7,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ProjectMap } from "@/app/components/map";
+import styles from "@/app/styles/variables.module.css"
 
 
 export default function ObjectDetail() {
@@ -36,7 +37,7 @@ export default function ObjectDetail() {
                             <div className="flex justify-end mb-4">
                                 <button
                                     onClick={() => setIsModalWindowOpen(false)}
-                                    className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md"
+                                    className={styles.mainButton}
                                 >
                                     Вернуться
                                 </button>
@@ -67,9 +68,10 @@ export default function ObjectDetail() {
                 <div className="mb-6">
                     <Link
                         href={'/list_objects'}
-                        className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md"
+                        className="flex flex-row gap-2 items-center"
                     >
-                        Вернуться
+                        <Image src={'/backArrow.svg'} alt="Вернуться на главную страницу" height={15} width={30} />
+                        <span>Вернуться</span>
                     </Link>
                 </div>
 
@@ -78,20 +80,20 @@ export default function ObjectDetail() {
                 </div>
 
                 <div className="flex justify-between gap-4 mb-6">
-                    <button onClick={() => setIsModalWindowOpen(true)} className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md">
+                    <button onClick={() => setIsModalWindowOpen(true)} className={styles.mainButton}>
                         Вложения
                     </button>
 
-                    <button className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md">
+                    <button className={styles.mainButton}>
                         Список предписаний
                     </button>
                 </div>
 
                 <div className="space-y-4">
                     {projectData ? (
-                        <div className="border rounded-md p-4 bg-white shadow-sm">
+                        <div className=" p-4 bg-white shadow-sm">
                             <div className="flex justify-between items-center cursor-pointer">
-                                <div>
+                                <div className="mb-2 flex flex-col gap-3">
                                     <p className="font-medium">{projectData.project.address}</p>
                                     <p className="text-sm text-gray-600">
                                         Статус: {projectData.project.status}
@@ -104,17 +106,41 @@ export default function ObjectDetail() {
                             ) : (
                                 <p>Карта: нет данных</p>
                             )}
+                            <div className="flex flex-col gap-3 w-1/4 mt-4 space-y-2 text-sm">
+                                <div className="grid grid-cols-[120px_1fr] gap-2">
+                                    <p className="text-gray-700">Заказчик:</p>
+                                    <p className="border-b border-[#D0D0D0]">
+                                        {projectData.project.customer || "отсутствует"}
+                                    </p>
+                                </div>
 
-                            <div className="mt-4 space-y-2 text-sm">
-                                {projectData.project.customer && <p>Заказчик: {projectData.project.customer}</p>}
-                                {projectData.project.contractor ? (
-                                    <p>Подрядчик: {projectData.project.contractor}</p>
-                                ) : (
-                                    <p>Подрядчик отсутствует</p>
-                                )}
-                                {projectData.project.inspector && <p>Ответственный инспектор: {projectData.project.inspector}</p>}
-                                {projectData.project.start_date && <p>Дата начала: {projectData.project.start_date}</p>}
-                                {projectData.project.end_date && <p>Дата конца: {projectData.project.end_date}</p>}
+                                <div className="grid grid-cols-[120px_1fr] gap-2">
+                                    <p className="text-gray-700">Подрядчик:</p>
+                                    <p className="border-b border-[#D0D0D0]">
+                                        {projectData.project.contractor || "отсутствует"}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-[120px_1fr] gap-2">
+                                    <p className="text-gray-700">Инспектор:</p>
+                                    <p className="border-b border-[#D0D0D0]">
+                                        {projectData.project.inspector || "отсутствует"}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-[120px_1fr] gap-2">
+                                    <p className="text-gray-700">Дата начала:</p>
+                                    <p className="border-b border-[#D0D0D0]">
+                                        {projectData.project.start_date || "отсутствует"}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-[120px_1fr] gap-2">
+                                    <p className="text-gray-700">Дата конца:</p>
+                                    <p className="border-b border-[#D0D0D0]">
+                                        {projectData.project.end_date || "отсутствует"}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     ) : (
@@ -122,19 +148,23 @@ export default function ObjectDetail() {
                     )}
 
                     <div className="w-full justify-end flex flex-col gap-4 mb-6">
-                        <button className="min-w-[250px] self-end bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md">
+                        <button
+                            className={`self-end min-w-[250px] ${styles.mainButton}`}>
                             Отчеты
                         </button>
 
-                        <button className="min-w-[250px] self-end bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md">
+                        <button
+                            className={`self-end min-w-[250px] ${styles.mainButton}`}>
                             Материалы
                         </button>
 
-                        <button className="min-w-[250px] self-end bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md">
+                        <button
+                            className={`self-end min-w-[250px] ${styles.mainButton}`}>
                             График работ
                         </button>
 
-                        <button className="min-w-[250px] self-end bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md">
+                        <button
+                            className={`self-end min-w-[250px] ${styles.mainButton}`}>
                             Прикрепить документы
                         </button>
                     </div>
