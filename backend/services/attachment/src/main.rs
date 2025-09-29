@@ -1,6 +1,6 @@
 use aws_config::{BehaviorVersion, Region};
 use aws_sdk_s3::{config::{Credentials, SharedCredentialsProvider}};
-use axum::http::StatusCode;
+use axum::{extract::DefaultBodyLimit, http::StatusCode};
 use axum::routing::get;
 use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
@@ -118,7 +118,8 @@ async fn main() -> anyhow::Result<()> {
         .merge(api_router)
         .merge(metrics)
         .layer(shared::helpers::cors::cors_layer())
-        .layer(default_layers);
+        .layer(default_layers)
+        .layer(DefaultBodyLimit::max(200 * 1024 * 1024));
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", CFG.PORT)).await
         .inspect_err(|err| tracing::error!("Failed to bind to port {}: {}", CFG.PORT, err))?;

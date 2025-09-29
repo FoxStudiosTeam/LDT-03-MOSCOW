@@ -29,13 +29,12 @@ struct AppState {
 
 #[derive(IntoParams, ToSchema, serde::Deserialize)]
 pub struct RequestParams {
-    pub file_id: uuid::Uuid,
-    pub resource_id: uuid::Uuid
+    pub file_id: uuid::Uuid
 }
 
 #[utoipa::path(
     get,
-    path = "/file/",
+    path = "/api/attachmentproxy/file",
     params(RequestParams),
     tag = crate::MAIN_TAG,
     request_body(description = "Multipart file", content_type = "multipart/form-data"),
@@ -47,10 +46,10 @@ pub struct RequestParams {
 )]
 async fn proxy_file(
     State(state): State<Arc<AppState>>,
-    Query(RequestParams{resource_id, file_id}): Query<RequestParams>,
-    headers: HeaderMap,
+    Query(RequestParams{file_id}): Query<RequestParams>,
+    // headers: HeaderMap,
 ) -> impl IntoResponse {
-    let resp = match state.s3.get_object().bucket(&ENV.S3_BUCKET).key(&format!("attachments/{}/{}", resource_id, file_id)).send().await {
+    let resp = match state.s3.get_object().bucket(&ENV.S3_BUCKET).key(&format!("attachments/{}", file_id)).send().await {
         Ok(r) => r,
         Err(_e) => {
             return (StatusCode::NOT_FOUND, "not found").into_response();

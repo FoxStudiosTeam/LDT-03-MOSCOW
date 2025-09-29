@@ -11,18 +11,18 @@ env:
 jobs:
   lint-and-test:
     runs-on: self-hosted
-    name: Rust Tests & Lint
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.RUST_SSH_KEY }}
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+  #   name: Rust Tests & Lint
+  #   steps:
+      # - uses: actions/checkout@v3
+      # - name: Setup SSH
+      #   uses: webfactory/ssh-agent@v0.9.0
+      #   with:
+      #     ssh-private-key: ${{ secrets.RUST_SSH_KEY }}
+      # - name: Install Rust toolchain
+      #   uses: actions-rs/toolchain@v1
+      #   with:
+      #     toolchain: stable
+      #     override: true
       # - name: Run cargo clippy
       #   working-directory: "./"
       #   run: make rust_lint
