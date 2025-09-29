@@ -86,39 +86,7 @@ export default function Activation() {
                             className="w-[35%] h-[30px] border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                         />
                     </div>
-                    <div className="w-[70%] flex flex-col gap-6">
-                        {questionsList.map((q, idx) => (
-                            <div
-                                key={q.id}
-                                className="bg-white flex flex-col gap-3 p-3 border-[1px] border-[#D0D0D0] rounded-md text-black shadow-[8px_7px_8px_0px_rgba(34,60,80,0.2)]"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <p className="flex-1">
-                                        {idx + 1}. {q.question}
-                                    </p>
-                                    <select
-                                        className="w-[180px] h-[25px] text-center outline-0 border-[1px] border-[#D0D0D0] text-black rounded"
-                                        onChange={(e) =>
-                                            handleAnswerChange(q.id, "answer", e.target.value)
-                                        }
-                                    >
-                                        <option value="" className="text-black">Выберите</option>
-                                        <option value="Не требуется" className="text-black">Не требуется</option>
-                                        <option value="Да" className="text-black">Да</option>
-                                        <option value="Нет" className="text-black">Нет</option>
-                                    </select>
-                                </div>
 
-                                <textarea
-                                    placeholder="Комментарий..."
-                                    className="w-full bg-white border-[1px] border-[#D0D0D0] p-2 rounded text-black"
-                                    onChange={(e) =>
-                                        handleAnswerChange(q.id, "comment", e.target.value)
-                                    }
-                                ></textarea>
-                            </div>
-                        ))}
-                    </div>
                 </div>
 
                 <div className="mt-6">

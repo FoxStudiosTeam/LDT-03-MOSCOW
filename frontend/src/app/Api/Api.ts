@@ -356,6 +356,28 @@ export async function uploadProjectFiles(projectId: string, files: File[] | File
     return { uploaded, errors };
 }
 
+export async function LogOut() {
+    try {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
+        await fetch(`${authBaseURL}/auth/session`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+    } catch (error) {
+        console.error("Ошибка при выходе:", error);
+        return { success: false, message: String(error) };
+    }
+}
+
 export async function GetReports(uuid: string) {
 
     const response = await fetch(`${baseURL}/report/get_reports_by_uuid?project_uuid=${uuid}`, {
@@ -372,5 +394,5 @@ export async function GetReports(uuid: string) {
         return { success: true, message: null, result: data };
     }
 
-    return { success: false, message: data.message || "Ошибка при получении отчётов", result: [] };
+    return { success: false, message: data.message || "Ошибка при получении отчётов", result: [] }
 }
