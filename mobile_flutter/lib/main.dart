@@ -6,6 +6,8 @@ import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/screens/objects_screen.dart';
 
+import 'object/object_provider.dart';
+
 const IAPIRootURI = "I-API-Root-URI";
 
 void main() async {
@@ -14,6 +16,8 @@ void main() async {
   var builder = DependencyBuilder();
   builder.registerDependency(IAuthStorageProviderDIToken, AuthStorageProvider());
   builder.registerDependency(IAPIRootURI, Uri.parse("https://test.foxstudios.ru:32460/api"));
+
+  builder.registerDependency(IObjectsProviderDIToken, ObjectsProvider(apiRoot: builder.getDependency<Uri>(IAPIRootURI), authStorageProvider: builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken)));
 
   var storage = builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
   var au = AuthProvider(Uri.parse('https://sso.foxstudios.ru:32460'), storage);

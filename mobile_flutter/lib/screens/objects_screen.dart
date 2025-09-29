@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
+import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/object_card.dart';
@@ -59,14 +60,24 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   }
 
   Future<List<ObjectCard>> _loadCards() async {
-    return List<ObjectCard>.generate(
-      100,
-      (index) => ObjectCard(
-        title: "title: $index",
-        content: "content: $index",
+    var objectsProvider = widget.di.getDependency<IObjectsProvider>(IObjectsProviderDIToken);
+
+
+    var cardsResponse = await objectsProvider.getObjects("", 0);
+
+    var cards = cardsResponse.items.map((project) {
+      return ObjectCard(
+        title: project.address, // или любое другое поле из Project
+        content: "Статус: ${project.status.name}", // пример контента
         di: widget.di,
-      ),
-    );
+        polygon: project.polygon!,
+      );
+    }).toList();
+
+    print(cards.length);
+    print(cards.first.content);
+
+    return cards;
   }
 
   @override

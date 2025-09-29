@@ -1,26 +1,36 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:mobile_flutter/di/dependency_container.dart';
+import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/main.dart';
 
 abstract class IObjectsProvider {
   Future<PaginationResponseWrapper<Project>> getObjects(String address, int offset);
 }
 
-class ObjectsProvider implements IObjectsProvider {
-  final IDependencyContainer di;
+const IObjectsProviderDIToken = "IObjectsProvider";
 
-  ObjectsProvider({required this.di});
+class ObjectsProvider implements IObjectsProvider {
+  final Uri apiRoot;
+  final IAuthStorageProvider authStorageProvider;
+  String? _accessToken;
+
+  ObjectsProvider({required this.apiRoot, required this.authStorageProvider});
+
+  Future<void> init() async {
+    _accessToken = await authStorageProvider.getAccessToken();
+  }
 
   @override
   Future<PaginationResponseWrapper<Project>> getObjects(String address, int offset) async {
-    final uri = di.getDependency<Uri>(IAPIRootURI).resolve('/api/get-project');
+    _accessToken ??= await authStorageProvider.getAccessToken();
+
+    final uri = apiRoot.resolve('/api/project/get-project');
 
     final response = await http.post(
       uri,
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $_accessToken',
       },
       body: jsonEncode({
         'address': address,
@@ -35,7 +45,10 @@ class ObjectsProvider implements IObjectsProvider {
             (item) => Project.fromJson(item),
       );
     } else {
-      throw Exception('Failed to load projects. Status code: ${response.statusCode}');
+      if (response.statusCode == 401){
+          throw Exception('Unauthorized');
+      }
+      throw Exception('Failed to load projects');
     }
   }
 }
