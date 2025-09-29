@@ -1,241 +1,256 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import { loadYMaps3, YMaps3Modules } from "@/app/lib/ymaps";
-import { Geometry } from "@yandex/ymaps3-types/imperative/YMapFeature/types";
-import { LngLat } from "ymaps3";
+import React, { useEffect, useRef, useState } from "react";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { Header } from "@/app/components/header";
 import { useForm } from "react-hook-form";
 import { FirstStepForm } from "@/models";
 import { useUserStore } from "@/storage/userstore";
-import {CreateObject} from "@/app/Api/Api";
+import { CreateObject } from "@/app/Api/Api";
+import { useRouter } from "next/navigation";
 
-
-function getCenter(geom: Geometry): LngLat {
-    let verts: LngLat[] = [[0.0, 0.0]];
-    switch (geom.type) {
-        case "Polygon":
-            verts = geom.coordinates[0];
-            break;
-        case "MultiPolygon":
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            verts = geom.coordinates.flatMap((poly: any) => poly[0]);
-            break;
-    }
-    let sumX = 0,
-        sumY = 0;
-    for (const [x, y] of verts) {
-        sumX += x;
-        sumY += y;
-    }
-    const n = verts.length;
-    return n ? ([sumX / n, sumY / n] as LngLat) : ([0, 0] as LngLat);
-}
+type PolygonGeoJSON = GeoJSON.Polygon | GeoJSON.MultiPolygon;
 
 export default function FirstStep() {
+    const mapContainer = useRef<HTMLDivElement | null>(null);
+    const mapRef = useRef<maplibregl.Map | null>(null);
+
     const [message, setMessage] = useState<string>("");
+    const [polygonGeom, setPolygonGeom] = useState<PolygonGeoJSON | null>(null);
+
     const userData = useUserStore((state) => state.userData);
+    const router = useRouter();
 
-    const { register, handleSubmit, setValue } = useForm<FirstStepForm>({
-    });
+    const { register, handleSubmit, setValue } = useForm<FirstStepForm>();
 
-    const onSubmit = async (data: FirstStepForm) => {
-        if (!data || !userData) {
-            setMessage("Повторите попытку");
-            return;
-        }
-
-        try {
-            const {success, message, result} = await CreateObject(data.address, data.polygon, userData.uuid);
-            if (success && result) {
-                console.log(result)
-
-            } else {
-                setMessage(message || "Ошибка создания объекта");
-            }
-        } catch (error) {
-            setMessage(`${error}`);
-        }
-    }
-
-    const [YMapComponents, setYMapComponents] = useState<YMaps3Modules | null>(null);
-    const [polygonGeom, setPolygonGeom] = useState<Geometry | null>(null);
-    const [addressCoords, setAddressCoords] = useState<LngLat | null>(null);
-    const [searchValue, setSearchValue] = useState("");
-
+    // инициализация карты
     useEffect(() => {
-        loadYMaps3().then(setYMapComponents);
+        if (mapRef.current || !mapContainer.current) return;
+
+        const map = new maplibregl.Map({
+            container: mapContainer.current,
+            style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+            center: [37.6173, 55.7558],
+            zoom: 10,
+        });
+
+        mapRef.current = map;
+
+        return () => {
+            map.remove();
+            mapRef.current = null;
+        };
     }, []);
 
+    // отрисовка полигона
+    useEffect(() => {
+        if (!mapRef.current || !polygonGeom) return;
+
+        const geoJsonFeature: GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon> = {
+            type: "Feature",
+            properties: {},
+            geometry: polygonGeom,
+        };
+
+        const map = mapRef.current;
+        const existingSource = map.getSource("polygon") as maplibregl.GeoJSONSource | undefined;
+
+        if (existingSource && typeof existingSource.setData === "function") {
+            existingSource.setData(geoJsonFeature);
+        } else {
+            if (!map.getSource("polygon")) {
+                map.addSource("polygon", {
+                    type: "geojson",
+                    data: geoJsonFeature,
+                });
+            }
+
+            if (!map.getLayer("polygon-fill")) {
+                map.addLayer({
+                    id: "polygon-fill",
+                    type: "fill",
+                    source: "polygon",
+                    paint: {
+                        "fill-color": "#00FF00",
+                        "fill-opacity": 0.4,
+                    },
+                });
+            }
+
+            if (!map.getLayer("polygon-outline")) {
+                map.addLayer({
+                    id: "polygon-outline",
+                    type: "line",
+                    source: "polygon",
+                    paint: {
+                        "line-color": "#00FF00",
+                        "line-width": 2,
+                    },
+                });
+            }
+        }
+
+        let coords: number[][];
+        if (polygonGeom.type === "Polygon") {
+            coords = polygonGeom.coordinates[0];
+        } else {
+            coords = polygonGeom.coordinates[0][0];
+        }
+
+        if (coords.length > 0) {
+            const first = coords[0] as maplibregl.LngLatLike;
+            const bounds = coords.reduce(
+                (b: maplibregl.LngLatBounds, c) => b.extend(c as maplibregl.LngLatLike),
+                new maplibregl.LngLatBounds(first, first)
+            );
+            map.fitBounds(bounds, { padding: 40 });
+        }
+    }, [polygonGeom]);
+
+    // проверка файла
+    const isPolygonGeoJSON = (obj: unknown): obj is PolygonGeoJSON => {
+        if (!obj || typeof obj !== "object") return false;
+        const maybe = obj as { type?: unknown; coordinates?: unknown };
+        if (maybe.type === "Polygon") return Array.isArray(maybe.coordinates);
+        if (maybe.type === "MultiPolygon") return Array.isArray(maybe.coordinates);
+        return false;
+    };
+
+    // загрузка файла полигона
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!file.name.endsWith(".json")) {
+        if (!file.name.toLowerCase().endsWith(".json")) {
             alert("Можно загружать только файлы с расширением .json");
             return;
         }
 
         try {
             const text = await file.text();
-            setValue("polygon", text)
-            const json = JSON.parse(text);
+            const parsed = JSON.parse(text) as unknown;
 
-            if (typeof json !== "object" || !json.type || !json.coordinates) {
-                alert("Файл должен быть корректным GeoJSON объектом");
-                return;
-            }
-
-            if (json.type !== "Polygon" && json.type !== "MultiPolygon") {
+            if (!isPolygonGeoJSON(parsed)) {
                 alert("Файл должен содержать Polygon или MultiPolygon");
                 return;
             }
 
-            const checkCoords = (coords: unknown): boolean => {
-                if (!Array.isArray(coords)) return false;
-                if (typeof coords[0] === "number" && typeof coords[1] === "number") {
-                    return true;
-                }
-                return coords.every((c) => checkCoords(c));
-            };
-
-            if (!checkCoords(json.coordinates)) {
-                alert("Неверный формат координат");
-                return;
-            }
-
-            setPolygonGeom(json as Geometry);
-        } catch (err) {
-            console.error("Ошибка чтения файла:", err);
+            setValue("polygon", text);
+            setPolygonGeom(parsed);
+        } catch {
             alert("Не удалось прочитать JSON");
         }
     };
 
-    const handleSearch = async () => {
-        if (!searchValue.trim()) return;
+    // сабмит формы
+    const onSubmit = async (data: FirstStepForm) => {
+        if (!data || !userData) {
+            setMessage("Повторите попытку");
+            return;
+        }
+
+        // проверка адреса
+        if (!data.address || data.address.trim() === "") {
+            setMessage("Введите адрес");
+            return;
+        }
+
+        // проверка полигона
+        if (!polygonGeom) {
+            setMessage("Необходимо загрузить полигон в формате JSON");
+            return;
+        }
 
         try {
-            const response = await fetch(
-                `https://geocode-maps.yandex.ru/1.x/?apikey=API_KEY&format=json&geocode=${encodeURIComponent(
-                    searchValue
-                )}`
-            );
-            const data = await response.json();
+            const res = await CreateObject(data.address, data.polygon);
 
-            const pos =
-                data.response.GeoObjectCollection.featureMember[0]?.GeoObject?.Point?.pos;
-            if (!pos) {
-                alert("Адрес не найден");
-                return;
+            if (res && typeof res === "object" && "success" in res) {
+                const { success, message: srvMessage, result } = res as {
+                    success: boolean;
+                    message?: string;
+                    result?: string;
+                };
+                if (success && result) {
+                    localStorage.setItem("projectUuid", result);
+                    router.push("/list_objects/create_object/second_step");
+                } else {
+                    setMessage(srvMessage ?? "Ошибка создания объекта");
+                }
+            } else {
+                setMessage("Непредвиденный ответ от сервера");
             }
-
-            const [lon, lat] = pos.split(" ").map(Number);
-            setAddressCoords([lon, lat] as LngLat);
-        } catch (err) {
-            console.error("Ошибка поиска адреса:", err);
-            alert("Ошибка при обращении к геокодеру");
+        } catch (error) {
+            const text = error instanceof Error ? error.message : String(error);
+            setMessage(text);
         }
     };
-
-    if (!YMapComponents) return <div>Загрузка карты...</div>;
-
-    const {
-        YMap,
-        YMapDefaultSchemeLayer,
-        YMapFeature,
-        YMapDefaultFeaturesLayer,
-        YMapMarker,
-    } = YMapComponents;
-
-    const center: LngLat =
-        polygonGeom != null
-            ? getCenter(polygonGeom)
-            : addressCoords != null
-                ? addressCoords
-                : ([37.6173, 55.7558] as LngLat);
 
     return (
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />
-            <main className="w-[80%] bg-white px-8">
+            <main className="w-full max-w-[1200px] bg-white px-4 sm:px-6 md:px-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex justify-center">
-                    <div className="flex flex-col gap-5 w-[1000px] h-[600px] justify-center items-center relative">
-                        <div className="w-full flex flex-row justify-between">
+                    <div className="flex flex-col gap-5 w-full h-auto min-h-[600px] justify-center items-center relative py-6">
+                        <div className="w-full flex flex-col sm:flex-row justify-between gap-2 sm:gap-0">
                             <p className="font-bold">Новый объект</p>
                             <p>Этап 1 из 2</p>
                         </div>
-                        <div className="w-[45%] top-4 left-4 flex flex-row self-start gap-3">
+
+                        <div className="w-full sm:w-[60%] flex flex-col sm:flex-row gap-3">
                             <input
-                                {...register('address')}
+                                {...register("address")}
                                 type="text"
-                                value={searchValue}
-                                onChange={(e) => setSearchValue(e.target.value)}
-                                placeholder="Введите адрес..."
+                                placeholder="Введите адрес"
                                 className="w-full flex-1 border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                             />
-                            <button
-                                type="button"
-                                className="self-start bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg"
-                                onClick={handleSearch}
-                            >
-                                Найти
-                            </button>
-                        </div>
-                        <div className="w-full h-full">
-                            <YMap
-                                location={{
-                                    center,
-                                    zoom: polygonGeom ? 17 : addressCoords ? 15 : 10,
-                                }}
-                                mode="vector"
-                            >
-                                <YMapDefaultSchemeLayer />
-                                <YMapDefaultFeaturesLayer />
-
-                                {polygonGeom && (
-                                    <YMapFeature
-                                        geometry={polygonGeom}
-                                        style={{
-                                            fill: "#00FF0088",
-                                            stroke: [{ color: "#00FF00", width: 2 }],
-                                        }}
-                                    />
-                                )}
-
-                                {addressCoords && (
-                                    <YMapMarker coordinates={addressCoords}>
-                                        <div className="bg-red-500 w-4 h-4 rounded-full border-2 border-white" />
-                                    </YMapMarker>
-                                )}
-                            </YMap>
                         </div>
 
-                        <div className="w-full flex flex-row self-start gap-2 items-center justify-between">
-                            <div className="flex flex-row items-center gap-2 cursor-pointer">
+                        <div className="w-full h-[300px] sm:h-[500px]">
+                            <div
+                                ref={mapContainer}
+                                className="w-full h-full rounded-2xl shadow-lg"
+                            />
+                        </div>
+
+                        <div className="w-full flex flex-col sm:flex-row gap-3 items-center justify-between">
+                            <div className="flex flex-col sm:flex-row items-center gap-2 cursor-pointer">
                                 <label htmlFor="coords" className="cursor-pointer">
-                                    <span className="text-sm font-medium">Загрузить координаты в формате JSON</span>
+                  <span className="text-sm font-medium">
+                    Загрузить координаты в формате JSON
+                  </span>
                                 </label>
 
-                                <label htmlFor="coords" className="bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg cursor-pointer">
+                                <label
+                                    htmlFor="coords"
+                                    className="bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg cursor-pointer"
+                                >
                                     Загрузить
                                 </label>
                             </div>
 
                             <input
-                                id={'coords'}
+                                id={"coords"}
                                 type="file"
                                 accept=".json"
                                 className="hidden"
                                 onChange={handleFileUpload}
                             />
 
-                            <input type="submit" value={"Далее"} className="bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg"></input>
+                            <button
+                                type="submit"
+                                className="self-end bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg sm:w-auto"
+                            >
+                                Далее
+                            </button>
                         </div>
 
-                        {message && <p className="w-full text-center text-red-600 mt-2">{message}</p>}
+                        {message && (
+                            <p className="w-full text-center text-red-600 pt-2">{message}</p>
+                        )}
                     </div>
                 </form>
             </main>
         </div>
-    )
+    );
 }
