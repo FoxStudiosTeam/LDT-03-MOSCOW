@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Header } from "@/app/components/header";
@@ -10,10 +10,7 @@ import { useUserStore } from "@/storage/userstore";
 import { CreateObject } from "@/app/Api/Api";
 import { useRouter } from "next/navigation";
 
-type PolygonGeoJSON = {
-    type: "Polygon" | "MultiPolygon";
-    coordinates: any;
-};
+type PolygonGeoJSON = GeoJSON.Polygon | GeoJSON.MultiPolygon;
 
 export default function FirstStep() {
     const mapContainer = useRef<HTMLDivElement | null>(null);
@@ -21,8 +18,6 @@ export default function FirstStep() {
 
     const [message, setMessage] = useState<string>("");
     const [polygonGeom, setPolygonGeom] = useState<PolygonGeoJSON | null>(null);
-    const [addressCoords, setAddressCoords] = useState<[number, number] | null>(null);
-    const [searchValue, setSearchValue] = useState("");
 
     const userData = useUserStore((state) => state.userData);
     const router = useRouter();
@@ -33,93 +28,93 @@ export default function FirstStep() {
     useEffect(() => {
         if (mapRef.current || !mapContainer.current) return;
 
-        mapRef.current = new maplibregl.Map({
+        const map = new maplibregl.Map({
             container: mapContainer.current,
             style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
             center: [37.6173, 55.7558],
             zoom: 10,
         });
+
+        mapRef.current = map;
+
+        return () => {
+            map.remove();
+            mapRef.current = null;
+        };
     }, []);
 
     // отрисовка полигона
     useEffect(() => {
         if (!mapRef.current || !polygonGeom) return;
 
-        if (mapRef.current.getSource("polygon")) {
-            (mapRef.current.getSource("polygon") as maplibregl.GeoJSONSource).setData(
-                polygonGeom as any
-            );
+        const geoJsonFeature: GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon> = {
+            type: "Feature",
+            properties: {},
+            geometry: polygonGeom,
+        };
+
+        const map = mapRef.current;
+        const existingSource = map.getSource("polygon") as maplibregl.GeoJSONSource | undefined;
+
+        if (existingSource && typeof existingSource.setData === "function") {
+            existingSource.setData(geoJsonFeature);
         } else {
-            mapRef.current.addSource("polygon", {
-                type: "geojson",
-                data: polygonGeom as any,
-            });
-            mapRef.current.addLayer({
-                id: "polygon-fill",
-                type: "fill",
-                source: "polygon",
-                paint: {
-                    "fill-color": "#00FF00",
-                    "fill-opacity": 0.4,
-                },
-            });
-            mapRef.current.addLayer({
-                id: "polygon-outline",
-                type: "line",
-                source: "polygon",
-                paint: {
-                    "line-color": "#00FF00",
-                    "line-width": 2,
-                },
-            });
+            if (!map.getSource("polygon")) {
+                map.addSource("polygon", {
+                    type: "geojson",
+                    data: geoJsonFeature,
+                });
+            }
+
+            if (!map.getLayer("polygon-fill")) {
+                map.addLayer({
+                    id: "polygon-fill",
+                    type: "fill",
+                    source: "polygon",
+                    paint: {
+                        "fill-color": "#00FF00",
+                        "fill-opacity": 0.4,
+                    },
+                });
+            }
+
+            if (!map.getLayer("polygon-outline")) {
+                map.addLayer({
+                    id: "polygon-outline",
+                    type: "line",
+                    source: "polygon",
+                    paint: {
+                        "line-color": "#00FF00",
+                        "line-width": 2,
+                    },
+                });
+            }
         }
 
-        // центрируем карту на полигон
-        const coords =
-            polygonGeom.type === "Polygon"
-                ? polygonGeom.coordinates[0]
-                : polygonGeom.coordinates[0][0];
-        const bounds = coords.reduce(
-            (b: maplibregl.LngLatBounds, [lng, lat]: [number, number]) =>
-                b.extend([lng, lat]),
-            new maplibregl.LngLatBounds(coords[0], coords[0])
-        );
-        mapRef.current.fitBounds(bounds, { padding: 40 });
+        let coords: number[][];
+        if (polygonGeom.type === "Polygon") {
+            coords = polygonGeom.coordinates[0];
+        } else {
+            coords = polygonGeom.coordinates[0][0];
+        }
+
+        if (coords.length > 0) {
+            const first = coords[0] as maplibregl.LngLatLike;
+            const bounds = coords.reduce(
+                (b: maplibregl.LngLatBounds, c) => b.extend(c as maplibregl.LngLatLike),
+                new maplibregl.LngLatBounds(first, first)
+            );
+            map.fitBounds(bounds, { padding: 40 });
+        }
     }, [polygonGeom]);
 
-    // отрисовка маркера адреса
-    useEffect(() => {
-        if (!mapRef.current || !addressCoords) return;
-
-        new maplibregl.Marker({ color: "red" })
-            .setLngLat(addressCoords)
-            .addTo(mapRef.current);
-
-        mapRef.current.flyTo({ center: addressCoords, zoom: 15 });
-    }, [addressCoords]);
-
-    // поиск адреса
-    const handleSearch = async () => {
-        if (!searchValue.trim()) return;
-
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-                    searchValue
-                )}`
-            );
-            const data = await response.json();
-
-            if (data.length > 0) {
-                const { lon, lat } = data[0];
-                setAddressCoords([parseFloat(lon), parseFloat(lat)]);
-            } else {
-                alert("Адрес не найден");
-            }
-        } catch (err) {
-            console.error("Ошибка поиска:", err);
-            alert("Ошибка при обращении к геокодеру");
-        }
+    // проверка файла
+    const isPolygonGeoJSON = (obj: unknown): obj is PolygonGeoJSON => {
+        if (!obj || typeof obj !== "object") return false;
+        const maybe = obj as { type?: unknown; coordinates?: unknown };
+        if (maybe.type === "Polygon") return Array.isArray(maybe.coordinates);
+        if (maybe.type === "MultiPolygon") return Array.isArray(maybe.coordinates);
+        return false;
     };
 
     // загрузка файла полигона
@@ -127,24 +122,23 @@ export default function FirstStep() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!file.name.endsWith(".json")) {
+        if (!file.name.toLowerCase().endsWith(".json")) {
             alert("Можно загружать только файлы с расширением .json");
             return;
         }
 
         try {
             const text = await file.text();
-            setValue("polygon", text);
-            const json = JSON.parse(text);
+            const parsed = JSON.parse(text) as unknown;
 
-            if (json.type !== "Polygon" && json.type !== "MultiPolygon") {
+            if (!isPolygonGeoJSON(parsed)) {
                 alert("Файл должен содержать Polygon или MultiPolygon");
                 return;
             }
 
-            setPolygonGeom(json as PolygonGeoJSON);
-        } catch (err) {
-            console.error("Ошибка чтения файла:", err);
+            setValue("polygon", text);
+            setPolygonGeom(parsed);
+        } catch {
             alert("Не удалось прочитать JSON");
         }
     };
@@ -156,19 +150,39 @@ export default function FirstStep() {
             return;
         }
 
+        // проверка адреса
+        if (!data.address || data.address.trim() === "") {
+            setMessage("Введите адрес");
+            return;
+        }
+
+        // проверка полигона
+        if (!polygonGeom) {
+            setMessage("Необходимо загрузить полигон в формате JSON");
+            return;
+        }
+
         try {
-            const { success, message, result } = await CreateObject(
-                data.address,
-                data.polygon
-            );
-            if (success && result) {
-                localStorage.setItem("projectUuid", result);
-                router.push("/list_objects/create_object/second_step");
+            const res = await CreateObject(data.address, data.polygon);
+
+            if (res && typeof res === "object" && "success" in res) {
+                const { success, message: srvMessage, result } = res as {
+                    success: boolean;
+                    message?: string;
+                    result?: string;
+                };
+                if (success && result) {
+                    localStorage.setItem("projectUuid", result);
+                    router.push("/list_objects/create_object/second_step");
+                } else {
+                    setMessage(srvMessage ?? "Ошибка создания объекта");
+                }
             } else {
-                setMessage(message || "Ошибка создания объекта");
+                setMessage("Непредвиденный ответ от сервера");
             }
         } catch (error) {
-            setMessage(`${error}`);
+            const text = error instanceof Error ? error.message : String(error);
+            setMessage(text);
         }
     };
 
@@ -176,10 +190,7 @@ export default function FirstStep() {
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />
             <main className="w-full max-w-[1200px] bg-white px-4 sm:px-6 md:px-8">
-                <form
-                    onSubmit={handleSubmit(onSubmit)}
-                    className="flex justify-center"
-                >
+                <form onSubmit={handleSubmit(onSubmit)} className="flex justify-center">
                     <div className="flex flex-col gap-5 w-full h-auto min-h-[600px] justify-center items-center relative py-6">
                         <div className="w-full flex flex-col sm:flex-row justify-between gap-2 sm:gap-0">
                             <p className="font-bold">Новый объект</p>
@@ -190,18 +201,9 @@ export default function FirstStep() {
                             <input
                                 {...register("address")}
                                 type="text"
-                                value={searchValue}
-                                onChange={(e) => setSearchValue(e.target.value)}
-                                placeholder="Введите адрес..."
+                                placeholder="Введите адрес"
                                 className="w-full flex-1 border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                             />
-                            <button
-                                type="button"
-                                className="self-end bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg"
-                                onClick={handleSearch}
-                            >
-                                Найти
-                            </button>
                         </div>
 
                         <div className="w-full h-[300px] sm:h-[500px]">
@@ -235,11 +237,12 @@ export default function FirstStep() {
                                 onChange={handleFileUpload}
                             />
 
-                            <input
+                            <button
                                 type="submit"
-                                value={"Далее"}
                                 className="self-end bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg sm:w-auto"
-                            />
+                            >
+                                Далее
+                            </button>
                         </div>
 
                         {message && (

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Header } from "@/app/components/header";
+import {useState, useEffect} from "react";
+import {Header} from "@/app/components/header";
 import Link from "next/link";
-import { GetProjects, GetStatuses } from "@/app/Api/Api";
-import { useProjectStore } from "@/storage/projectStorage";
+import {GetProjects, GetStatuses} from "@/app/Api/Api";
+import {useProjectStore} from "@/storage/projectStorage";
+import {ProjectMap} from "@/app/components/map";
 
 interface Attachment {
     base_entity_uuid: string;
@@ -39,7 +40,7 @@ export default function ProjectsPage() {
 
     const limit = 10;
 
-    const { projects, total, setProjects, clearProjects } = useProjectStore();
+    const {projects, total, setProjects, clearProjects} = useProjectStore();
 
     const [totalPages, setTotalPages] = useState<number>(0);
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -100,7 +101,7 @@ export default function ProjectsPage() {
             attachments: p.attachments ?? [],
         }));
 
-        setCurrentPageContent(newArray.reverse());
+        setCurrentPageContent(newArray);
     }, [projects, currentPage, total]);
 
     const getStatusTitle = (statusId: number) => {
@@ -110,7 +111,7 @@ export default function ProjectsPage() {
 
     return (
         <div className="min-h-screen flex flex-col bg-[#D0D0D0]">
-            <Header />
+            <Header/>
             <main className="flex-1 w-full max-w-6xl mx-auto bg-white px-6 sm:px-8 py-6 sm:py-10">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl sm:text-3xl font-semibold">Ваши объекты</h1>
@@ -141,33 +142,33 @@ export default function ProjectsPage() {
                                     <div>
                                         <Link
                                             href={`/list_objects/${project.uuid}`}
-                                            className="font-medium"
+                                            className="font-medium text-blue-500 hover:text-blue-700 hover:underline decoration-1 underline-offset-2 transition-colors duration-200"
                                         >
                                             {project.address || "Адрес не указан"}
                                         </Link>
+
+
                                         <p className="text-sm text-gray-600">
                                             Статус: {getStatusTitle(project.status)}
                                         </p>
                                     </div>
                                     <span className="text-xl">
-                    {openProject === project.uuid ? "▲" : "▼"}
-                  </span>
+                                        {openProject === project.uuid ? "▲" : "▼"}
+                                    </span>
                                 </div>
 
                                 {openProject === project.uuid && (
                                     <div className="mt-4 space-y-2 text-sm text-gray-700">
-                                        {project.ssk && <p>Заказчик: {project.ssk}</p>}
-                                        {project.foreman && <p>Подрядчик: {project.foreman}</p>}
-                                        {project.start_date && <p>Дата начала: {project.start_date}</p>}
-                                        {project.end_date && <p>Дата окончания: {project.end_date}</p>}
-                                        {project.polygon && (
-                                            <div>
-                                                <p className="mb-1">Карта:</p>
+                                        <p>Подрядчик: {project.foreman || "не указан"}</p>
 
-                                            </div>
+                                        {project.polygon ? (
+                                            <ProjectMap polygon={project.polygon} />
+                                        ) : (
+                                            <p>Карта: нет данных</p>
                                         )}
                                     </div>
                                 )}
+
                             </div>
                         ))}
                 </div>
