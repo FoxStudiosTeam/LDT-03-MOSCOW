@@ -41,8 +41,8 @@ class AuthProvider implements IAuthProvider {
 
     if (response.statusCode == 200) {
       final rawData = jsonDecode(response.body);
-      data.accessTokenValue = rawData['accessToken'] ?? "";
-      data.ext = rawData['ext'] ?? 0;
+      data.accessTokenValue = rawData['access_token'] ?? "";
+      data.ext = rawData['exp'] ?? 0;
 
       var refresh = parseHeaders(response.headers);
       if (refresh != null) {
