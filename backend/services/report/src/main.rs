@@ -85,9 +85,12 @@ async fn main() -> anyhow::Result<()> {
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .nest("/api/report", api::make_router(state.clone()))
         .split_for_parts();
+
+    let schema = serde_json::to_string(&api).expect("Can't serialize schema");
     
     let app = axum::Router::new()
         .merge(Scalar::with_url("/api/report/docs/scalar", api))
+        .route("/api/report/openapi.json", get(|| async move {schema}))
         .merge(metrics)
         .merge(api_router)
         .layer(shared::helpers::cors::cors_layer())

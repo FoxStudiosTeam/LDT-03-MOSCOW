@@ -88,9 +88,12 @@ async fn main() -> anyhow::Result<()> {
         .nest("/api/punishment", api::everyone(state.clone()))
         .nest("/api/punishment", api::inspector_customer(state.clone()))
         .split_for_parts();
+
+    let schema = serde_json::to_string(&api).expect("Can't serialize schema");
     
     let app = axum::Router::new()
         .merge(Scalar::with_url("/api/punishment/docs/scalar", api))
+        .route("/api/punishment/openapi.json", get(|| async move {schema}))
         .merge(metrics)
         .merge(api_router)
         .layer(shared::helpers::cors::cors_layer())
