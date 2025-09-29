@@ -30,7 +30,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  yandex_mapkit: ^4.2.1
+  flutter_osm_plugin:
+    version: ^1.4.2
+  shared_preferences:
+    version: ^2.5.3
+  http:
+    version: ^1.5.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -46,13 +51,3 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
-
-
-# The following section is specific to Flutter packages.
-flutter:
-  uses-material-design: true
-  plugin:
-    platforms:
-      android:
-        package: com.unact.yandexmapkit
-        pluginClass: YandexMapkitPlugin

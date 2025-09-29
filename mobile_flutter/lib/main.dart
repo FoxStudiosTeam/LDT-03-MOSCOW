@@ -1,28 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:yandex_mapkit/yandex_mapkit.dart';
+import 'package:mobile_flutter/auth/auth_storage_provider.dart';
+import 'package:mobile_flutter/auth/auth_provider.dart';
+import 'package:mobile_flutter/di/dependency_builder.dart';
+import 'package:mobile_flutter/di/dependency_container.dart';
+import 'package:mobile_flutter/screens/auth_screen.dart';
+import 'package:mobile_flutter/screens/map.dart';
 
-void main() {
-  runApp(const MaterialApp(home: MainPage()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Это нужно!
+
+  var builder = DependencyBuilder();
+  builder.registerDependency(IAuthStorageProviderDIToken, AuthStorageProvider());
+
+  var storage = builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
+  var au = AuthProvider(Uri.parse('https://sso.foxstudios.ru:32460'), storage);
+  builder.registerDependency(IAuthProviderDIToken, au);
+  var di = builder.build();
+
+  runApp(MaterialApp(home: MainPage(di: di)));
 }
 
-
 class MainPage extends StatelessWidget {
-  const MainPage({ super.key});
+  final IDependencyContainer di;
+
+  const MainPage({super.key, required this.di});
+
+  Future<Widget> prepareChild() async {
+    var storageProvider = di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
+    if (await storageProvider.getRefreshToken() != "") {
+      return MapScreen();
+    }
+    return AuthScreen(di:di);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('YandexMap examples')),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              child: const YandexMap()
-            )
-          ),
-        ]
-      )
+      body: FutureBuilder<Widget>(
+        future: prepareChild(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}'));
+          } else {
+            return snapshot.data ?? const SizedBox.shrink();
+          }
+        },
+      ),
     );
   }
 }
