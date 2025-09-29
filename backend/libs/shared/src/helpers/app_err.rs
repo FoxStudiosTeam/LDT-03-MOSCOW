@@ -41,6 +41,12 @@ impl AppErr {
     }
 }
 
+impl ToString for AppErr {
+    fn to_string(&self) -> String {
+        self.0.to_string()
+    }
+}
+
 
 impl IntoResponse for AppErr {
     fn into_response(self) -> axum::response::Response {

@@ -1,5 +1,18 @@
-ALTER TABLE journal.punishment
-      DROP COLUMN punishment_status;
 
-ALTER TABLE journal.punishment
-      ADD COLUMN punishment_status integer NOT NULL;
+
+
+
+
+
+
+
+
+
+  ALTER TABLE journal.project_schedule
+    ADD COLUMN is_deleted boolean
+      
+      
+       NOT NULL
+       DEFAULT false;
+
+

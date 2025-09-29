@@ -1,5 +1,4 @@
-use std::{collections::HashMap, hash::Hash};
-
+use std::{collections::HashMap};
 use axum::{Json, extract::{Query, State}, http::StatusCode, response::{IntoResponse, Response}};
 use serde::{Deserialize, Serialize};
 use shared::{prelude::{AppErr, IntoAppErr}};
@@ -49,7 +48,7 @@ impl OptionalAttachments {
 #[utoipa::path(
     get,
     path = "/get_punishment_items",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     params(PunishmentItemsRequest),
     summary = "Get all items in punishment",
     responses(
@@ -94,5 +93,6 @@ pub async fn get_punishment_items(
 #[derive(utoipa::ToSchema, Deserialize, Debug, IntoParams)]
 pub struct PunishmentItemsRequest{
     #[schema(example=Uuid::new_v4)]
+    #[param(example=Uuid::new_v4)]
     punishment_id: uuid::Uuid,
 }

@@ -6,6 +6,14 @@ tables:
     type: integer
   - name: polygon
     type: jsonb
+  - name: start_date
+    type: date
+    nullable: true
+    default: null
+  - name: end_date
+    type: date
+    nullable: true
+    default: null
   - name: uuid
     type: uuid
     isPrimary: true
@@ -20,10 +28,9 @@ tables:
     type: uuid
     nullable: true
     default: null
-  - name: is_active
-    type: boolean
-    nullable: false
-    default: false  
+  - name: created_by
+    type: uuid
+    nullable: true
 - name: iko_relationship
   schema: project
   fields:

@@ -10,7 +10,6 @@ impl WorkCategory {
     pub fn into_active(self) -> ActiveWorkCategory {
         ActiveWorkCategory {
             kpgz: Set(self.kpgz),
-            id: Set(self.id),
             uuid: Set(self.uuid),
             title: Set(self.title),
         }
@@ -22,7 +21,6 @@ impl WorkCategory {
 #[derive(Clone, Debug, FromRow)]
 pub struct WorkCategory {
     pub kpgz: i32,
-    pub id: Option<i32>,
     pub uuid: uuid::Uuid,
     pub title: String,
 }
@@ -30,7 +28,6 @@ pub struct WorkCategory {
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveWorkCategory {
     pub kpgz: Optional<i32>,
-    pub id: Optional<Option<i32>>,
     pub uuid: Optional<uuid::Uuid>,
     pub title: Optional<String>,
 }
@@ -39,7 +36,6 @@ impl ActiveWorkCategory {
     pub fn into_work_category(self) -> Option<WorkCategory> {
         Some(WorkCategory {
             kpgz: self.kpgz.into_option()?,
-            id: self.id.into_option()?,
             uuid: self.uuid.into_option()?,
             title: self.title.into_option()?,
         })
@@ -66,7 +62,6 @@ impl TableSelector for ActiveWorkCategory {
     fn is_field_set(&self, field_name: &str) -> bool {
         match field_name {
             "kpgz" => self.kpgz.is_set(),
-            "id" => self.id.is_set(),
             "uuid" => self.uuid.is_set(),
             "title" => self.title.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
@@ -77,13 +72,6 @@ impl TableSelector for ActiveWorkCategory {
             ColumnDef{
                 name: "kpgz",
                 nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "id",
-                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
@@ -142,7 +130,6 @@ impl ModelOps<sqlx::Postgres> for ActiveWorkCategory
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Postgres, T, <sqlx::Postgres as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.kpgz {tracing::debug!("Binded kpgz"); q = q.bind(v);}
-        if let Set(v) = &self.id {tracing::debug!("Binded id"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
@@ -262,7 +249,6 @@ impl ModelOps<sqlx::MySql> for ActiveWorkCategory
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::MySql, T, <sqlx::MySql as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.kpgz {tracing::debug!("Binded kpgz"); q = q.bind(v);}
-        if let Set(v) = &self.id {tracing::debug!("Binded id"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q
@@ -382,7 +368,6 @@ impl ModelOps<sqlx::Sqlite> for ActiveWorkCategory
     fn complete_query<'s, 'q, T>(&'s self, mut q: QueryAs<'q, sqlx::Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q>>)
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.kpgz {tracing::debug!("Binded kpgz"); q = q.bind(v);}
-        if let Set(v) = &self.id {tracing::debug!("Binded id"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
         q

@@ -1,7 +1,60 @@
-use schema::prelude::{Attachments, Project};
+use schema::prelude::*;
 use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
+use serde_json::Value;
+use sqlx::prelude::{FromRow, Type};
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
+
+#[derive(ToSchema, Deserialize)]
+pub struct CreateWorkCategoryRequest {
+    pub title : String,
+    pub kpgz : i32,
+}
+
+#[derive(ToSchema, Serialize)]
+pub struct ProjectStatusesResponse {
+    pub data: Vec<ProjectStatuses>
+}
+
+
+#[derive(ToSchema, Deserialize)]
+pub struct UpdateWorkCategoryRequest {
+    pub title : Option<String>,
+    pub kpgz : Option<i32>,
+    pub uuid : Uuid
+}
+
+#[derive(ToSchema, Deserialize)]
+pub struct CreateUpdateWorkRequest {
+    pub work_category_uuid : Uuid,
+    pub title : String,
+    pub uuid : Option<Uuid>
+}
+
+// #[derive(ToSchema, Serialize)]
+// pub struct SaveWorkResponse {
+//     pub items : Option<Works>
+// }
+
+// #[derive(ToSchema, Serialize)]
+// pub struct GetWorksByCategoryResponse {
+//     pub items: Vec<Works>
+// }
+
+#[derive(ToSchema, Deserialize)]
+pub struct GetWorksByCategoryRequest {
+    pub work_category_uuid : Uuid
+}
+
+#[derive(ToSchema, Serialize)]
+pub struct GetKpgz {
+    pub items : Vec<Kpgz>
+}
+
+#[derive(ToSchema, Serialize)]
+pub struct GetWorkCategoriesResponse {
+    pub items : Vec<WorkCategory>
+}
 
 #[derive(ToSchema, Deserialize)]
 pub struct GetProjectRequest {
@@ -11,15 +64,13 @@ pub struct GetProjectRequest {
 #[derive(ToSchema, Deserialize)]
 pub struct CreateProjectRequest {
     pub address : Option<String>,
-    pub polygon : Option<String>,
-    pub ssk : Option<String>
+    pub polygon : Option<sqlx::types::JsonValue>,
 }
 
 #[derive(ToSchema, Deserialize)]
-pub struct UpdateProjectRequest {
-    pub foreman : Option<String>,
-    pub status : Option<i32>,
-    pub uuid: String
+pub struct SetProjectForemanRequest {
+    pub foreman : Uuid,
+    pub uuid: Uuid
 }
 
 #[derive(ToSchema, Deserialize)]
@@ -28,65 +79,84 @@ pub struct Pagination {
     pub limit : i32
 }
 
-#[derive(ToSchema,Deserialize)]
-pub struct ActivateProjectRequest {
-    pub uuid : Uuid
+#[derive(ToSchema, Deserialize, IntoParams)]
+pub struct ProjectRequest {
+    pub project_uuid : Uuid
 }
 #[derive(ToSchema, Deserialize)]
 pub struct AddIkoToProjectRequest {
-    pub project_uuid : Uuid,
-    pub iko_uuid : Uuid
-}
-
-#[derive(ToSchema, Deserialize)]
-pub struct CreateProjectScheduleRequest {
-    pub start_date : chrono::NaiveDate,
-    pub end_date :  chrono::NaiveDate,
     pub project_uuid : Uuid
 }
 
 #[derive(ToSchema, Deserialize)]
-pub struct AddWorkToScheduleRequest {
-    pub created_by : Uuid,
-    pub work_uuid : Uuid, 
-    pub start_date : chrono::NaiveDate,
-    pub end_date : chrono::NaiveDate,
-    pub target_volume : f64,
-    pub is_draft : bool
+pub struct CreateProjectScheduleRequest {
+    pub project_uuid : Uuid,
+    pub work_uuid : Uuid,
 }
 
+
 #[derive(ToSchema, Deserialize)]
-pub struct UpdateWorkScheduleRequest {
-    pub items : Vec<UpdateWorksInScheduleRequest>
+pub struct SetWorksInScheduleRequest {
+    pub project_schedule_uuid : Uuid,
+    pub items : Vec<SetWorkInScheduleRequest>
 }
+
 
 #[derive(ToSchema,Deserialize)]
-pub struct UpdateWorksInScheduleRequest {
+pub struct SetWorkInScheduleRequest {
     pub start_date : chrono::NaiveDate,
     pub end_date : chrono::NaiveDate,
-    pub uuid : Uuid
+    pub uuid : Option<Uuid>,
+    pub title : String,
+    pub target_volume : f64,
+    pub is_complete: bool,
+    pub measurement : i32,
 }
 
+
 #[derive(ToSchema, Deserialize)]
-pub struct GetProjectScheduleRequest{
-    pub uuid : Uuid
+pub struct GetProjectScheduleRequest {
+    pub project_uuid : Uuid
 }
 #[derive(ToSchema, Serialize)]
 pub struct GetProjectScheduleResponse {
-    pub items : Vec<ProjectScheduleCategoryPartResponse>
+    pub data : Vec<ProjectScheduleCategoryPartResponse>
 }
 
 #[derive(ToSchema, Serialize)]
 pub struct ProjectScheduleCategoryPartResponse {
+    pub uuid: Uuid,
     pub title: String,
-    pub items: Option<Vec<ProjectScheduleItemResponse>>,
+    pub items: Vec<ProjectScheduleItemResponse>,
 }
 
 #[derive(ToSchema, Serialize)]
 pub struct ProjectScheduleItemResponse {
+    pub uuid: Uuid,
     pub title: String,
     pub start_date: chrono::NaiveDate,
     pub end_date: chrono::NaiveDate,
+    pub is_deleted: bool,
+    pub is_draft: bool,
+    pub is_completed: bool,
+    pub target_volume: f64,
+    pub measurement: i32
+}
+
+impl ProjectScheduleItemResponse {
+    pub fn from_items(items: ProjectScheduleItems) -> Self {
+        Self {
+            uuid: items.uuid,
+            title: items.title,
+            start_date: items.start_date,
+            end_date: items.end_date,
+            is_deleted: items.is_deleted,
+            is_draft: items.is_draft,
+            is_completed: items.is_completed,
+            target_volume: items.target_volume,
+            measurement: items.measurement
+        }
+    }
 }
 
 // ProjectStatus - таблица статусов проекта.
@@ -94,13 +164,13 @@ pub struct ProjectScheduleItemResponse {
 #[derive(Debug, Clone, Copy)]
 pub enum ProjectStatus {
     New,
-    InActive, 
-    Suspend,
+    PreActive, 
     Normal,
+    SomeWarnings,
     LowPunishment,
     NormalPunishment,
     HighPunishment,
-    SomeWarnings
+    Suspend
 }
 
 impl TryFrom<i32> for ProjectStatus {
@@ -109,7 +179,7 @@ impl TryFrom<i32> for ProjectStatus {
     fn try_from(v: i32) -> Result<Self, Self::Error> {
         match v {
             x if x == ProjectStatus::New as i32 => Ok(ProjectStatus::New),
-            x if x == ProjectStatus::InActive as i32 => Ok(ProjectStatus::InActive),
+            x if x == ProjectStatus::PreActive as i32 => Ok(ProjectStatus::PreActive),
             x if x == ProjectStatus::Suspend as i32 => Ok(ProjectStatus::Suspend),
             x if x == ProjectStatus::Normal as i32 => Ok(ProjectStatus::Normal),
             x if x == ProjectStatus::LowPunishment as i32 => Ok(ProjectStatus::LowPunishment),
@@ -169,5 +239,16 @@ impl OptionalAttachments {
             content_type: self.content_type,
         })
     }
+}
+
+#[derive(Default, Debug, ToSchema, Deserialize, IntoParams)]
+pub struct DeleteProjectScheduleRequest{
+    pub project_schedule_uuid : Uuid
+}
+
+#[derive(Deserialize, FromRow)]
+pub struct TitledSchedule {
+    pub uuid : Uuid,
+    pub title : String,
 }
 

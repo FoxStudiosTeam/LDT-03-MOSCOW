@@ -56,20 +56,17 @@ tables:
 - name: project_schedule
   schema: journal
   fields:
-  - name: start_date
-    type: date
-    nullable: true
-    default: null
   - name: uuid
     type: uuid
     isPrimary: true
     default: "gen_random_uuid()"
-  - name: end_date
-    type: date
-    nullable: true
-    default: null
   - name: project_uuid
     type: uuid
+  - name: work_category
+    type: uuid
+  - name: is_deleted
+    type: boolean
+    default: false
 - name: project_schedule_items
   schema: journal
   fields:
@@ -83,18 +80,20 @@ tables:
     type: uuid
     isPrimary: true
     default: "gen_random_uuid()"
-  - name: work_uuid
-    type: uuid
   - name: start_date
     type: date
   - name: end_date
     type: date
   - name: target_volume
     type: float8
+  - name: measurement
+    type: integer
   - name: updated_by
     type: uuid
     nullable: true
     default: null
+  - name: title
+    type: text
   - name: is_draft
     type: boolean
   - name: is_deleted

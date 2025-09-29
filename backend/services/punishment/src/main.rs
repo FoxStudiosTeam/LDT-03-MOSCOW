@@ -29,13 +29,15 @@ env_config!(
     }
 );
 
-pub const MAIN_TAG: &str = "punishment";
+pub const ANY_TAG: &str = "Any authed";
+pub const MANAGER_TAG: &str = "Inspector and Customer";
 
 #[derive(OpenApi)]
 #[openapi(
     modifiers(&SecurityAddon),
     tags(
-        (name = MAIN_TAG, description = "API"),
+        (name = ANY_TAG, description = "API access with auth (any role)"),
+        (name = MANAGER_TAG, description = "API access for inspector and customer")
     )
 )]
 
@@ -83,7 +85,8 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .nest("/api/punishment", api::make_router(state.clone()))
+        .nest("/api/punishment", api::everyone(state.clone()))
+        .nest("/api/punishment", api::inspector_customer(state.clone()))
         .split_for_parts();
     
     let app = axum::Router::new()
@@ -98,7 +101,7 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Listening on 0.0.0.0:{}", CFG.PORT);
     info!(
-        "Try scalar docs on http://127.0.0.1:{}/docs/scalar",
+        "Try scalar docs on http://127.0.0.1:{}/api/punishment/docs/scalar",
         CFG.PORT
     );
     axum::serve(listener, app.into_make_service()).await?;

@@ -1,22 +1,21 @@
 use axum::{extract::State, http::StatusCode, response::{IntoResponse, Response}, Json};
-use chrono::{NaiveDate};
 use serde::{Deserialize};
 use shared::prelude::{AppErr};
 use orm::prelude::*;
 use tracing::info;
 use schema::prelude::*;
 use uuid::Uuid;
-use crate::{AppState};
+use crate::{AppState, api::{ErrorExample,UuidResponse}};
 
 #[utoipa::path(
     put,
     path = "/update_punishment",
-    tag = crate::MAIN_TAG,
-    summary = "Update punishment with punishment items",
+    tag = crate::ANY_TAG,
+    summary = "Update punishment with status",
     responses(
-        (status = 200, description = "Punishment updated"),
-        (status = 500, description = "Punishment not updated", body=str, example="Punishment not recorded"),
-        (status = 404, description = "Punishment not found", body=str, example="Punishment not found"),
+        (status = 200, description = "Punishment updated", body=UuidResponse),
+        (status = 500, description = "Punishment not updated", body=ErrorExample),
+        (status = 404, description = "Punishment not found", body=ErrorExample),
     )
 )]
 
@@ -30,12 +29,11 @@ pub async fn update_punishment(
     .with_status(StatusCode::NOT_FOUND)
     .with_err_response("Punishment not found"))?;
 
-    match r.project {
-        Some(p) => app.orm.project().select_by_pk(&p).await?,
-        None => app.orm.project().select_by_pk(&ext_p.project).await?,
-    }.ok_or_else(|| AppErr::default()
+    if let Some(p) = r.project {
+        app.orm.project().select_by_pk(&p).await?.ok_or_else(|| AppErr::default()
         .with_status(StatusCode::NOT_FOUND)
-        .with_err_response("Punishment not found"))?;         
+        .with_err_response("Punishment not found"))?;
+    } 
 
     let status = match &r.items {
         Some(items) => {
@@ -63,29 +61,12 @@ pub async fn update_punishment(
         punishment_status: Set(status),
         ..Default::default()
     };
-    let raw_punishment = app.orm.punishment().save(record, Update).await?.ok_or_else(|| AppErr::default()
+    let punishment = app.orm.punishment().save(record, Update).await?.ok_or_else(|| AppErr::default()
     .with_status(StatusCode::INTERNAL_SERVER_ERROR)
     .with_err_response("Punishment not recorded"))?;
-    info!("{:?}", raw_punishment);
-    tracing::info!("Result: {:?}", raw_punishment);
-    
-    let result: () = match r.items {
-        Some(items) => {
-            for item in items {
-                app.orm.punishment_item().select_by_pk(&item.uuid).await?
-                .ok_or_else(|| AppErr::default()
-                .with_status(StatusCode::NOT_FOUND)
-                .with_err_response("Punishment item not found"))?;
-                app.orm.punishment_item().save(item.into_active(), Update).await?
-                .ok_or_else(|| AppErr::default()
-                .with_status(StatusCode::INTERNAL_SERVER_ERROR)
-                .with_err_response("Punishment item not recorded"))?;
-                ()
-            }
-        },
-        None => (),
-    };
-    Ok((StatusCode::OK, Json(result)).into_response())
+    info!("{:?}", punishment);
+    tracing::info!("Result: {:?}", punishment);
+    Ok((StatusCode::OK, Json(UuidResponse{uuid: uuid})).into_response())
 }
 
 
@@ -105,36 +86,6 @@ pub struct PunishmentUpdRequest{
 #[derive(utoipa::ToSchema, Deserialize, Debug, Default)]
 
 pub struct PunishmentItemsUpdRequest{
-    #[schema(example=Uuid::new_v4)]
-    pub(crate) uuid: Uuid,
-    #[schema(example="title of contravention")]
-    pub(crate) title: Option<String>,
-    #[schema(example=NaiveDate::default)]
-    pub(crate) correction_date_fact: Option<chrono::NaiveDate>,
     #[schema(example=52)]
     pub(crate) punishment_item_status: Option<i32>,
-    #[schema(example="aboba loh")]
-    pub(crate) comment: Option<String>,
-    #[schema(example="aboba loh")]
-    pub(crate) correction_date_info: Option<String>,
-    #[schema(example=Uuid::new_v4)]
-    pub(crate) regulation_doc: Option<Uuid>,
-    #[schema(example=true)]
-    pub(crate) is_suspended: Option<bool>,
-}
-
-impl PunishmentItemsUpdRequest {
-    pub fn into_active(self) -> ActivePunishmentItem {
-        ActivePunishmentItem {
-            uuid: Set(self.uuid),
-            comment: self.comment.map(|v| Set(Some(v))).unwrap_or_default(),
-            correction_date_fact: self.correction_date_fact.map(|v| Set(Some(v))).unwrap_or_default(),
-            correction_date_info: self.correction_date_info.map(|v| Set(Some(v))).unwrap_or_default(),
-            is_suspend: self.is_suspended.map(|v| Set(v)).unwrap_or_default(),
-            punishment_item_status: self.punishment_item_status.map(|v| Set(v)).unwrap_or_default(),
-            regulation_doc: self.regulation_doc.map(|v| Set(Some(v))).unwrap_or_default(),
-            title: self.title.map(|v| Set(v)).unwrap_or_default(),
-            ..Default::default()
-        }
-    }
 }

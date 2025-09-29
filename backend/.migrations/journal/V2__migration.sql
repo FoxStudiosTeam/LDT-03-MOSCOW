@@ -2,16 +2,14 @@
 
 
 
-  ALTER TABLE journal.punishment
-    ADD COLUMN punishment_status uuid
-      
-      
-       NOT NULL
-      ;
 
 
 
 
+  ALTER TABLE journal.project_schedule
+    DROP COLUMN end_date;
+  ALTER TABLE journal.project_schedule
+    DROP COLUMN start_date;
 
 
 

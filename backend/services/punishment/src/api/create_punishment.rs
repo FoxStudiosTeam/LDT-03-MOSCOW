@@ -1,22 +1,22 @@
 use axum::{extract::State, http::StatusCode, response::{IntoResponse, Response}, Json};
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{NaiveDateTime};
 use serde::{Deserialize};
 use shared::prelude::{AppErr};
 use orm::prelude::*;
 use tracing::info;
 use schema::prelude::*;
 use uuid::Uuid;
-use crate::{AppState};
+use crate::{AppState, api::{ErrorExample, UuidResponse}};
 
 #[utoipa::path(
     post,
     path = "/create_punishment",
-    tag = crate::MAIN_TAG,
-    summary = "Create punishment with punishment items",
+    tag = crate::MANAGER_TAG,
+    summary = "Create punishment with status & date",
     responses(
-        (status = 200, description = "Punishment created"),
-        (status = 400, description = "Punishment not created", body=str, example="Punishment not recorded to database"),
-        (status = 404, description = "Project not found", body=str, example="Project not found"),
+        (status = 200, description = "Punishment created", body=UuidResponse),
+        (status = 409, description = "Punishment already exist", body=ErrorExample),
+        (status = 400, description = "Project not found", body=ErrorExample),
     )
 )]
 pub async fn create_punishment(
@@ -24,9 +24,8 @@ pub async fn create_punishment(
     Json(r): Json<PunishmentCreateRequest>,
 ) -> Result<Response, AppErr> {
     info!("{:?}", r);
-    let project = app.orm.project().select_by_pk(&r.project).await?;
-    if let Some(_) = project {
-
+    app.orm.project().select_by_pk(&r.project).await?
+    .ok_or_else(|| AppErr::default().with_status(StatusCode::BAD_REQUEST).with_err_response("Project not found"))?;
         let mut statuses: Vec<i32> = vec![];
         let mut dates: Vec<NaiveDateTime> = vec![];
         
@@ -53,44 +52,10 @@ pub async fn create_punishment(
             uuid: Set(uuid),
             punishment_status: Set(status)
         };
-        let raw_punishment = app.orm.punishment().save(record, Insert).await?;
-        info!("{:?}", raw_punishment);
+        let raw_punishment = app.orm.punishment().save(record, Insert).await?
+        .ok_or_else(||AppErr::default().with_status(StatusCode::CONFLICT).with_err_response("Punishment already exist"))?;
         tracing::info!("Result: {:?}", raw_punishment);
-
-        let mut result = !(raw_punishment.ok_or_else(|| AppErr::default()
-        .with_status(StatusCode::BAD_REQUEST)
-        .with_err_response("Punishment not recorded"))?
-        .project.to_string().is_empty());
-        
-        let punishment = app.orm.punishment().select_by_pk(&uuid).await?;
-        if let Some(_) = punishment {
-            for raw_record in r.items {
-                let data = ActivePunishmentItem { 
-                    punishment: Set(uuid),
-                    is_suspend: Set(raw_record.is_suspended), 
-                    comment: Set(raw_record.comment), 
-                    punish_datetime: Set(raw_record.punish_datetime), 
-                    regulation_doc: Set(Some(raw_record.regulation_doc)), 
-                    correction_date_plan: Set(raw_record.correction_date_plan), 
-                    title: Set(raw_record.title), 
-                    punishment_item_status: Set(raw_record.punishment_item_status), 
-                    place: Set(raw_record.place),
-                    ..Default::default()
-                };
-
-                let raw_item = app.orm.punishment_item().save(data, Insert).await?;
-                tracing::info!("Result: {:?}", raw_item);
-                result = !(raw_item.ok_or_else(|| AppErr::default()
-                .with_status(StatusCode::BAD_REQUEST)
-                .with_err_response("Result not recorded"))?
-                .title.to_string().is_empty());
-            };
-        }
-        Ok((StatusCode::OK, Json(result)).into_response())
-    }
-    else {
-        Err(AppErr::default().with_status(StatusCode::NOT_FOUND).with_err_response("Project not found"))
-    }
+        Ok((StatusCode::OK, Json(UuidResponse{uuid:uuid})).into_response())
 }
 
 #[derive(utoipa::ToSchema, Deserialize, Debug)]
@@ -100,26 +65,14 @@ pub struct PunishmentCreateRequest{
     pub(crate) project: uuid::Uuid,
     #[schema(example="abc123")]
     pub(crate) custom_number: Option<String>,
-    pub(crate) items: Vec<PunishmentItemsCreateRequest>
+    pub(crate) items: Vec<InsPunishmentItemsCreateRequest>
 }
 
 #[derive(utoipa::ToSchema, Deserialize, Debug)]
 
-pub struct PunishmentItemsCreateRequest{
-    #[schema(example="title of contravention")]
-    pub(crate) title: String,
+pub struct InsPunishmentItemsCreateRequest{
     #[schema(example=NaiveDateTime::default)]
     pub(crate) punish_datetime: chrono::NaiveDateTime,
-    #[schema(example=NaiveDate::default)]
-    pub(crate) correction_date_plan: chrono::NaiveDate,
     #[schema(example=52)]
     pub(crate) punishment_item_status: i32,
-    #[schema(example="aboba loh")]
-    pub(crate) comment: Option<String>,
-    #[schema(example="12.34 56.78")]
-    pub(crate) place: String,
-    #[schema(example=Uuid::new_v4)]
-    pub(crate) regulation_doc: Uuid,
-    #[schema(example=true)]
-    pub(crate) is_suspended: bool,
 }

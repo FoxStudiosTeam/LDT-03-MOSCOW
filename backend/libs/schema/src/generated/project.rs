@@ -11,11 +11,13 @@ impl Project {
         ActiveProject {
             status: Set(self.status),
             polygon: Set(self.polygon),
+            start_date: Set(self.start_date),
+            end_date: Set(self.end_date),
             uuid: Set(self.uuid),
             foreman: Set(self.foreman),
             address: Set(self.address),
             ssk: Set(self.ssk),
-            is_active: Set(self.is_active),
+            created_by: Set(self.created_by),
         }
     }
 }
@@ -26,22 +28,26 @@ impl Project {
 pub struct Project {
     pub status: i32,
     pub polygon: serde_json::Value,
+    pub start_date: Option<chrono::NaiveDate>,
+    pub end_date: Option<chrono::NaiveDate>,
     pub uuid: uuid::Uuid,
     pub foreman: Option<uuid::Uuid>,
     pub address: String,
     pub ssk: Option<uuid::Uuid>,
-    pub is_active: bool,
+    pub created_by: Option<uuid::Uuid>,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveProject {
     pub status: Optional<i32>,
     pub polygon: Optional<serde_json::Value>,
+    pub start_date: Optional<Option<chrono::NaiveDate>>,
+    pub end_date: Optional<Option<chrono::NaiveDate>>,
     pub uuid: Optional<uuid::Uuid>,
     pub foreman: Optional<Option<uuid::Uuid>>,
     pub address: Optional<String>,
     pub ssk: Optional<Option<uuid::Uuid>>,
-    pub is_active: Optional<bool>,
+    pub created_by: Optional<Option<uuid::Uuid>>,
 }
 
 impl ActiveProject {
@@ -49,11 +55,13 @@ impl ActiveProject {
         Some(Project {
             status: self.status.into_option()?,
             polygon: self.polygon.into_option()?,
+            start_date: self.start_date.into_option()?,
+            end_date: self.end_date.into_option()?,
             uuid: self.uuid.into_option()?,
             foreman: self.foreman.into_option()?,
             address: self.address.into_option()?,
             ssk: self.ssk.into_option()?,
-            is_active: self.is_active.into_option()?,
+            created_by: self.created_by.into_option()?,
         })
     }
 }
@@ -79,11 +87,13 @@ impl TableSelector for ActiveProject {
         match field_name {
             "status" => self.status.is_set(),
             "polygon" => self.polygon.is_set(),
+            "start_date" => self.start_date.is_set(),
+            "end_date" => self.end_date.is_set(),
             "uuid" => self.uuid.is_set(),
             "foreman" => self.foreman.is_set(),
             "address" => self.address.is_set(),
             "ssk" => self.ssk.is_set(),
-            "is_active" => self.is_active.is_set(),
+            "created_by" => self.created_by.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
@@ -99,6 +109,20 @@ impl TableSelector for ActiveProject {
             ColumnDef{
                 name: "polygon",
                 nullable: false,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "start_date",
+                nullable: true,
+                default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "end_date",
+                nullable: true,
                 default: None,
                 is_unique: false,
                 is_primary: false,
@@ -132,9 +156,9 @@ impl TableSelector for ActiveProject {
                 is_primary: false,
             },
             ColumnDef{
-                name: "is_active",
-                nullable: false,
-                default: Some("false"),
+                name: "created_by",
+                nullable: true,
+                default: None,
                 is_unique: false,
                 is_primary: false,
             },
@@ -179,11 +203,13 @@ impl ModelOps<sqlx::Postgres> for ActiveProject
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
         if let Set(v) = &self.polygon {tracing::debug!("Binded polygon"); q = q.bind(v);}
+        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
+        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
         if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
-        if let Set(v) = &self.is_active {tracing::debug!("Binded is_active"); q = q.bind(v);}
+        if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
         q
     }
     
@@ -302,11 +328,13 @@ impl ModelOps<sqlx::MySql> for ActiveProject
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
         if let Set(v) = &self.polygon {tracing::debug!("Binded polygon"); q = q.bind(v);}
+        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
+        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
         if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
-        if let Set(v) = &self.is_active {tracing::debug!("Binded is_active"); q = q.bind(v);}
+        if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
         q
     }
     
@@ -425,11 +453,13 @@ impl ModelOps<sqlx::Sqlite> for ActiveProject
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.status {tracing::debug!("Binded status"); q = q.bind(v);}
         if let Set(v) = &self.polygon {tracing::debug!("Binded polygon"); q = q.bind(v);}
+        if let Set(v) = &self.start_date {tracing::debug!("Binded start_date"); q = q.bind(v);}
+        if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
         if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
-        if let Set(v) = &self.is_active {tracing::debug!("Binded is_active"); q = q.bind(v);}
+        if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
         q
     }
     
