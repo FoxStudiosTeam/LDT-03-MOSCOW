@@ -86,22 +86,20 @@ export default function ProjectsPage() {
     }, [total]);
 
     useEffect(() => {
-        console.log(projects)
-        const newArray: ProjectData[] = projects.map((p) => ({
-
-            uuid: p.project.uuid,
-            address: p.project.address,
-            status: p.project.status,
-            ssk: p.project.ssk,
-            foreman: p.project.foreman,
-            created_by: p.project.created_by,
-            start_date: p.project.start_date,
-            end_date: p.project.end_date,
-            polygon: p.project.polygon,
-            attachments: p.attachments ?? [],
-        }));
-
-        setCurrentPageContent(newArray);
+        setCurrentPageContent(
+            projects.map((p) => ({
+                uuid: p.project.uuid,
+                address: p.project.address,
+                status: p.project.status,
+                ssk: p.project.ssk,
+                foreman: p.project.foreman,
+                created_by: p.project.created_by,
+                start_date: p.project.start_date,
+                end_date: p.project.end_date,
+                polygon: p.project.polygon,
+                attachments: (p.attachments ?? []) as Attachment[],
+            }))
+        );
     }, [projects, currentPage, total]);
 
     const getStatusTitle = (statusId: number) => {
@@ -177,7 +175,7 @@ export default function ProjectsPage() {
                     <button
                         disabled={currentPage === 1}
                         className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
-                        onClick={() => setCurrentPage((prev) => (prev -= 1))}
+                        onClick={() => setCurrentPage(prev => prev - 1)}
                     >
                         Назад
                     </button>
@@ -192,10 +190,11 @@ export default function ProjectsPage() {
                         {totalPages}
                     </div>
 
+
                     <button
                         disabled={currentPage >= totalPages}
                         className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
-                        onClick={() => setCurrentPage((prev) => (prev += 1))}
+                        onClick={() => setCurrentPage(prev => prev + 1)}
                     >
                         Вперед
                     </button>
