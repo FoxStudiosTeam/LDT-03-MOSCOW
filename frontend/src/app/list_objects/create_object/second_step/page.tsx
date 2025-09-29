@@ -4,9 +4,9 @@ import { Header } from "@/app/components/header";
 import { useActionsStore } from "@/storage/jobsStorage";
 import Link from "next/link";
 import Image from "next/image";
-import {useEffect, useState} from "react";
-import {DeleteProjectSchedule, GetProjectSchedule} from "@/app/Api/Api";
-import {DataBlock} from "@/models";
+import { useEffect, useState } from "react";
+import { DeleteProjectSchedule, GetProjectSchedule } from "@/app/Api/Api";
+import { DataBlock } from "@/models";
 
 export default function SecondStep() {
     const data = useActionsStore((state) => state.data);
@@ -20,8 +20,8 @@ export default function SecondStep() {
     useEffect(() => {
         async function loadData() {
             try {
-                if (uuid){
-                    const {success, message: respMessage, result} = await GetProjectSchedule(uuid);
+                if (uuid) {
+                    const { success, message: respMessage, result } = await GetProjectSchedule(uuid);
                     console.log(result)
                     console.log(uuid)
                     if (success && result && Array.isArray(result.data)) {
@@ -60,84 +60,84 @@ export default function SecondStep() {
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />
             <main className="w-[80%] bg-white px-8 flex flex-col items-center gap-4">
-                <div className="w-full flex flex-row justify-between">
+                <div className="w-full flex flex-col sm:flex-row justify-between gap-2 sm:gap-0">
                     <p className="font-bold">Новый объект</p>
                     <p>Этап 2 из 2</p>
                 </div>
 
                 <div className="w-full">
-                    <div className="flex flex-row justify-between items-center">
-                        <p>График работ</p>
-                        <Link href={"/list_objects/create_object/second_step/add_subjobs/"} className="bg-red-700 text-white px-6 py-2 rounded-lg">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:gap-0 justify-between items-center">
+                        <p className="self-start">График работ</p>
+                        <Link href={"/list_objects/create_object/second_step/add_subjobs/"} className=" bg-red-700 text-center text-sm text-white px-6 py-2 rounded-lg">
                             Добавить этап работы
                         </Link>
                     </div>
                 </div>
 
-                <div className="w-full">
+                <div className="w-full overflow-x-scroll">
                     <table className="w-full">
                         <thead>
-                        <tr>
-                            <th>№</th>
-                            <th>Этап работы</th>
-                            <th>Дата начала</th>
-                            <th>Дата окончания</th>
-                            <th className="w-[80px]"></th>
-                        </tr>
+                            <tr>
+                                <th>№</th>
+                                <th>Этап работы</th>
+                                <th>Дата начала</th>
+                                <th>Дата окончания</th>
+                                <th className="w-[80px]"></th>
+                            </tr>
                         </thead>
                         <tbody>
-                        {data.length > 0 ? (
-                            data.map((block, idx) => (
-                                <tr key={block.uuid}>
-                                    <td>{idx + 1}</td>
-                                    <td>{block.title}</td>
-                                    <td>{block.start_date}</td>
-                                    <td>{block.end_date}</td>
-                                    <td className="px-4 py-2 text-center">
-                                        <div className="flex items-center justify-center gap-3">
-                                            <Link href={`/list_objects/create_object/second_step/edit/${block.uuid}`}>
-                                                <Image
-                                                    alt="Редактирование"
-                                                    src="/Tables/edit.svg"
-                                                    height={20}
-                                                    width={20}
-                                                />
-                                            </Link>
-                                            <button
-                                                onClick={async () => {
-                                                    if (!block.uuid) return;
-                                                    const isConfirmed = window.confirm("Вы действительно хотите удалить этот элемент?");
-                                                    if (!isConfirmed) return;
-                                                    const {success, message} = await DeleteProjectSchedule(block.uuid);
+                            {data.length > 0 ? (
+                                data.map((block, idx) => (
+                                    <tr key={block.uuid}>
+                                        <td>{idx + 1}</td>
+                                        <td>{block.title}</td>
+                                        <td>{block.start_date}</td>
+                                        <td>{block.end_date}</td>
+                                        <td className="px-4 py-2 text-center">
+                                            <div className="flex items-center justify-center gap-3">
+                                                <Link href={`/list_objects/create_object/second_step/edit/${block.uuid}`}>
+                                                    <Image
+                                                        alt="Редактирование"
+                                                        src="/Tables/edit.svg"
+                                                        height={20}
+                                                        width={20}
+                                                    />
+                                                </Link>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!block.uuid) return;
+                                                        const isConfirmed = window.confirm("Вы действительно хотите удалить этот элемент?");
+                                                        if (!isConfirmed) return;
+                                                        const { success, message } = await DeleteProjectSchedule(block.uuid);
 
-                                                    if (success) {
-                                                        deleteDataBlock(block.uuid);
-                                                        setMessage(null);
-                                                    } else {
-                                                        setMessage(message);
-                                                    }
-                                                }}
-                                            >
-                                                <Image
-                                                    alt="Удаление"
-                                                    src="/Tables/delete.svg"
-                                                    height={20}
-                                                    width={20}
-                                                />
-                                            </button>
+                                                        if (success) {
+                                                            deleteDataBlock(block.uuid);
+                                                            setMessage(null);
+                                                        } else {
+                                                            setMessage(message);
+                                                        }
+                                                    }}
+                                                >
+                                                    <Image
+                                                        alt="Удаление"
+                                                        src="/Tables/delete.svg"
+                                                        height={20}
+                                                        width={20}
+                                                    />
+                                                </button>
 
-                                        </div>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                ))
+                            ) : isEmpty ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center text-gray-500 py-4">
+                                        Таблица пока пустая
                                     </td>
-
                                 </tr>
-                            ))
-                        ) : isEmpty ? (
-                            <tr>
-                                <td colSpan={5} className="text-center text-gray-500 py-4">
-                                    Таблица пока пустая
-                                </td>
-                            </tr>
-                        ) : null}
+                            ) : null}
                         </tbody>
                     </table>
                 </div>

@@ -25,9 +25,11 @@ export default function ProjectsPage() {
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const [statuses, setStatuses] = useState<Status[]>([]);
     const [openProject, setOpenProject] = useState<string | null>(null);
-    const [offset, setOffset] = useState(0);
     const limit = 10;
-    const [total, setTotal] = useState(0);
+    const [total, setTotal] = useState(1);
+    const [totalPages, setTotalPages] = useState<number>(0);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [currentPageContent, setCurrentPageContent] = useState<ProjectData[]>([]);
     const [loading, setLoading] = useState(false);
 
     const toggleProject = (uuid: string) => {
@@ -37,7 +39,7 @@ export default function ProjectsPage() {
     useEffect(() => {
         const loadProjects = async () => {
             setLoading(true);
-            const data = await GetProjects(offset, limit);
+            const data = await GetProjects(currentPage - 1, limit);
             if (data.success) {
                 setProjects(data.result);
                 setTotal(data.total);
@@ -58,7 +60,23 @@ export default function ProjectsPage() {
 
         loadProjects();
         loadStatuses();
-    }, [offset]);
+    }, [currentPage]);
+
+    useEffect(() => {
+        const totalPages = Math.ceil(total / limit);
+
+        setTotalPages(totalPages);
+
+    }, [total])
+
+    useEffect(() => {
+        const start = (currentPage - 1) * limit;
+        const end = currentPage * limit;
+
+        const newArray = projects.slice(start, end);
+        setCurrentPageContent(newArray)
+
+    }, [projects, currentPage, total])
 
     const getStatusTitle = (statusId: number) => {
         const status = statuses.find(s => s.id === statusId);
@@ -91,7 +109,7 @@ export default function ProjectsPage() {
                 {loading && <p className="text-center text-gray-600">Загрузка проектов...</p>}
 
                 <div className="space-y-4">
-                    {projects.map(project => (
+                    {currentPageContent && currentPageContent.map(project => (
                         <div
                             key={project.uuid}
                             className="border rounded-md p-4 bg-white shadow-md hover:shadow-lg transition"
@@ -123,17 +141,31 @@ export default function ProjectsPage() {
 
                 <div className="flex justify-center mt-6 gap-2">
                     <button
-                        disabled={offset === 0}
+                        disabled={currentPage === 1}
                         className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
-                        onClick={() => setOffset(offset - limit)}
+                        onClick={() => setCurrentPage((prev) => prev -= 1)}
                     >
                         Назад
                     </button>
 
+                    <div
+                        className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                    >
+                        {currentPage}
+                    </div>
+
+                    <span className="my-auto">ИЗ</span>
+
+                    <div
+                        className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                    >
+                        {totalPages}
+                    </div>
+
                     <button
-                        disabled={offset + limit >= total}
+                        disabled={currentPage + limit >= totalPages}
                         className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
-                        onClick={() => setOffset(offset + limit)}
+                        onClick={() => setCurrentPage((prev) => prev += 1)}
                     >
                         Вперед
                     </button>
