@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class OcrCameraScreen extends StatefulWidget {
@@ -114,7 +115,11 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
               onPressed: _takePicture,
               shape: const CircleBorder(),
               backgroundColor: Colors.white,
-              child: const Icon(Icons.camera),
+              child: const Iconify(
+                'tabler:camera',
+                color: Colors.black,
+                size: 32,
+              ),
             ),
           ),
         ],

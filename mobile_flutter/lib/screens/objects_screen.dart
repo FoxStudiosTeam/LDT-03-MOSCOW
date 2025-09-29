@@ -74,10 +74,6 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         polygon: project.polygon!,
       );
     }).toList();
-
-    print(cards.length);
-    print(cards.first.content);
-
     return cards;
   }
 
