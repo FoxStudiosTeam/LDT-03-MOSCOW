@@ -6,7 +6,7 @@ use axum::{
     response::IntoResponse,
     routing::get,
 };
-use aws_sdk_s3::{Client, config::{Credentials, SharedCredentialsProvider}};
+use aws_sdk_s3::{Client, config::{Credentials, SharedCredentialsProvider}, operation::get_object::GetObjectOutput};
 use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Basic;
@@ -55,21 +55,32 @@ async fn proxy_file(
             return (StatusCode::NOT_FOUND, "not found").into_response();
         }
     };
+    let GetObjectOutput{body, content_type, metadata, ..} = resp;
 
-    let byte_stream = resp.body;
+    let ct = if let Some(ct) = content_type {
+        ct.parse().ok()
+    } else {None};
+
+    let filename = metadata.and_then(|m| m.get("filename").cloned());
+    
+    let byte_stream = body;
 
     let async_read = byte_stream.into_async_read();
     let reader_stream = ReaderStream::new(async_read);
 
     let body = Body::from_stream(reader_stream);
 
-
+    
     let mut response = (StatusCode::OK, body).into_response();
-
-    if let Some(ct) = resp.content_type {
-        if let Ok(header_val) = ct.parse() {
-            response.headers_mut().insert("content-type", header_val);
-        }
+    if let Some(ct) = ct {
+        response.headers_mut().insert(axum::http::header::CONTENT_TYPE, ct);
+    }
+    if let Some(filename) = filename {
+        let disposition = format!("attachment; filename=\"{}\"", filename);
+        response.headers_mut().insert(
+            axum::http::header::CONTENT_DISPOSITION,
+            disposition.parse().unwrap(),
+        );
     }
 
     response
