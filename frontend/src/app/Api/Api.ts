@@ -5,6 +5,8 @@ import {WorkItem} from "@/models";
 
 const baseURL = "https://test.foxstudios.ru:32460/api";
 
+const authBaseURL = 'https://sso.foxstudios.ru:32460/api'
+
 interface TokenPayload {
     exp: number;
     uuid: string;
@@ -14,7 +16,7 @@ interface TokenPayload {
 
 export async function AuthUser(login: string, password: string) {
     try {
-        const response = await fetch(`http://81.200.145.130:32460/api/auth/session`, {
+        const response = await fetch(`${authBaseURL}/auth/session`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -323,3 +325,24 @@ export async function GetStatuses() {
     return { success: false, message: data.message || "Ошибка при получении статусов", result: [] };
 }
 
+export async function LogOut() {
+    try {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
+        await fetch(`${authBaseURL}/auth/session`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+    } catch (error) {
+        console.error("Ошибка при выходе:", error);
+        return { success: false, message: String(error) };
+    }
+}

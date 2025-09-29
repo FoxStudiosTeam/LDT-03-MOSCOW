@@ -129,7 +129,7 @@ export default function ProjectsPage() {
                         currentPageContent.map((project) => (
                             <div
                                 key={project.uuid}
-                                className="border rounded-md p-4 bg-white shadow-md hover:shadow-lg transition"
+                                className="border rounded-md p-4 bg-white shadow-md hover:shadow-lg transition border-[#D0D0D0]"
                             >
                                 <div
                                     className="flex justify-between items-center cursor-pointer"
@@ -139,6 +139,9 @@ export default function ProjectsPage() {
                                         <Link
                                             href={`/list_objects/${project.uuid}`}
                                             className="font-medium text-blue-500 hover:text-blue-700 hover:underline decoration-1 underline-offset-2 transition-colors duration-200"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                            }}
                                         >
                                             {project.address || "Адрес не указан"}
                                         </Link>
