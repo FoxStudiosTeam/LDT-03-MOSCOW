@@ -7,20 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "@/app/styles/variables.module.css";
 import { GetReports } from "@/app/Api/Api";
-
-interface Report {
-    uuid: string;
-    report_date: string;
-    check_date: string;
-    project_schedule_item: string;
-    status: number;
-    title: string;
-}
-
-interface ReportItem {
-    report: Report;
-    attachments: any[];
-}
+import { ReportItem } from "@/models";
 
 export default function Orders() {
     const [isModalWindowOpen, setIsModalWindowOpen] = useState(false);
@@ -68,73 +55,78 @@ export default function Orders() {
                         </div>
 
                         <div className="flex flex-wrap gap-3">
-
-                            {reports?.attachments.map((item, itemIdx) => (
-                                <div
-                                    key={itemIdx}
-                                    className="max-w-[80px] max-h-[70px] cursor-pointer"
-                                >
-                                    <Link
-                                        href={`https://test.foxstudios.ru:32460/api/attachmentproxy/file?file_id=${item.uuid}`}
+                            {selectedReport.attachments.length > 0 ? (
+                                selectedReport.attachments.map((item, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="max-w-[80px] max-h-[70px] cursor-pointer"
                                     >
-                                        <Image
-                                            src={"/attachment/attachment.svg"}
-                                            alt="Скачать вложение"
-                                            width={50}
-                                            height={50}
-                                            className="mx-auto"
-                                        />
-                                        <p className="break-words text-ballance text-center text-sm">
-                                            {item.original_filename}
-                                        </p>
-                                    </Link>
-                                </div>
-                            ))}
+                                        <Link
+                                            href={`https://test.foxstudios.ru:32460/api/attachmentproxy/file?file_id=${item.uuid}`}
+                                        >
+                                            <Image
+                                                src={"/attachment/attachment.svg"}
+                                                alt="Скачать вложение"
+                                                width={50}
+                                                height={50}
+                                                className="mx-auto"
+                                            />
+                                            <p className="break-words text-center text-sm">
+                                                {item.original_filename}
+                                            </p>
+                                        </Link>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-gray-500">Вложений нет</p>
+                            )}
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Таблица */}
-            <main className="w-[80%] bg-white px-8 py-6">
-                <table className="w-full border-collapse text-left">
-                    <thead>
-                        <tr className="bg-gray-100">
-                            <th className="border px-4 py-2">Код</th>
-                            <th className="border px-4 py-2">Дата отчета</th>
-                            <th className="border px-4 py-2">Дата проверки</th>
-                            <th className="border px-4 py-2">Статус</th>
-                            <th className="border px-4 py-2">Вложения</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {reports.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                                <td className="border px-4 py-2">{idx + 1}</td>
-                                <td className="border px-4 py-2">{item.report.report_date ? <p>{item.report.report_date}</p> : <p>-</p>}</td>
-                                <td className="border px-4 py-2">{item.report.check_date ? <p>{item.report.check_date}</p> : <p>-</p>}</td>
-                                <td className="border px-4 py-2">{item.report.status ? <p>{item.report.status}</p> : <p>-</p>}</td>
-                                <td className="w-[40px] border px-4 py-2 text-center">
-                                    <button
-                                        onClick={() => {
-                                            setSelectedReport(item);
-                                            setIsModalWindowOpen(true);
-                                        }}
-                                        className="w-full cursor-pointer"
-                                    >
-                                        <Image
-                                            className="mx-auto"
-                                            src="/attachment/files.svg"
-                                            alt="download"
-                                            width={30}
-                                            height={30}
-                                        />
-                                    </button>
-                                </td>
+            <main className="w-[80%] bg-white px-8 py-6 ">
+                <div className="overflow-x-scroll">
+
+                    <table className="w-full border-collapse text-left">
+                        <thead>
+                            <tr className="bg-gray-100">
+                                <th className="border px-4 py-2">Код</th>
+                                <th className="border px-4 py-2">Дата отчета</th>
+                                <th className="border px-4 py-2">Дата проверки</th>
+                                <th className="border px-4 py-2">Статус</th>
+                                <th className="border px-4 py-2">Вложения</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {reports.map((item, idx) => (
+                                <tr key={idx} className="hover:bg-gray-50">
+                                    <td className="border px-4 py-2">{idx + 1}</td>
+                                    <td className="border px-4 py-2">{item.report.report_date ? <p>{item.report.report_date}</p> : <p>-</p>}</td>
+                                    <td className="border px-4 py-2">{item.report.check_date ? <p>{item.report.check_date}</p> : <p>-</p>}</td>
+                                    <td className="border px-4 py-2">{item.report.status ? <p>{item.report.status}</p> : <p>-</p>}</td>
+                                    <td className="w-[40px] border px-4 py-2 text-center">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedReport(item);
+                                                setIsModalWindowOpen(true);
+                                            }}
+                                            className="w-full cursor-pointer"
+                                        >
+                                            <Image
+                                                className="mx-auto"
+                                                src="/attachment/files.svg"
+                                                alt="download"
+                                                width={30}
+                                                height={30}
+                                            />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </main>
         </div>
     );

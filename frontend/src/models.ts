@@ -68,3 +68,24 @@ export interface Status {
   id: number;
   title: string;
 }
+
+export interface Report {
+    uuid: string;
+    report_date: string;
+    check_date: string;
+    project_schedule_item: string;
+    status: number;
+    title: string;
+}
+
+export interface Attachment {
+    base_entity_uuid: string;
+    content_type: string;
+    uuid: string;
+    original_filename: string;
+}
+
+export interface ReportItem {
+    report: Report;
+    attachments: Attachment[];
+}
