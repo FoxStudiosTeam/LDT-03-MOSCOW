@@ -8,7 +8,7 @@ import { Header } from "@/app/components/header";
 import { useForm } from "react-hook-form";
 import { FirstStepForm } from "@/models";
 import { useUserStore } from "@/storage/userstore";
-import {CreateObject} from "@/app/Api/Api";
+import { CreateObject } from "@/app/Api/Api";
 import { useRouter } from "next/navigation";
 
 
@@ -48,7 +48,7 @@ export default function FirstStep() {
         }
 
         try {
-            const {success, message, result} = await CreateObject(data.address, data.polygon);
+            const { success, message, result } = await CreateObject(data.address, data.polygon);
             if (success && result) {
                 localStorage.setItem("projectUuid", result);
                 router.push("/list_objects/create_object/second_step");
@@ -159,14 +159,15 @@ export default function FirstStep() {
     return (
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />
-            <main className="w-[80%] bg-white px-8">
+            <main className="w-full max-w-[1200px] bg-white px-4 sm:px-6 md:px-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex justify-center">
-                    <div className="flex flex-col gap-5 w-[1000px] h-[600px] justify-center items-center relative">
-                        <div className="w-full flex flex-row justify-between">
+                    <div className="flex flex-col gap-5 w-full h-auto min-h-[600px] justify-center items-center relative py-6">
+                        <div className="w-full flex flex-col sm:flex-row justify-between gap-2 sm:gap-0">
                             <p className="font-bold">Новый объект</p>
                             <p>Этап 1 из 2</p>
                         </div>
-                        <div className="w-[45%] top-4 left-4 flex flex-row self-start gap-3">
+
+                        <div className="w-full sm:w-[60%] flex flex-col sm:flex-row gap-3">
                             <input
                                 {...register('address')}
                                 type="text"
@@ -177,13 +178,14 @@ export default function FirstStep() {
                             />
                             <button
                                 type="button"
-                                className="self-start bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg"
+                                className="self-end bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg"
                                 onClick={handleSearch}
                             >
                                 Найти
                             </button>
                         </div>
-                        <div className="w-full h-full">
+
+                        <div className="w-full h-[300px] sm:h-[500px]">
                             <YMap
                                 location={{
                                     center,
@@ -212,13 +214,16 @@ export default function FirstStep() {
                             </YMap>
                         </div>
 
-                        <div className="w-full flex flex-row self-start gap-2 items-center justify-between">
-                            <div className="flex flex-row items-center gap-2 cursor-pointer">
+                        <div className="w-full flex flex-col sm:flex-row gap-3 items-center justify-between">
+                            <div className="flex flex-col sm:flex-row items-center gap-2 cursor-pointer">
                                 <label htmlFor="coords" className="cursor-pointer">
                                     <span className="text-sm font-medium">Загрузить координаты в формате JSON</span>
                                 </label>
 
-                                <label htmlFor="coords" className="bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg cursor-pointer">
+                                <label
+                                    htmlFor="coords"
+                                    className="bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg cursor-pointer"
+                                >
                                     Загрузить
                                 </label>
                             </div>
@@ -231,7 +236,11 @@ export default function FirstStep() {
                                 onChange={handleFileUpload}
                             />
 
-                            <input type="submit" value={"Далее"} className="bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg"></input>
+                            <input
+                                type="submit"
+                                value={"Далее"}
+                                className="self-end bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-lg sm:w-auto"
+                            />
                         </div>
 
                         {message && <p className="w-full text-center text-red-600 pt-2">{message}</p>}

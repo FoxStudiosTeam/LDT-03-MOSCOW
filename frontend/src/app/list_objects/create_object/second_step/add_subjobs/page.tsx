@@ -3,8 +3,8 @@
 import { Header } from "@/app/components/header";
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {CreateProjectSchedule, Getkpgz, GetMeasurement, GetWorkCategories, UpdateWorksInSchedule} from "@/app/Api/Api";
-import {Kpgz, Measurement, SubJob, WorkItem, Works} from "@/models";
+import { CreateProjectSchedule, Getkpgz, GetMeasurement, GetWorkCategories, UpdateWorksInSchedule } from "@/app/Api/Api";
+import { Kpgz, Measurement, SubJob, WorkItem, Works } from "@/models";
 import Image from "next/image";
 
 
@@ -195,7 +195,7 @@ export default function AddSubjobs() {
                     <p>Добавить этап работы</p>
                 </div>
                 <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
-                    <div className="flex flex-row justify-between gap-14">
+                    <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-14">
                         <div className="w-full flex flex-col">
                             <label>Этап работы</label>
                             <select
@@ -222,7 +222,7 @@ export default function AddSubjobs() {
                             />
                         </div>
                     </div>
-                    <div className="flex flex-row justify-between gap-14">
+                    <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-14">
                         <div className="w-full flex flex-col">
                             <label>Дата начала</label>
                             <input
@@ -244,11 +244,11 @@ export default function AddSubjobs() {
                             />
                         </div>
                     </div>
-                    <div className="w-full overflow-x-auto">
-                        <table className="w-full table-fixed border-collapse">
+                    <div className="w-full overflow-x-scroll">
+                        <table className="w-full border-collapse table-auto">
                             <thead>
                                 <tr className="bg-slate-100 text-left">
-                                    <th className="px-4 py-3">Название работы</th>
+                                    <th className="px-4 py-3 min-w-[300px]">Название работы</th>
                                     <th className="px-4 py-3 w-32">Объем</th>
                                     <th className="px-4 py-3">Единицы измерения</th>
                                     <th className="px-4 py-3">Дата начала*</th>
@@ -300,7 +300,7 @@ export default function AddSubjobs() {
                                                         <option value="" disabled>Выберите единицу</option>
                                                         {measurement.map((meas) => (
                                                             <option value={meas.title}
-                                                                    key={meas.title}>{meas.title}</option>
+                                                                key={meas.title}>{meas.title}</option>
                                                         ))}
                                                     </select>
 
@@ -344,7 +344,7 @@ export default function AddSubjobs() {
                                                     />
                                                 ) : (
                                                     <div className="min-h-[36px]">
-                                                    {item.endDate || <span className="text-slate-400">—</span>}
+                                                        {item.endDate || <span className="text-slate-400">—</span>}
                                                     </div>
                                                 )}
                                             </td>
@@ -371,14 +371,19 @@ export default function AddSubjobs() {
                         </table>
                     </div>
 
-                    <div className="w-full flex items-center justify-between gap-4">
-                        <button type="button" className="bg-red-700 text-white px-6 py-2 rounded-lg" onClick={addRow}>Добавить строку</button>
+                    <div className="w-full flex items-center flex-col sm:flex-row justify-between gap-4">
+                        <button
+                            type="button"
+                            className="bg-red-700 text-white px-6 py-2 rounded-lg w-full sm:w-auto"
+                            onClick={addRow}
+                        >
+                            Добавить строку
+                        </button>
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className={`px-6 py-2 rounded-lg text-white ${
-                                isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-red-700 hover:bg-red-800"
-                            }`}
+                            className={`w-full sm:w-auto px-6 py-2 rounded-lg text-white ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-red-700 hover:bg-red-800"
+                                }`}
                         >
                             {isSubmitting ? "Сохранение..." : "Сохранить"}
                         </button>
