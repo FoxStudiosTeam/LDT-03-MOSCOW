@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
-import 'package:mobile_flutter/screens/map_screen.dart';
 import 'package:mobile_flutter/screens/objects_screen.dart';
 
 import '../auth/auth_provider.dart';
