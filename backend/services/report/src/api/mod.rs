@@ -168,7 +168,6 @@ async fn get_report(
         a.uuid AS attachment_uuid,
         a.original_filename,
         a.base_entity_uuid,
-        a.file_uuid,
         a.content_type
         FROM (
             SELECT rts.*, psi.title
@@ -329,7 +328,6 @@ pub struct OptionalAttachments {
     pub original_filename: Option<String>,
     pub attachment_uuid: Option<uuid::Uuid>,
     pub base_entity_uuid: Option<uuid::Uuid>,
-    pub file_uuid: Option<uuid::Uuid>,
     pub content_type: Option<String>,
 }
 
@@ -339,7 +337,6 @@ impl OptionalAttachments {
             original_filename: self.original_filename?,
             uuid: self.attachment_uuid?,
             base_entity_uuid: self.base_entity_uuid?,
-            file_uuid: self.file_uuid?,
             content_type: self.content_type,
         })
     }
@@ -370,7 +367,6 @@ async fn get_reports(
         a.uuid AS attachment_uuid,
         a.original_filename,
         a.base_entity_uuid,
-        a.file_uuid,
         a.content_type
         FROM (
             SELECT rts.*, psi.title

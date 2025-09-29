@@ -1,10 +1,9 @@
-use auth_jwt::prelude::Role;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::{Json, response::Response};
 use axum::extract::{Query, State};
 use orm::prelude::*;
-use schema::prelude::{ActiveMaterials, Attachments, Materials, OrmMaterials};
+use schema::prelude::{ActiveMaterials, Attachments, OrmMaterials};
 use serde::{Deserialize};
 use shared::prelude::*;
 use utoipa::{ToSchema};

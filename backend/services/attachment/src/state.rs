@@ -60,7 +60,7 @@ impl AppState {
 
             let r = self.s3.put_object()
                 .bucket(&ENV.S3_BUCKET)
-                .key(&format!("attachments/{}/{}", params.id, file_id))
+                .key(&format!("attachments/{}", file_id))
                 .body(aws_sdk_s3::primitives::ByteStream::new(data.into()))
                 .send()
                 .await
@@ -72,7 +72,6 @@ impl AppState {
                 original_filename: Set(file_name),
                 uuid: Set(file_id),
                 base_entity_uuid: Set(params.id),
-                file_uuid: Set(file_id),
                 content_type: Set(Some(content_type.unwrap_or("application/octet-stream".to_string()))),
             }, Insert).await?;
 

@@ -56,6 +56,7 @@ pub async fn handle_create_project(
     security(("bearer_access" = [])),
     responses(
         (status = 200, description = "Project created.", body = Project),
+        (status = 404, description = "Foreman not found."),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )

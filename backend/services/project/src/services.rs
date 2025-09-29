@@ -67,7 +67,6 @@ impl IProjectService for ProjectService {
             a.uuid AS attachment_uuid,
             a.original_filename,
             a.base_entity_uuid,
-            a.file_uuid,
             a.content_type,
             COUNT(*) OVER() AS total_count
             FROM project.project p
@@ -108,6 +107,7 @@ impl IProjectService for ProjectService {
             .into_app_err()?;
         
 
+
         let mut hm = HashMap::new();
         let mut total = 0;
         for row in rows {
@@ -123,9 +123,10 @@ impl IProjectService for ProjectService {
             let Some(a) = a else { continue };
             e.push(a);
         }
-
+        let mut v = hm.into_values().collect::<Vec<_>>();
+        v.sort_by_key(|v| v.project.uuid);
         let result = GetProjectWithAttachmentResult {
-            result: hm.into_values().collect::<Vec<_>>(),
+            result: v,
             total: total,
         };
 
@@ -183,6 +184,21 @@ impl IProjectService for ProjectService {
     }
 
     async fn set_project_foreman(&self, r: SetProjectForemanRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
+        let pattern = format!("%{} {} {}%", r.last_name, r.first_name, r.patronymic);
+        #[derive(sqlx::FromRow, serde::Deserialize)]
+        struct Foreman {uuid: Uuid}
+        let id = sqlx::query_as::<_, Foreman>("select * from auth.users where fcs ilike $1")
+            .bind(pattern)
+            .fetch_optional(self.state.orm().get_executor())
+            .await
+            .into_app_err()?
+            .ok_or(
+                AppErr::default()
+                    .with_err_response("foreman not found")
+                    .with_status(StatusCode::NOT_FOUND),
+            )?
+            .uuid; 
+
         let r = sqlx::query_as::<_, Project>("
             UPDATE project.project 
             SET foreman_uuid = $1
@@ -191,7 +207,7 @@ impl IProjectService for ProjectService {
             AND uuid = $4
             RETURNING *
         ")
-            .bind(&r.foreman)
+            .bind(id)
             .bind(&t.org)
             .bind(&(ProjectStatus::New as i32))
             .bind(&r.uuid)
