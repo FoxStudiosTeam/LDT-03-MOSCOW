@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
+import 'package:mobile_flutter/screens/ocr/camera.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/object_card.dart';
 
@@ -87,12 +88,25 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         title: Text('ЭСЖ'),
         automaticallyImplyLeading: false,
       ),
-      body: data.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: data.length,
-              itemBuilder: (context, index) => data[index],
-            ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextButton(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => OcrCameraScreen()));
+            },
+            child: Text("OCR"),
+          ),
+          data.isEmpty
+            ? Expanded(child: Center(child: CircularProgressIndicator()))
+            : Expanded(
+                child: ListView.builder(
+                  itemCount: data.length,
+                  itemBuilder: (context, index) => data[index],
+                ),
+              ),
+        ],
+      ),
       drawer: DrawerMenu(di: widget.di)
     );
   }
