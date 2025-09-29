@@ -355,3 +355,25 @@ export async function uploadProjectFiles(projectId: string, files: File[] | File
 
     return { uploaded, errors };
 }
+
+export async function LogOut() {
+    try {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+            return { success: false, message: "Нет access_token в localStorage" };
+        }
+
+        await fetch(`${authBaseURL}/auth/session`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+    } catch (error) {
+        console.error("Ошибка при выходе:", error);
+        return { success: false, message: String(error) };
+    }
+}
