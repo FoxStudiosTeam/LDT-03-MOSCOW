@@ -103,9 +103,16 @@ class _AuthScreenState extends State<AuthScreen> {
         fontFamily: "Inter",
       ),
       controller: _loginController,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Логин',
-        border: OutlineInputBorder(),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4),
+          borderSide: BorderSide(color: Colors.black38)
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4),
+          borderSide: BorderSide(color: Colors.black87,width: 2)
+        )
       ),
       validator: (value) =>
       value == null || value.isEmpty ? 'Пожалуйста, введите логин' : null,
@@ -119,9 +126,16 @@ class _AuthScreenState extends State<AuthScreen> {
           fontFamily: "Inter",
         ),
         controller: _passwordController,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           labelText: 'Пароль',
-          border: OutlineInputBorder(),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide(color: Colors.black38)
+            ),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide(color: Colors.black87,width: 2)
+            )
         ),
         obscureText: true,
         validator: (value) =>
@@ -136,7 +150,7 @@ class _AuthScreenState extends State<AuthScreen> {
         backgroundColor: Color.fromARGB(255, 180, 19, 19),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10)
+          borderRadius: BorderRadius.circular(4)
         ),
         textStyle: TextStyle(
           fontSize: 20,
