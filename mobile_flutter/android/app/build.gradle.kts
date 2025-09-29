@@ -24,7 +24,7 @@ android {
         applicationId = "ru.foxstudios.mobile_flutter"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 26//flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -40,7 +40,9 @@ android {
 }
 
 dependencies{
-    implementation("com.google.android.gms:play-services-location:21.1.0")
+    //implementation("com.google.android.gms:play-services-location:21.1.0")
+    //implementation ("androidx.work:work-runtime:2.9.0")
+    //implementation("com.yandex.android:mapkit:4.22.0-beta-lite")
 }
 
 flutter {
