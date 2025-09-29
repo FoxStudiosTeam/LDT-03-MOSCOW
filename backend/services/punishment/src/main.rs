@@ -29,13 +29,15 @@ env_config!(
     }
 );
 
-pub const MAIN_TAG: &str = "punishment";
+pub const ANY_TAG: &str = "Any authed";
+pub const MANAGER_TAG: &str = "Inspector and Customer";
 
 #[derive(OpenApi)]
 #[openapi(
     modifiers(&SecurityAddon),
     tags(
-        (name = MAIN_TAG, description = "API"),
+        (name = ANY_TAG, description = "API access with auth (any role)"),
+        (name = MANAGER_TAG, description = "API access for inspector and customer")
     )
 )]
 
@@ -83,11 +85,15 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .nest("/api/punishment", api::make_router(state.clone()))
+        .nest("/api/punishment", api::everyone(state.clone()))
+        .nest("/api/punishment", api::inspector_customer(state.clone()))
         .split_for_parts();
+
+    let schema = serde_json::to_string(&api).expect("Can't serialize schema");
     
     let app = axum::Router::new()
         .merge(Scalar::with_url("/api/punishment/docs/scalar", api))
+        .route("/api/punishment/openapi.json", get(|| async move {schema}))
         .merge(metrics)
         .merge(api_router)
         .layer(shared::helpers::cors::cors_layer())

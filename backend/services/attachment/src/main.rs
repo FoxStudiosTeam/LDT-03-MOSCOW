@@ -1,6 +1,6 @@
 use aws_config::{BehaviorVersion, Region};
 use aws_sdk_s3::{config::{Credentials, SharedCredentialsProvider}};
-use axum::http::StatusCode;
+use axum::{extract::DefaultBodyLimit, http::StatusCode};
 use axum::routing::get;
 use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
@@ -112,13 +112,17 @@ async fn main() -> anyhow::Result<()> {
     let (api_router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .nest("/api", api::router(state))
         .split_for_parts();
+
+    let schema = serde_json::to_string(&api).expect("Can't serialize schema");
     
     let app = axum::Router::new()
         .merge(Scalar::with_url("/api/attachment/docs/scalar", api))
+        .route("/api/attachment/openapi.json", get(|| async move {schema}))
         .merge(api_router)
         .merge(metrics)
         .layer(shared::helpers::cors::cors_layer())
-        .layer(default_layers);
+        .layer(default_layers)
+        .layer(DefaultBodyLimit::max(200 * 1024 * 1024));
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", CFG.PORT)).await
         .inspect_err(|err| tracing::error!("Failed to bind to port {}: {}", CFG.PORT, err))?;

@@ -56,6 +56,7 @@ pub async fn handle_create_project(
     security(("bearer_access" = [])),
     responses(
         (status = 200, description = "Project created.", body = Project),
+        (status = 404, description = "Foreman not found."),
         (status = 500, description = "Internal server error."),
         (status = 401, description = "Unauthorized"),
     )
@@ -244,7 +245,7 @@ pub async fn handle_update_work_category(
 #[utoipa::path(
     get,
     path = "/get-work-category",
-    tag = crate::ANY_TAG,
+    tag = crate::GUEST_TAG,
     summary = "get work categories as vec",
     responses (
         (status = 200, description = "Work Categories as vec", body = GetWorkCategoriesResponse),
@@ -259,7 +260,7 @@ pub async fn handle_get_work_categories(State(state): State<AppState>) -> Result
 #[utoipa::path(
     get,
     path = "/get-kpgz-vec",
-    tag = crate::ANY_TAG,
+    tag = crate::GUEST_TAG,
     summary = "get kpgz dictionary as vec",
     responses (
         (status = 200, description = "kpgz dictionary as vec", body = GetKpgz),
@@ -275,7 +276,7 @@ pub async fn handle_get_kpgz_vec(State(state) : State<AppState>) -> Result<Respo
 #[utoipa::path(
     get,
     path = "/get-measurements",
-    tag = crate::ANY_TAG,
+    tag = crate::GUEST_TAG,
     summary = "get measurement dictionary as vec",
     responses (
         (status = 200, description = "Measurement dictionary as vec", body = Vec<Measurements>),
@@ -289,7 +290,7 @@ pub async fn handle_get_measurements(State(state) : State<AppState>) -> Result<R
 
 #[utoipa::path(
     get,
-    path = "/statuses/get",
+    path = "/get-statuses",
     tag = crate::GUEST_TAG,
     summary = "get project statuses",
     responses (

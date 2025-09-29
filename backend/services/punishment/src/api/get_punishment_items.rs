@@ -1,11 +1,10 @@
 use std::{collections::HashMap};
-
 use axum::{Json, extract::{Query, State}, http::StatusCode, response::{IntoResponse, Response}};
 use serde::{Deserialize, Serialize};
 use shared::{prelude::{AppErr, IntoAppErr}};
 use tracing::info;
 use schema::prelude::*;
-use utoipa::{IntoParams, ToSchema, openapi::example};
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 use crate::{AppState};
 
@@ -29,7 +28,6 @@ pub struct OptionalAttachments {
     pub original_filename: Option<String>,
     pub attachment_uuid: Option<uuid::Uuid>,
     pub base_entity_uuid: Option<uuid::Uuid>,
-    pub file_uuid: Option<uuid::Uuid>,
     pub content_type: Option<String>,
 }
 
@@ -39,7 +37,6 @@ impl OptionalAttachments {
             original_filename: self.original_filename?,
             uuid: self.attachment_uuid?,
             base_entity_uuid: self.base_entity_uuid?,
-            file_uuid: self.file_uuid?,
             content_type: self.content_type,
         })
     }
@@ -49,7 +46,7 @@ impl OptionalAttachments {
 #[utoipa::path(
     get,
     path = "/get_punishment_items",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     params(PunishmentItemsRequest),
     summary = "Get all items in punishment",
     responses(
@@ -65,7 +62,6 @@ pub async fn get_punishment_items(
         a.uuid AS attachment_uuid,
         a.original_filename,
         a.base_entity_uuid,
-        a.file_uuid,
         a.content_type
         FROM journal.punishment_item pi
         LEFT JOIN attachment.attachments a ON a.base_entity_uuid = pi.uuid

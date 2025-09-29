@@ -6,7 +6,7 @@ use axum::{
     response::IntoResponse,
     routing::get,
 };
-use aws_sdk_s3::{Client, config::{Credentials, SharedCredentialsProvider}};
+use aws_sdk_s3::{Client, config::{Credentials, SharedCredentialsProvider}, operation::get_object::GetObjectOutput};
 use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Basic;
@@ -29,13 +29,12 @@ struct AppState {
 
 #[derive(IntoParams, ToSchema, serde::Deserialize)]
 pub struct RequestParams {
-    pub file_id: uuid::Uuid,
-    pub resource_id: uuid::Uuid
+    pub file_id: uuid::Uuid
 }
 
 #[utoipa::path(
     get,
-    path = "/file/",
+    path = "/api/attachmentproxy/file",
     params(RequestParams),
     tag = crate::MAIN_TAG,
     request_body(description = "Multipart file", content_type = "multipart/form-data"),
@@ -47,30 +46,41 @@ pub struct RequestParams {
 )]
 async fn proxy_file(
     State(state): State<Arc<AppState>>,
-    Query(RequestParams{resource_id, file_id}): Query<RequestParams>,
-    headers: HeaderMap,
+    Query(RequestParams{file_id}): Query<RequestParams>,
+    // headers: HeaderMap,
 ) -> impl IntoResponse {
-    let resp = match state.s3.get_object().bucket(&ENV.S3_BUCKET).key(&format!("attachments/{}/{}", resource_id, file_id)).send().await {
+    let resp = match state.s3.get_object().bucket(&ENV.S3_BUCKET).key(&format!("attachments/{}", file_id)).send().await {
         Ok(r) => r,
         Err(_e) => {
             return (StatusCode::NOT_FOUND, "not found").into_response();
         }
     };
+    let GetObjectOutput{body, content_type, metadata, ..} = resp;
 
-    let byte_stream = resp.body;
+    let ct = if let Some(ct) = content_type {
+        ct.parse().ok()
+    } else {None};
+
+    let filename = metadata.and_then(|m| m.get("filename").cloned());
+    
+    let byte_stream = body;
 
     let async_read = byte_stream.into_async_read();
     let reader_stream = ReaderStream::new(async_read);
 
     let body = Body::from_stream(reader_stream);
 
-
+    
     let mut response = (StatusCode::OK, body).into_response();
-
-    if let Some(ct) = resp.content_type {
-        if let Ok(header_val) = ct.parse() {
-            response.headers_mut().insert("content-type", header_val);
-        }
+    if let Some(ct) = ct {
+        response.headers_mut().insert(axum::http::header::CONTENT_TYPE, ct);
+    }
+    if let Some(filename) = filename {
+        let disposition = format!("attachment; filename=\"{}\"", filename);
+        response.headers_mut().insert(
+            axum::http::header::CONTENT_DISPOSITION,
+            disposition.parse().unwrap(),
+        );
     }
 
     response
@@ -153,9 +163,12 @@ async fn main() -> anyhow::Result<()> {
         .routes(routes!(proxy_file))
         .with_state(Arc::new(state))
         .split_for_parts();
+
+    let schema = serde_json::to_string(&api).expect("Can't serialize schema");
     
     let app = axum::Router::new()
         .merge(Scalar::with_url("/api/attachmentproxy/docs/scalar", api))
+        .route("/api/attachmentproxy/openapi.json", get(|| async move {schema}))
         .merge(api_router)
         .merge(metrics)
         .layer(shared::helpers::cors::cors_layer())

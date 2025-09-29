@@ -69,7 +69,9 @@ pub struct CreateProjectRequest {
 
 #[derive(ToSchema, Deserialize)]
 pub struct SetProjectForemanRequest {
-    pub foreman : Uuid,
+    pub first_name : String,
+    pub last_name : String,
+    pub patronymic : String,
     pub uuid: Uuid
 }
 
@@ -225,7 +227,6 @@ pub struct OptionalAttachments {
     pub original_filename: Option<String>,
     pub attachment_uuid: Option<uuid::Uuid>,
     pub base_entity_uuid: Option<uuid::Uuid>,
-    pub file_uuid: Option<uuid::Uuid>,
     pub content_type: Option<String>,
 }
 
@@ -235,7 +236,6 @@ impl OptionalAttachments {
             original_filename: self.original_filename?,
             uuid: self.attachment_uuid?,
             base_entity_uuid: self.base_entity_uuid?,
-            file_uuid: self.file_uuid?,
             content_type: self.content_type,
         })
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
-import 'package:mobile_flutter/screens/map.dart';
+import 'package:mobile_flutter/screens/map_screen.dart';
+import 'package:mobile_flutter/screens/objects_screen.dart';
 
 import '../auth/auth_provider.dart';
 class AuthScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class _AuthScreenState extends State<AuthScreen> {
         const Duration(seconds: 5),
       );
       if (!mounted) return;
-      Navigator.push(context, MaterialPageRoute(builder: (_) => MapScreen(di:widget.di)));
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => ObjectsScreen(di:widget.di)), (route) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -45,42 +46,95 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Авторизация'), automaticallyImplyLeading: false),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLoginField(),
-              const SizedBox(height: 16),
-              _buildPasswordField(),
-              const SizedBox(height: 24),
-              _buildSubmitButton(),
-            ],
-          ),
+      backgroundColor: Color.fromARGB(255, 208, 208, 208),
+      body: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(16),
+              margin: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10,
+                    offset: Offset(0, 10)
+                  )
+                ]
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildTitle(),
+                  _buildLoginField(),
+                  const SizedBox(height: 16),
+                  _buildPasswordField(),
+                  const SizedBox(height: 24),
+                  _buildSubmitButton(),
+                ],
+              )
+            )
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildLoginField() => TextFormField(
-    controller: _loginController,
-    decoration: const InputDecoration(
-      labelText: 'Логин',
-      border: OutlineInputBorder(),
-    ),
-    validator: (value) =>
-    value == null || value.isEmpty ? 'Пожалуйста, введите логин' : null,
+  Widget _buildTitle() => Padding(
+    padding: EdgeInsets.only(bottom: 30, top: 20),
+    child: Text(
+      "Авторизация",
+      style: TextStyle(
+        fontFamily: "Inter",
+        fontSize: 26,
+      ),
+      textAlign: TextAlign.center)
+  );
+
+  Widget _buildLoginField() => Padding(
+    padding: EdgeInsets.only(top: 25),
+    child: TextFormField(
+      style: TextStyle(
+        fontFamily: "Inter",
+      ),
+      controller: _loginController,
+      decoration: InputDecoration(
+        labelText: 'Логин',
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4),
+          borderSide: BorderSide(color: Colors.black38)
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4),
+          borderSide: BorderSide(color: Colors.black87,width: 2)
+        )
+      ),
+      validator: (value) =>
+      value == null || value.isEmpty ? 'Пожалуйста, введите логин' : null,
+    )
   );
 
   Widget _buildPasswordField() => TextFormField(
+    style: TextStyle(
+      fontFamily: "Inter",
+    ),
     controller: _passwordController,
-    decoration: const InputDecoration(
-      labelText: 'Пароль',
-      border: OutlineInputBorder(),
+    decoration: InputDecoration(
+        labelText: 'Пароль',
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: Colors.black38)
+        ),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: Colors.black87,width: 2)
+        )
     ),
     obscureText: true,
     validator: (value) =>
@@ -90,6 +144,17 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget _buildSubmitButton() => SizedBox(
     width: double.infinity,
     child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color.fromARGB(255, 180, 19, 19),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4)
+        ),
+        textStyle: TextStyle(
+          fontSize: 20,
+          fontFamily: "Inter"
+        )
+      ),
       onPressed: _isLoading ? null : _submit,
       child: _isLoading
           ? const SizedBox(

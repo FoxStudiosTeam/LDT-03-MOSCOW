@@ -12,6 +12,7 @@ impl ProjectSchedule {
             uuid: Set(self.uuid),
             project_uuid: Set(self.project_uuid),
             work_category: Set(self.work_category),
+            is_deleted: Set(self.is_deleted),
         }
     }
 }
@@ -23,6 +24,7 @@ pub struct ProjectSchedule {
     pub uuid: uuid::Uuid,
     pub project_uuid: uuid::Uuid,
     pub work_category: uuid::Uuid,
+    pub is_deleted: bool,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
@@ -30,6 +32,7 @@ pub struct ActiveProjectSchedule {
     pub uuid: Optional<uuid::Uuid>,
     pub project_uuid: Optional<uuid::Uuid>,
     pub work_category: Optional<uuid::Uuid>,
+    pub is_deleted: Optional<bool>,
 }
 
 impl ActiveProjectSchedule {
@@ -38,6 +41,7 @@ impl ActiveProjectSchedule {
             uuid: self.uuid.into_option()?,
             project_uuid: self.project_uuid.into_option()?,
             work_category: self.work_category.into_option()?,
+            is_deleted: self.is_deleted.into_option()?,
         })
     }
 }
@@ -64,6 +68,7 @@ impl TableSelector for ActiveProjectSchedule {
             "uuid" => self.uuid.is_set(),
             "project_uuid" => self.project_uuid.is_set(),
             "work_category" => self.work_category.is_set(),
+            "is_deleted" => self.is_deleted.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
@@ -87,6 +92,13 @@ impl TableSelector for ActiveProjectSchedule {
                 name: "work_category",
                 nullable: false,
                 default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "is_deleted",
+                nullable: false,
+                default: Some("false"),
                 is_unique: false,
                 is_primary: false,
             },
@@ -132,6 +144,7 @@ impl ModelOps<sqlx::Postgres> for ActiveProjectSchedule
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
         if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
+        if let Set(v) = &self.is_deleted {tracing::debug!("Binded is_deleted"); q = q.bind(v);}
         q
     }
     
@@ -251,6 +264,7 @@ impl ModelOps<sqlx::MySql> for ActiveProjectSchedule
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
         if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
+        if let Set(v) = &self.is_deleted {tracing::debug!("Binded is_deleted"); q = q.bind(v);}
         q
     }
     
@@ -370,6 +384,7 @@ impl ModelOps<sqlx::Sqlite> for ActiveProjectSchedule
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.project_uuid {tracing::debug!("Binded project_uuid"); q = q.bind(v);}
         if let Set(v) = &self.work_category {tracing::debug!("Binded work_category"); q = q.bind(v);}
+        if let Set(v) = &self.is_deleted {tracing::debug!("Binded is_deleted"); q = q.bind(v);}
         q
     }
     

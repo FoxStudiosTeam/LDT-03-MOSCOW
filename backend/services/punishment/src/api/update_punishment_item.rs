@@ -11,7 +11,7 @@ use crate::{AppState, api::{ErrorExample, UuidResponse}};
 #[utoipa::path(
     put,
     path = "/update_punishment_item",
-    tag = crate::MAIN_TAG,
+    tag = crate::ANY_TAG,
     summary = "Update punishment item",
     responses(
         (status = 200, description = "Punishment item updated", body=UuidResponse),
@@ -26,18 +26,21 @@ pub async fn update_punishment_item(
 ) -> Result<Response, AppErr> {
     info!("{:?}", r);
 
-    app.orm.punishment().select_by_pk(&r.uuid).await?.ok_or_else(|| AppErr::default()
-    .with_status(StatusCode::NOT_FOUND)
-    .with_err_response("Punishment not found"))?;
-    let uuid = r.uuid;
-        app.orm.punishment_item().select_by_pk(&uuid).await?
-        .ok_or_else(|| AppErr::default()
+    if let Some(u) = r.punishment {
+        app.orm.punishment().select_by_pk(&u).await?.ok_or_else(|| AppErr::default()
         .with_status(StatusCode::NOT_FOUND)
-        .with_err_response("Punishment item not found"))?;
-        app.orm.punishment_item().save(r.into_active(), Update).await?
-        .ok_or_else(|| AppErr::default()
-        .with_status(StatusCode::INTERNAL_SERVER_ERROR)
-        .with_err_response("Punishment item not recorded"))?;
+        .with_err_response("Punishment not found"))?;
+    };
+
+    let uuid = r.uuid;
+    app.orm.punishment_item().select_by_pk(&uuid).await?
+    .ok_or_else(|| AppErr::default()
+    .with_status(StatusCode::NOT_FOUND)
+    .with_err_response("Punishment item not found"))?;
+    app.orm.punishment_item().save(r.into_active(), Update).await?
+    .ok_or_else(|| AppErr::default()
+    .with_status(StatusCode::INTERNAL_SERVER_ERROR)
+    .with_err_response("Punishment item not recorded"))?;
     Ok((StatusCode::OK, Json(UuidResponse{uuid:uuid})).into_response())
 }
 #[derive(utoipa::ToSchema, Deserialize, Debug, Default)]
@@ -57,6 +60,8 @@ pub struct PunishmentItemUpdRequest{
     pub(crate) correction_date_info: Option<String>,
     #[schema(example=Uuid::new_v4)]
     pub(crate) regulation_doc: Option<Uuid>,
+    #[schema(example=Uuid::new_v4)]
+    pub(crate) punishment: Option<Uuid>,
     #[schema(example=true)]
     pub(crate) is_suspended: Option<bool>,
 }
@@ -72,6 +77,7 @@ impl PunishmentItemUpdRequest {
             punishment_item_status: self.punishment_item_status.map(|v| Set(v)).unwrap_or_default(),
             regulation_doc: self.regulation_doc.map(|v| Set(Some(v))).unwrap_or_default(),
             title: self.title.map(|v| Set(v)).unwrap_or_default(),
+            punishment: self.punishment.map(|v| Set(v)).unwrap_or_default(),
             ..Default::default()
         }
     }

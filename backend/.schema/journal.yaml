@@ -64,6 +64,9 @@ tables:
     type: uuid
   - name: work_category
     type: uuid
+  - name: is_deleted
+    type: boolean
+    default: false
 - name: project_schedule_items
   schema: journal
   fields:

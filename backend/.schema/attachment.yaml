@@ -10,8 +10,6 @@ tables:
     default: "gen_random_uuid()"
   - name: base_entity_uuid
     type: uuid
-  - name: file_uuid
-    type: uuid
   - name: content_type
     type: text
     nullable: true

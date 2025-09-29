@@ -40,11 +40,8 @@ impl IProjectService for ProjectService {
     async fn get_project(&self, r: GetProjectRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
         let (offset, limit) = r.pagination.map(|p| (p.offset, p.limit)).unwrap_or((0, 0));
 
-        let address = r.address.map(|addr| (addr)).ok_or(
-            AppErr::default()
-                .with_err_response("address is empty")
-                .with_status(StatusCode::BAD_REQUEST),
-        )?;
+        let address = r.address.unwrap_or_default();
+
 
         if limit <= 0 {
             let total: (i64,) = sqlx::query_as::<_, (i64,)>(
@@ -70,12 +67,12 @@ impl IProjectService for ProjectService {
             a.uuid AS attachment_uuid,
             a.original_filename,
             a.base_entity_uuid,
-            a.file_uuid,
             a.content_type,
             COUNT(*) OVER() AS total_count
             FROM project.project p
             LEFT JOIN attachment.attachments a ON a.base_entity_uuid = p.uuid
-            WHERE p.address like $2 offset $3 limit $4 {{ROLE_RULE}}".to_string();
+            WHERE p.address like $2 {{ROLE_RULE}} offset $3 limit $4".to_string();
+        
         let q = 
         match t.role.as_str() {
             FOREMAN_ROLE => {
@@ -91,7 +88,7 @@ impl IProjectService for ProjectService {
                 sqlx::query_as::<_, RowProjectWithAttachment>(&qstr).bind(t.uuid)
             }
             ADMINISTRATOR_ROLE => {
-                qstr = qstr.replace("{{ROLE_RULE}}", "AND $1 = $1");
+                qstr = qstr.replace("{{ROLE_RULE}}", "AND $1::boolean IS NOT NULL");
                 sqlx::query_as::<_, RowProjectWithAttachment>(&qstr).bind(true)
             }
             _ => {
@@ -110,6 +107,7 @@ impl IProjectService for ProjectService {
             .into_app_err()?;
         
 
+
         let mut hm = HashMap::new();
         let mut total = 0;
         for row in rows {
@@ -125,9 +123,10 @@ impl IProjectService for ProjectService {
             let Some(a) = a else { continue };
             e.push(a);
         }
-
+        let mut v = hm.into_values().collect::<Vec<_>>();
+        v.sort_by_key(|v| v.project.uuid);
         let result = GetProjectWithAttachmentResult {
-            result: hm.into_values().collect::<Vec<_>>(),
+            result: v,
             total: total,
         };
 
@@ -185,6 +184,21 @@ impl IProjectService for ProjectService {
     }
 
     async fn set_project_foreman(&self, r: SetProjectForemanRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
+        let pattern = format!("%{} {} {}%", r.last_name, r.first_name, r.patronymic);
+        #[derive(sqlx::FromRow, serde::Deserialize)]
+        struct Foreman {uuid: Uuid}
+        let id = sqlx::query_as::<_, Foreman>("select * from auth.users where fcs ilike $1")
+            .bind(pattern)
+            .fetch_optional(self.state.orm().get_executor())
+            .await
+            .into_app_err()?
+            .ok_or(
+                AppErr::default()
+                    .with_err_response("foreman not found")
+                    .with_status(StatusCode::NOT_FOUND),
+            )?
+            .uuid; 
+
         let r = sqlx::query_as::<_, Project>("
             UPDATE project.project 
             SET foreman_uuid = $1
@@ -193,7 +207,7 @@ impl IProjectService for ProjectService {
             AND uuid = $4
             RETURNING *
         ")
-            .bind(&r.foreman)
+            .bind(id)
             .bind(&t.org)
             .bind(&(ProjectStatus::New as i32))
             .bind(&r.uuid)
@@ -214,11 +228,10 @@ impl IProjectService for ProjectService {
         let mut tx : OrmTX<crate::DB> = self.state.orm().begin_tx().await.into_app_err()?;
         let project = sqlx::query_as::<_, Project>("
             UPDATE project.project 
-            SET ssk = $1, status = $2
-            WHERE uuid = $3 AND status = $4
+            SET status = $1
+            WHERE uuid = $2 AND status = $3
             RETURNING *
         ")
-            .bind(&t.uuid)
             .bind(ProjectStatus::Normal as i32)
             .bind(&r.project_uuid)
             .bind(ProjectStatus::PreActive as i32)
@@ -378,16 +391,26 @@ impl IProjectScheduleService for ProjectScheduleService {
             pub end_date: Option<chrono::NaiveDate>,
         }
         
-        let res = sqlx::query_as::<_, LocalProjectFields>("UPDATE journal.project_schedule_items psi
-                    SET is_deleted = TRUE
-                    FROM journal.project_schedule ps
-                    JOIN project.project p
-                    ON ps.project_uuid = p.uuid
-                    WHERE psi.project_schedule_uuid = ps.uuid
-                    AND psi.project_schedule_uuid = $1
-                    AND p.created_by = $2
-                    AND p.status = $3
-                    p.uuid AS project_id")
+        let res = sqlx::query_as::<_, LocalProjectFields>("WITH updated AS (
+    UPDATE journal.project_schedule_items psi
+    SET is_deleted = TRUE
+    FROM journal.project_schedule ps
+    JOIN project.project p ON ps.project_uuid = p.uuid
+    WHERE psi.project_schedule_uuid = ps.uuid
+      AND psi.project_schedule_uuid = $1
+      AND p.created_by = $2
+      AND p.status = $3
+    RETURNING p.uuid AS project_id
+)
+SELECT project_id FROM updated
+UNION ALL
+SELECT p.uuid AS project_id
+FROM journal.project_schedule ps
+JOIN project.project p ON ps.project_uuid = p.uuid
+WHERE ps.uuid = $1
+  AND p.created_by = $2
+  AND p.status = $3
+LIMIT 1")
             .bind(&r.project_schedule_uuid)
             .bind(&t.org)
             .bind(&(ProjectStatus::New as i32))
@@ -454,16 +477,26 @@ impl IProjectScheduleService for ProjectScheduleService {
             pub project_id: Uuid,
         }
         
-        let res = sqlx::query_as::<_, ProjectId>("UPDATE journal.project_schedule_items psi
-                    SET is_deleted = TRUE
-                    FROM journal.project_schedule ps
-                    JOIN project.project p
-                    ON ps.project_uuid = p.uuid
-                    WHERE psi.project_schedule_uuid = ps.uuid
-                    AND psi.project_schedule_uuid = $1
-                    AND p.created_by = $2
-                    AND p.status = $3
-                    p.uuid AS project_id")
+        let res = sqlx::query_as::<_, ProjectId>("WITH updated AS (
+    UPDATE journal.project_schedule_items psi
+    SET is_deleted = TRUE
+    FROM journal.project_schedule ps
+    JOIN project.project p ON ps.project_uuid = p.uuid
+    WHERE psi.project_schedule_uuid = ps.uuid
+      AND psi.project_schedule_uuid = $1
+      AND p.created_by = $2
+      AND p.status = $3
+    RETURNING p.uuid AS project_id
+)
+SELECT project_id FROM updated
+UNION ALL
+SELECT p.uuid AS project_id
+FROM journal.project_schedule ps
+JOIN project.project p ON ps.project_uuid = p.uuid
+WHERE ps.uuid = $1
+  AND p.created_by = $2
+  AND p.status = $3
+LIMIT 1")
             .bind(&r.project_schedule_uuid)
             .bind(&t.org)
             .bind(&(ProjectStatus::New as i32))
@@ -603,13 +636,13 @@ impl IProjectScheduleService for ProjectScheduleService {
             SET is_deleted = TRUE
             FROM project.project p
             WHERE ps.project_uuid = p.uuid
-            AND ps.project_uuid = $1
-            AND ps.project_status = $2
+            AND ps.uuid = $1
+            AND p.status = $2
             AND p.created_by = $3
             RETURNING ps.*")
             .bind(&r.project_schedule_uuid)
             .bind(&(ProjectStatus::New as i32))
-            .bind(&t.uuid)
+            .bind(&t.org)
             .fetch_optional(tx.get_inner())
             .await
             .into_app_err();

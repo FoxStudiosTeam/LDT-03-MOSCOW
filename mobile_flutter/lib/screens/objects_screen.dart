@@ -1,0 +1,99 @@
+import 'package:flutter/material.dart';
+import 'package:mobile_flutter/auth/auth_storage_provider.dart';
+import 'package:mobile_flutter/screens/auth_screen.dart';
+import 'package:mobile_flutter/widgets/drawer_menu.dart';
+import 'package:mobile_flutter/widgets/object_card.dart';
+
+import '../di/dependency_container.dart';
+
+class ObjectsScreen extends StatefulWidget {
+  final IDependencyContainer di;
+
+  const ObjectsScreen({super.key, required this.di});
+
+  @override
+  State<ObjectsScreen> createState() => _ObjectsScreenState();
+}
+
+class _ObjectsScreenState extends State<ObjectsScreen> {
+  String? _token; // Переменная для хранения токена
+  List<ObjectCard> data = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Получаем токен асинхронно
+    _loadToken();
+    _loadCards().then((cards) {
+      setState(() {
+        data = cards;
+      });
+    });
+  }
+
+  Future<void> _loadToken() async {
+    try {
+      var authStorageProvider = widget.di.getDependency<IAuthStorageProvider>(
+        IAuthStorageProviderDIToken,
+      );
+      var token = await authStorageProvider.getRefreshToken();
+      setState(() {
+        _token = token;
+      });
+    } catch (e) {
+      setState(() {
+        _token = "NO TOKEN";
+      });
+    }
+  }
+
+  Future<void> _leave() async {
+    await widget.di
+        .getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken)
+        .clear();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => AuthScreen(di: widget.di)),
+    );
+  }
+
+  Future<List<ObjectCard>> _loadCards() async {
+    return List<ObjectCard>.generate(
+      100,
+      (index) => ObjectCard(
+        title: "title: $index",
+        content: "content: $index",
+        di: widget.di,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+            );
+          },
+        ),
+        title: Text('ЭСЖ'),
+        automaticallyImplyLeading: false,
+      ),
+      body: data.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: data.length,
+              itemBuilder: (context, index) => data[index],
+            ),
+      drawer: DrawerMenu(di: widget.di)
+    );
+  }
+}
