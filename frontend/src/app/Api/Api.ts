@@ -3,7 +3,7 @@
 import {jwtDecode} from "jwt-decode";
 import {WorkItem} from "@/models";
 
-const baseURL = "https://test.foxstudios.ru:32460/api";
+const baseURL = "https://test.foxstudios.ru:32460/Vadim/api";
 
 const authBaseURL = 'https://sso.foxstudios.ru:32460/api'
 
@@ -354,4 +354,23 @@ export async function uploadProjectFiles(projectId: string, files: File[] | File
     }
 
     return { uploaded, errors };
+}
+
+export async function GetReports(uuid: string) {
+
+    const response = await fetch(`${baseURL}/report/get_reports_by_uuid?project_uuid=${uuid}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    const data = await response.json();
+
+    if (response.ok && Array.isArray(data.data)) {
+        return { success: true, message: null, result: data };
+    }
+
+    return { success: false, message: data.message || "Ошибка при получении отчётов", result: [] };
 }
