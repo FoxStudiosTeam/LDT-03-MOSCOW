@@ -3,7 +3,7 @@
 import {jwtDecode} from "jwt-decode";
 import {WorkItem} from "@/models";
 
-const baseURL = "https://test.foxstudios.ru:32460/api";
+const baseURL = "https://test.foxstudios.ru:32460/Vadim/api";
 
 interface TokenPayload {
     exp: number;
@@ -298,8 +298,7 @@ export async function GetProjects(offset: number, limit: number) {
     const data = await response.json();
 
     if (response.ok && Array.isArray(data.result)) {
-        const projects = data.result.map((item: { project: unknown }) => item.project);
-        return { success: true, message: null, result: projects, total: data.total || 0 };
+        return { success: true, message: null, result: data.result, total: data.total || 0 };
     } else {
         return { success: false, message: data.message || "Ошибка при получении проектов", result: [] };
     }

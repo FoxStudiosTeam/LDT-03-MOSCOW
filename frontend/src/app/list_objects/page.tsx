@@ -4,8 +4,15 @@ import { useState, useEffect } from "react";
 import { Header } from "@/app/components/header";
 import Link from "next/link";
 import { GetProjects, GetStatuses } from "@/app/Api/Api";
-import {useProjectStore} from "@/storage/projectStorage";
+import { useProjectStore } from "@/storage/projectStorage";
 
+interface Attachment {
+    base_entity_uuid: string;
+    content_type: string | null;
+    file_uuid: string;
+    original_filename: string;
+    uuid: string;
+}
 
 interface ProjectData {
     uuid: string;
@@ -16,6 +23,8 @@ interface ProjectData {
     created_by: string | null;
     start_date: string | null;
     end_date: string | null;
+    polygon: string | null;
+    attachments: Attachment[];
 }
 
 interface Status {
@@ -46,6 +55,7 @@ export default function ProjectsPage() {
             clearProjects();
 
             const data = await GetProjects(currentPage - 1, limit);
+            console.log(data)
 
             if (data.success && Array.isArray(data.result) && data.result.length > 0) {
                 setProjects(data.result, data.total);
@@ -75,10 +85,9 @@ export default function ProjectsPage() {
     }, [total]);
 
     useEffect(() => {
-        const start = (currentPage - 1) * limit;
-        const end = currentPage * limit;
+        console.log(projects)
+        const newArray: ProjectData[] = projects.map((p) => ({
 
-        const newArray = projects.map((p) => ({
             uuid: p.project.uuid,
             address: p.project.address,
             status: p.project.status,
@@ -87,9 +96,11 @@ export default function ProjectsPage() {
             created_by: p.project.created_by,
             start_date: p.project.start_date,
             end_date: p.project.end_date,
+            polygon: p.project.polygon,
+            attachments: p.attachments ?? [],
         }));
 
-        setCurrentPageContent(newArray.slice(start, end));
+        setCurrentPageContent(newArray.reverse());
     }, [projects, currentPage, total]);
 
     const getStatusTitle = (statusId: number) => {
@@ -106,12 +117,6 @@ export default function ProjectsPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-3 mb-6">
-                    <button className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition">
-                        В процессе
-                    </button>
-                    <button className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition">
-                        Завершенные
-                    </button>
                     <Link
                         className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
                         href={"/list_objects/create_object/first_step/"}
@@ -155,6 +160,12 @@ export default function ProjectsPage() {
                                         {project.foreman && <p>Подрядчик: {project.foreman}</p>}
                                         {project.start_date && <p>Дата начала: {project.start_date}</p>}
                                         {project.end_date && <p>Дата окончания: {project.end_date}</p>}
+                                        {project.polygon && (
+                                            <div>
+                                                <p className="mb-1">Карта:</p>
+
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
