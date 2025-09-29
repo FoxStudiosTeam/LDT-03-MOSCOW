@@ -45,51 +45,104 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Авторизация'), automaticallyImplyLeading: false),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLoginField(),
-              const SizedBox(height: 16),
-              _buildPasswordField(),
-              const SizedBox(height: 24),
-              _buildSubmitButton(),
-            ],
-          ),
+      backgroundColor: Color.fromARGB(255, 208, 208, 208),
+      body: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(16),
+              margin: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10,
+                    offset: Offset(0, 10)
+                  )
+                ]
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildTitle(),
+                  _buildLoginField(),
+                  const SizedBox(height: 16),
+                  _buildPasswordField(),
+                  const SizedBox(height: 24),
+                  _buildSubmitButton(),
+                ],
+              )
+            )
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildLoginField() => TextFormField(
-    controller: _loginController,
-    decoration: const InputDecoration(
-      labelText: 'Логин',
-      border: OutlineInputBorder(),
-    ),
-    validator: (value) =>
-    value == null || value.isEmpty ? 'Пожалуйста, введите логин' : null,
+  Widget _buildTitle() => Padding(
+    padding: EdgeInsets.only(bottom: 30, top: 20),
+    child: Text(
+      "Авторизация",
+      style: TextStyle(
+        fontFamily: "Inter",
+        fontSize: 26,
+      ),
+      textAlign: TextAlign.center)
   );
 
-  Widget _buildPasswordField() => TextFormField(
-    controller: _passwordController,
-    decoration: const InputDecoration(
-      labelText: 'Пароль',
-      border: OutlineInputBorder(),
-    ),
-    obscureText: true,
-    validator: (value) =>
-    value == null || value.isEmpty ? 'Пожалуйста, введите пароль' : null,
+  Widget _buildLoginField() => Padding(
+    padding: EdgeInsets.symmetric(vertical: 25),
+    child: TextFormField(
+      style: TextStyle(
+        fontFamily: "Inter",
+      ),
+      controller: _loginController,
+      decoration: const InputDecoration(
+        labelText: 'Логин',
+        border: OutlineInputBorder(),
+      ),
+      validator: (value) =>
+      value == null || value.isEmpty ? 'Пожалуйста, введите логин' : null,
+    )
+  );
+
+  Widget _buildPasswordField() => Padding(
+      padding: EdgeInsets.symmetric(vertical: 25),
+      child: TextFormField(
+        style: TextStyle(
+          fontFamily: "Inter",
+        ),
+        controller: _passwordController,
+        decoration: const InputDecoration(
+          labelText: 'Пароль',
+          border: OutlineInputBorder(),
+        ),
+        obscureText: true,
+        validator: (value) =>
+        value == null || value.isEmpty ? 'Пожалуйста, введите пароль' : null,
+      )
   );
 
   Widget _buildSubmitButton() => SizedBox(
     width: double.infinity,
     child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color.fromARGB(255, 180, 19, 19),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10)
+        ),
+        textStyle: TextStyle(
+          fontSize: 20,
+          fontFamily: "Inter"
+        )
+      ),
       onPressed: _isLoading ? null : _submit,
       child: _isLoading
           ? const SizedBox(
