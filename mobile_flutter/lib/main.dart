@@ -28,7 +28,7 @@ class MainPage extends StatelessWidget {
   Future<Widget> prepareChild() async {
     var storageProvider = di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
     if (await storageProvider.getRefreshToken() != "") {
-      return MapScreen();
+      return MapScreen(di: di);
     }
     return AuthScreen(di:di);
   }

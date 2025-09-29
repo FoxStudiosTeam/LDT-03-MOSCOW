@@ -31,7 +31,7 @@ class _AuthScreenState extends State<AuthScreen> {
         const Duration(seconds: 5),
       );
       if (!mounted) return;
-      Navigator.push(context, MaterialPageRoute(builder: (_) => MapScreen()));
+      Navigator.push(context, MaterialPageRoute(builder: (_) => MapScreen(di:widget.di)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -45,7 +45,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Авторизация')),
+      appBar: AppBar(title: const Text('Авторизация'), automaticallyImplyLeading: false),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
