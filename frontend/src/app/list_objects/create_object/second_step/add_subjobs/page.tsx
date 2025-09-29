@@ -47,15 +47,37 @@ export default function AddSubjobs() {
             const next = [...prev];
             const old = next[rowIdx];
             if (!old) return prev;
+
             if (colKey === "volume") {
                 const num = value === "" ? 0 : Number(value);
                 next[rowIdx] = { ...old, volume: Number.isFinite(num) ? num : 0 };
+            } else if (colKey === "startDate") {
+                const newStart = new Date(value).getTime();
+                const end = old.endDate ? new Date(old.endDate).getTime() : null;
+
+                if (end && newStart > end) {
+                    setMessages(["Дата начала не может быть позже даты окончания"]);
+                    return prev; // отклоняем изменение
+                }
+
+                next[rowIdx] = { ...old, startDate: value };
+            } else if (colKey === "endDate") {
+                const newEnd = new Date(value).getTime();
+                const start = old.startDate ? new Date(old.startDate).getTime() : null;
+
+                if (start && newEnd < start) {
+                    setMessages(["Дата окончания не может быть раньше даты начала"]);
+                    return prev; // отклоняем изменение
+                }
+
+                next[rowIdx] = { ...old, endDate: value };
             } else {
                 next[rowIdx] = { ...old, [colKey]: value };
             }
             return next;
         });
     };
+
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (e.key === "Enter") {
@@ -251,8 +273,8 @@ export default function AddSubjobs() {
                                     <th className="px-4 py-3 min-w-[300px]">Название работы</th>
                                     <th className="px-4 py-3 w-32">Объем</th>
                                     <th className="px-4 py-3">Единицы измерения</th>
-                                    <th className="px-4 py-3">Дата начала*</th>
-                                    <th className="px-4 py-3">Дата окончания*</th>
+                                    <th className="px-4 py-3">Дата начала</th>
+                                    <th className="px-4 py-3">Дата окончания</th>
                                     <th className="px-4 py-3 w-[80px]"></th>
                                 </tr>
                             </thead>

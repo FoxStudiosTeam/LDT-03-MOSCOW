@@ -12,7 +12,6 @@ impl Attachments {
             original_filename: Set(self.original_filename),
             uuid: Set(self.uuid),
             base_entity_uuid: Set(self.base_entity_uuid),
-            file_uuid: Set(self.file_uuid),
             content_type: Set(self.content_type),
         }
     }
@@ -25,7 +24,6 @@ pub struct Attachments {
     pub original_filename: String,
     pub uuid: uuid::Uuid,
     pub base_entity_uuid: uuid::Uuid,
-    pub file_uuid: uuid::Uuid,
     pub content_type: Option<String>,
 }
 
@@ -34,7 +32,6 @@ pub struct ActiveAttachments {
     pub original_filename: Optional<String>,
     pub uuid: Optional<uuid::Uuid>,
     pub base_entity_uuid: Optional<uuid::Uuid>,
-    pub file_uuid: Optional<uuid::Uuid>,
     pub content_type: Optional<Option<String>>,
 }
 
@@ -44,7 +41,6 @@ impl ActiveAttachments {
             original_filename: self.original_filename.into_option()?,
             uuid: self.uuid.into_option()?,
             base_entity_uuid: self.base_entity_uuid.into_option()?,
-            file_uuid: self.file_uuid.into_option()?,
             content_type: self.content_type.into_option()?,
         })
     }
@@ -72,7 +68,6 @@ impl TableSelector for ActiveAttachments {
             "original_filename" => self.original_filename.is_set(),
             "uuid" => self.uuid.is_set(),
             "base_entity_uuid" => self.base_entity_uuid.is_set(),
-            "file_uuid" => self.file_uuid.is_set(),
             "content_type" => self.content_type.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
@@ -95,13 +90,6 @@ impl TableSelector for ActiveAttachments {
             },
             ColumnDef{
                 name: "base_entity_uuid",
-                nullable: false,
-                default: None,
-                is_unique: false,
-                is_primary: false,
-            },
-            ColumnDef{
-                name: "file_uuid",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -156,7 +144,6 @@ impl ModelOps<sqlx::Postgres> for ActiveAttachments
         if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
         if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         q
     }
@@ -277,7 +264,6 @@ impl ModelOps<sqlx::MySql> for ActiveAttachments
         if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
         if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         q
     }
@@ -398,7 +384,6 @@ impl ModelOps<sqlx::Sqlite> for ActiveAttachments
         if let Set(v) = &self.original_filename {tracing::debug!("Binded original_filename"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.base_entity_uuid {tracing::debug!("Binded base_entity_uuid"); q = q.bind(v);}
-        if let Set(v) = &self.file_uuid {tracing::debug!("Binded file_uuid"); q = q.bind(v);}
         if let Set(v) = &self.content_type {tracing::debug!("Binded content_type"); q = q.bind(v);}
         q
     }
