@@ -62,6 +62,7 @@ impl AppState {
                 .bucket(&ENV.S3_BUCKET)
                 .key(&format!("attachments/{}", file_id))
                 .body(aws_sdk_s3::primitives::ByteStream::new(data.into()))
+                .metadata("filename", file_name.clone())
                 .send()
                 .await
                 .into_app_err()
