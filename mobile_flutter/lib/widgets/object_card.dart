@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/screens/object_screen.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../domain/entities.dart';
 
@@ -9,7 +10,7 @@ class ObjectCard extends StatefulWidget {
   final String title;
   final String content;
   final IDependencyContainer di;
-  final Polygon polygon;
+  final FoxPolygon polygon;
 
   const ObjectCard({
     super.key,
@@ -23,34 +24,15 @@ class ObjectCard extends StatefulWidget {
   State<ObjectCard> createState() => _ObjectCardState();
 }
 class _ObjectCardState extends State<ObjectCard> {
-  late final MapController mapController;
 
-  bool _mapReady = false;
 
   @override
   void initState() {
     super.initState();
 
-    mapController = MapController(
-      initPosition: widget.polygon.getCenter(),
-    );
   }
 
-  void _onMapReady(bool tl) async {
-    if (!_mapReady) {
-      _mapReady = true;
 
-      await mapController.drawRect(
-        RectOSM(
-          key: 'rect',
-          centerPoint: widget.polygon.getCenter(),
-          distance: 120.0,
-          color: const Color.fromARGB(255, 255, 0, 0),
-          strokeWidth: 10.0,
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,14 +62,32 @@ class _ObjectCardState extends State<ObjectCard> {
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                height: 100,
+                height: 200,
                 alignment: Alignment.center,
-                child: OSMFlutter(
-                  controller: mapController,
-                  osmOption: OSMOption(
-                    zoomOption: ZoomOption(initZoom: 15),
+                child: FlutterMap(
+                  options: MapOptions(
+                    initialCenter: widget.polygon.getCenter(),
+                    initialZoom: 15,
                   ),
-                  onMapIsReady: _onMapReady,
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+                      subdomains: ['a', 'b', 'c'],
+                      userAgentPackageName: 'com.example.yourapp',
+                    ),
+
+                    // Добавляем слой с полигоном
+                    PolygonLayer(
+                      polygons: [
+                        Polygon(
+                          points: widget.polygon.points,
+                          color: Colors.blue.withOpacity(0.3),
+                          borderColor: Colors.blue,
+                          borderStrokeWidth: 2,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],

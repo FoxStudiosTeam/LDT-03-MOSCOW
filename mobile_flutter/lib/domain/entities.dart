@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:latlong2/latlong.dart';
 
 class Pagination {
   final int limit;
@@ -53,46 +53,64 @@ ProjectStatus projectStatusFromInt(int status) {
   return ProjectStatus.values[status];
 }
 
-
-class Polygon {
+class FoxPolygon {
   final String type;
   final List<List<List<double>>> coordinates;
+  final List<LatLng> points;
 
-  Polygon({required this.type, required this.coordinates});
+  FoxPolygon({
+    required this.type,
+    required this.coordinates,
+  }) : points = _extractPoints(coordinates);
 
-  factory Polygon.fromJson(Map<String, dynamic> json) {
-    return Polygon(
-      type: json['type'] ?? '',
-      coordinates: (json['coordinates'] as List<dynamic>? ?? [])
-          .map<List<List<double>>>(
-            (l1) => (l1 as List<dynamic>)
-            .map<List<double>>(
-              (l2) => (l2 as List<dynamic>).map<double>((n) => (n as num).toDouble()).toList(),
-        )
-            .toList(),
-      )
-          .toList(),
+  /// Фабричный метод из JSON
+  factory FoxPolygon.fromJson(Map<String, dynamic> json) {
+    final rawCoordinates = json['coordinates'] as List<dynamic>? ?? [];
+
+    final coordinates = rawCoordinates
+        .map<List<List<double>>>((ring) =>
+        (ring as List<dynamic>)
+            .map<List<double>>((point) =>
+            (point as List<dynamic>)
+                .map<double>((value) => (value as num).toDouble())
+                .toList())
+            .toList())
+        .toList();
+
+    return FoxPolygon(
+      type: json['type'] as String? ?? '',
+      coordinates: coordinates,
     );
   }
 
-  GeoPoint getCenter() {
-    double x = 0;
-    double y = 0;
-    int count = 0;
+  /// Вычисление центра полигона
+  LatLng getCenter() {
+    if (points.isEmpty) return const LatLng(0, 0);
 
-    for (var col in coordinates) {
-      for (var point in col) {
-        x += point[0];
-        y += point[1];
-        count++;
+    final sum = points.reduce((a, b) =>
+        LatLng(a.latitude + b.latitude, a.longitude + b.longitude));
+    final avgLat = sum.latitude / points.length;
+    final avgLng = sum.longitude / points.length;
+
+    return LatLng(avgLat, avgLng);
+  }
+
+  /// Преобразование координат в LatLng
+  static List<LatLng> _extractPoints(List<List<List<double>>> coords) {
+    final List<LatLng> result = [];
+
+    for (final ring in coords) {
+      for (final point in ring) {
+        if (point.length >= 2) {
+          result.add(LatLng(point[1], point[0])); // [lon, lat] → LatLng(lat, lon)
+        }
       }
     }
 
-    x = x / count;
-    y = y / count;
-    return GeoPoint(latitude: y, longitude: x);
+    return result;
   }
 }
+
 
 
 class Project {
@@ -100,7 +118,7 @@ class Project {
   final String created_by;
   final DateTime? end_date;
   final String foreman;
-  final Polygon? polygon;
+  final FoxPolygon? polygon;
   final String ssk;
   final DateTime? start_date;
   final ProjectStatus status;
@@ -129,7 +147,7 @@ class Project {
           : null,
       foreman: projectJson['foreman'] ?? '',
       polygon: projectJson['polygon'] != null
-          ? Polygon.fromJson(jsonDecode(projectJson['polygon']))
+          ? FoxPolygon.fromJson(jsonDecode(projectJson['polygon']))
           : null,
       ssk: projectJson['ssk'] ?? '',
       start_date: projectJson['start_date'] != null
