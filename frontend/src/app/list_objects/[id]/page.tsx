@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { DownloadAttachment } from "@/app/Api/Api";
 
 export default function ObjectDetail() {
     const params = useParams();
@@ -23,8 +24,15 @@ export default function ObjectDetail() {
         return <p>Загрузка данных...</p>;
     };
 
-    const downloadFile = () => {
-        
+    const downloadFile = async (uuid: string) => {
+        const result = await DownloadAttachment(uuid);
+
+        const url = window.URL.createObjectURL(result.result);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "file_" + uuid;
+        a.click();
+        window.URL.revokeObjectURL(url);
     }
 
     return (
@@ -45,7 +53,7 @@ export default function ObjectDetail() {
 
                             <div className="flex flex-wrap gap-3">
                                 {projectData?.attachments.map((item, itemIdx) => (
-                                    <div key={itemIdx} className="max-w-[80px] max-h-[70px]" onClick={() => downloadFile()}>
+                                    <div key={itemIdx} className="max-w-[80px] max-h-[70px] cursor-pointer" onClick={() => downloadFile(item.uuid)}>
                                         <Image
                                             src={'/attachment/attachment.svg'}
                                             alt="Скачать вложение"

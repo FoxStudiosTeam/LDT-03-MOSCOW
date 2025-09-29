@@ -10,6 +10,7 @@ interface Attachment {
 }
 
 interface Project {
+    uuid: string;
     address: string;
     created_by: string | null;
     end_date: string | null;
@@ -18,7 +19,9 @@ interface Project {
     ssk: string | null;
     start_date: string | null;
     status: number;
-    uuid: string;
+    customer?: string;
+    contractor?: string;
+    inspector?: string;
 }
 
 export interface ProjectWithAttachments {
