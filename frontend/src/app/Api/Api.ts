@@ -323,21 +323,3 @@ export async function GetStatuses() {
     return { success: false, message: data.message || "Ошибка при получении статусов", result: [] };
 }
 
-export async function DownloadAttachment(uuid: string) {
-
-    const response = await fetch(`${baseURL}/attachmentproxy/file?file_id=${uuid}`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-            "Content-Type": "application/json",
-        },
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-        return { success: true, message: null, result: data };
-    }
-
-    return { success: false, message: data.message || "Ошибка при получении файла", result: [] };
-}

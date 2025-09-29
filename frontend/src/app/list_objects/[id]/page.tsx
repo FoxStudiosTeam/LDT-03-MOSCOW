@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { DownloadAttachment } from "@/app/Api/Api";
+
 
 export default function ObjectDetail() {
     const params = useParams();
@@ -22,18 +22,8 @@ export default function ObjectDetail() {
 
     if (!hydrated) {
         return <p>Загрузка данных...</p>;
-    };
-
-    const downloadFile = async (uuid: string) => {
-        const result = await DownloadAttachment(uuid);
-
-        const url = window.URL.createObjectURL(result.result);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "file_" + uuid;
-        a.click();
-        window.URL.revokeObjectURL(url);
     }
+
 
     return (
         <div className="relative flex justify-center bg-[#D0D0D0] mt-[50px]">
@@ -53,25 +43,26 @@ export default function ObjectDetail() {
 
                             <div className="flex flex-wrap gap-3">
                                 {projectData?.attachments.map((item, itemIdx) => (
-                                    <div key={itemIdx} className="max-w-[80px] max-h-[70px] cursor-pointer" onClick={() => downloadFile(item.uuid)}>
-                                        <Image
-                                            src={'/attachment/attachment.svg'}
-                                            alt="Скачать вложение"
-                                            width={50}
-                                            height={50}
-                                            className="mx-auto"
-                                        />
-                                        <p className="break-words text-ballance text-center text-sm">
-                                            {item.original_filename}
-                                        </p>
+                                    <div key={itemIdx} className="max-w-[80px] max-h-[70px] cursor-pointer">
+                                        <Link href={`https://test.foxstudios.ru:32460/Vadim/api/attachmentproxy/file?file_id=${item.uuid}`}>
+                                            <Image
+                                                src={'/attachment/attachment.svg'}
+                                                alt="Скачать вложение"
+                                                width={50}
+                                                height={50}
+                                                className="mx-auto"
+                                            />
+                                            <p className="break-words text-ballance text-center text-sm">
+                                                {item.original_filename}
+                                            </p>
+                                        </Link>
+
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
-                ) : (
-                    null
-                )}
+                ) : null}
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-xl font-semibold">Ваши объекты</h1>
                 </div>
