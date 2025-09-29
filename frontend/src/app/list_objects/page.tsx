@@ -36,7 +36,7 @@ export default function ProjectsPage() {
     const [openProject, setOpenProject] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    const limit = 10;
+    const limit = 5;
 
     const {projects, total, setProjects, clearProjects} = useProjectStore();
 
@@ -53,7 +53,7 @@ export default function ProjectsPage() {
             setLoading(true);
             clearProjects();
 
-            const data = await GetProjects(currentPage - 1, limit);
+            const data = await GetProjects((currentPage - 1) * limit, limit);
             console.log(data)
 
             if (data.success && Array.isArray(data.result) && data.result.length > 0) {
