@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/tabler.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
@@ -84,7 +86,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: const Icon(Icons.menu),
+              icon: const Iconify(Tabler.menu_2, color: Colors.black87, size: 32),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
