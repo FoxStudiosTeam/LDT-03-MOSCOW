@@ -4,13 +4,16 @@ import 'package:mobile_flutter/auth/auth_provider.dart';
 import 'package:mobile_flutter/di/dependency_builder.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
-import 'package:mobile_flutter/screens/map.dart';
+import 'package:mobile_flutter/screens/objects_screen.dart';
+
+const IAPIRootURI = "I-API-Root-URI";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Это нужно!
 
   var builder = DependencyBuilder();
   builder.registerDependency(IAuthStorageProviderDIToken, AuthStorageProvider());
+  builder.registerDependency(IAPIRootURI, Uri.parse("https://test.foxstudios.ru:32460/api"));
 
   var storage = builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
   var au = AuthProvider(Uri.parse('https://sso.foxstudios.ru:32460'), storage);
@@ -28,7 +31,7 @@ class MainPage extends StatelessWidget {
   Future<Widget> prepareChild() async {
     var storageProvider = di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
     if (await storageProvider.getRefreshToken() != "") {
-      return MapScreen(di: di);
+      return ObjectsScreen(di: di);
     }
     return AuthScreen(di:di);
   }

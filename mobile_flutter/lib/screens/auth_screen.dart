@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
-import 'package:mobile_flutter/screens/map.dart';
+import 'package:mobile_flutter/screens/map_screen.dart';
+import 'package:mobile_flutter/screens/objects_screen.dart';
 
 import '../auth/auth_provider.dart';
 class AuthScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class _AuthScreenState extends State<AuthScreen> {
         const Duration(seconds: 5),
       );
       if (!mounted) return;
-      Navigator.push(context, MaterialPageRoute(builder: (_) => MapScreen(di:widget.di)));
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => ObjectsScreen(di:widget.di)), (route) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +98,7 @@ class _AuthScreenState extends State<AuthScreen> {
   );
 
   Widget _buildLoginField() => Padding(
-    padding: EdgeInsets.symmetric(vertical: 25),
+    padding: EdgeInsets.only(top: 25),
     child: TextFormField(
       style: TextStyle(
         fontFamily: "Inter",
@@ -119,28 +120,25 @@ class _AuthScreenState extends State<AuthScreen> {
     )
   );
 
-  Widget _buildPasswordField() => Padding(
-      padding: EdgeInsets.symmetric(vertical: 25),
-      child: TextFormField(
-        style: TextStyle(
-          fontFamily: "Inter",
+  Widget _buildPasswordField() => TextFormField(
+    style: TextStyle(
+      fontFamily: "Inter",
+    ),
+    controller: _passwordController,
+    decoration: InputDecoration(
+        labelText: 'Пароль',
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: Colors.black38)
         ),
-        controller: _passwordController,
-        decoration: InputDecoration(
-          labelText: 'Пароль',
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: Colors.black38)
-            ),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: Colors.black87,width: 2)
-            )
-        ),
-        obscureText: true,
-        validator: (value) =>
-        value == null || value.isEmpty ? 'Пожалуйста, введите пароль' : null,
-      )
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: Colors.black87,width: 2)
+        )
+    ),
+    obscureText: true,
+    validator: (value) =>
+    value == null || value.isEmpty ? 'Пожалуйста, введите пароль' : null,
   );
 
   Widget _buildSubmitButton() => SizedBox(
