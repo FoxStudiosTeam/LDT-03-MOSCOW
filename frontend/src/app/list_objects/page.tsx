@@ -6,6 +6,7 @@ import Link from "next/link";
 import {GetProjects, GetStatuses} from "@/app/Api/Api";
 import {useProjectStore} from "@/storage/projectStorage";
 import {ProjectMap} from "@/app/components/map";
+import {Status} from "@/models";
 
 interface Attachment {
     base_entity_uuid: string;
@@ -28,10 +29,7 @@ interface ProjectData {
     attachments: Attachment[];
 }
 
-interface Status {
-    id: number;
-    title: string;
-}
+
 
 export default function ProjectsPage() {
     const [statuses, setStatuses] = useState<Status[]>([]);

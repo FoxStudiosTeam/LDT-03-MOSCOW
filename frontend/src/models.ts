@@ -63,3 +63,8 @@ export interface SubJob {
   startDate: string;
   endDate: string;
 }
+
+export interface Status {
+  id: number;
+  title: string;
+}

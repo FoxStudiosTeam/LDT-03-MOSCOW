@@ -3,17 +3,38 @@
 import { Header } from "@/app/components/header";
 import { useProjectStore } from "@/storage/projectStorage";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ProjectMap } from "@/app/components/map";
 import styles from "@/app/styles/variables.module.css"
+import {GetStatuses} from "@/app/Api/Api";
+import {Status} from "@/models";
 
 
 export default function ObjectDetail() {
     const params = useParams();
+    const [statuses, setStatuses] = useState<Status[]>([]);
 
     const [isModalWindowOpen, setIsModalWindowOpen] = useState(false);
+
+    useEffect(() => {
+        const loadStatuses = async () => {
+            const data = await GetStatuses();
+            if (data.success) {
+                setStatuses(data.result);
+            } else {
+                console.error("Ошибка при загрузке статусов:", data.message);
+            }
+        };
+
+        loadStatuses();
+    }, []);
+
+    const getStatusTitle = (statusId: number) => {
+        const status = statuses.find((s) => s.id === statusId);
+        return status ? status.title : "Неизвестно";
+    };
 
     const projectData = useProjectStore((state) => {
         if (!params?.id) return undefined;
@@ -93,10 +114,10 @@ export default function ObjectDetail() {
                     {projectData ? (
                         <div className=" p-4 bg-white shadow-sm">
                             <div className="flex justify-between items-center cursor-pointer">
-                                <div className="mb-2 flex flex-col gap-3">
+                                <div className="mb-4 flex flex-col gap-3">
                                     <p className="font-medium">{projectData.project.address}</p>
                                     <p className="text-sm text-gray-600">
-                                        Статус: {projectData.project.status}
+                                        Статус: {getStatusTitle(projectData.project.status)}
                                     </p>
                                 </div>
                             </div>
