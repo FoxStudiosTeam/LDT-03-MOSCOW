@@ -71,15 +71,38 @@ export default function EditSubjobs() {
             const next = [...prev];
             const old = next[rowIdx];
             if (!old) return prev;
+
             if (colKey === "volume") {
                 const num = value === "" ? 0 : Number(value);
                 next[rowIdx] = { ...old, volume: Number.isFinite(num) ? num : 0 };
+            } else if (colKey === "startDate") {
+                const newStart = new Date(value).getTime();
+                const end = old.endDate ? new Date(old.endDate).getTime() : null;
+
+                if (end && newStart > end) {
+                    setMessages(["Дата начала не может быть позже даты окончания"]);
+                    return prev; // отмена
+                }
+
+                next[rowIdx] = { ...old, startDate: value };
+            } else if (colKey === "endDate") {
+                const newEnd = new Date(value).getTime();
+                const start = old.startDate ? new Date(old.startDate).getTime() : null;
+
+                if (start && newEnd < start) {
+                    setMessages(["Дата окончания не может быть раньше даты начала"]);
+                    return prev; // отмена
+                }
+
+                next[rowIdx] = { ...old, endDate: value };
             } else {
                 next[rowIdx] = { ...old, [colKey]: value };
             }
+
             return next;
         });
     };
+
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (e.key === "Enter") {

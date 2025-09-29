@@ -110,7 +110,7 @@ export default function ProjectsPage() {
     return (
         <div className="min-h-screen flex flex-col bg-[#D0D0D0]">
             <Header/>
-            <main className="flex-1 w-full max-w-6xl mx-auto bg-white px-6 sm:px-8 py-6 sm:py-10">
+            <main className="flex-1 w-full max-w-[1200px] max-w-6xl mx-auto bg-white px-6 sm:px-8 py-6 sm:py-10">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl sm:text-3xl font-semibold">Ваши объекты</h1>
                 </div>
