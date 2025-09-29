@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ProjectMap } from "@/app/components/map";
 
 
 export default function ObjectDetail() {
@@ -44,7 +45,7 @@ export default function ObjectDetail() {
                             <div className="flex flex-wrap gap-3">
                                 {projectData?.attachments.map((item, itemIdx) => (
                                     <div key={itemIdx} className="max-w-[80px] max-h-[70px] cursor-pointer">
-                                        <Link href={`https://test.foxstudios.ru:32460/Vadim/api/attachmentproxy/file?file_id=${item.uuid}`}>
+                                        <Link href={`https://test.foxstudios.ru:32460/api/attachmentproxy/file?file_id=${item.uuid}`}>
                                             <Image
                                                 src={'/attachment/attachment.svg'}
                                                 alt="Скачать вложение"
@@ -56,13 +57,22 @@ export default function ObjectDetail() {
                                                 {item.original_filename}
                                             </p>
                                         </Link>
-
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
                 ) : null}
+
+                <div className="mb-6">
+                    <Link
+                        href={'/list_objects'}
+                        className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md"
+                    >
+                        Вернуться
+                    </Link>
+                </div>
+
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-xl font-semibold">Ваши объекты</h1>
                 </div>
@@ -78,12 +88,6 @@ export default function ObjectDetail() {
                 </div>
 
                 <div className="space-y-4">
-                    {/* {projectData.coordinates && (
-                        <p>
-                            Координаты: X: {projectData.coordinates.x}, Y:{" "}
-                            {projectData.coordinates.y}, Z: {projectData.coordinates.z}
-                        </p>
-                    )} */}
                     {projectData ? (
                         <div className="border rounded-md p-4 bg-white shadow-sm">
                             <div className="flex justify-between items-center cursor-pointer">
@@ -94,6 +98,13 @@ export default function ObjectDetail() {
                                     </p>
                                 </div>
                             </div>
+
+                            {projectData.project.polygon ? (
+                                <ProjectMap polygon={projectData.project.polygon} />
+                            ) : (
+                                <p>Карта: нет данных</p>
+                            )}
+
                             <div className="mt-4 space-y-2 text-sm">
                                 {projectData.project.customer && <p>Заказчик: {projectData.project.customer}</p>}
                                 {projectData.project.contractor ? (

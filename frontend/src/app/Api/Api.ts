@@ -3,7 +3,7 @@
 import {jwtDecode} from "jwt-decode";
 import {WorkItem} from "@/models";
 
-const baseURL = "https://test.foxstudios.ru:32460/Vadim/api";
+const baseURL = "https://test.foxstudios.ru:32460/api";
 
 interface TokenPayload {
     exp: number;
