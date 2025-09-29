@@ -325,24 +325,33 @@ export async function GetStatuses() {
     return { success: false, message: data.message || "Ошибка при получении статусов", result: [] };
 }
 
-export async function LogOut() {
-    try {
-        const token = localStorage.getItem("access_token");
+export async function uploadProjectFiles(projectId: string, files: File[] | FileList) {
+    const uploaded: string[] = [];
+    const errors: string[] = [];
 
-        if (!token) {
-            return { success: false, message: "Нет access_token в localStorage" };
+    for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch(
+                `${baseURL}/attach/project?id=${projectId}`,
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+            if (res.ok) {
+                uploaded.push(file.name);
+            } else {
+                errors.push(file.name);
+            }
+        } catch (err) {
+            console.error("Ошибка сети:", err);
+            errors.push(file.name);
         }
-
-        await fetch(`${authBaseURL}/auth/session`, {
-            method: "DELETE",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-
-    } catch (error) {
-        console.error("Ошибка при выходе:", error);
-        return { success: false, message: String(error) };
     }
+
+    return { uploaded, errors };
 }
