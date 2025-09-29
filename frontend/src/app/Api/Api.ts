@@ -396,3 +396,58 @@ export async function GetReports(uuid: string) {
 
     return { success: false, message: data.message || "Ошибка при получении отчётов", result: [] }
 }
+
+export async function setForeman(projectUuid: string, first_name: string, last_name: string, patronymic: string) {
+    try {
+        const token = localStorage.getItem("access_token");
+        if (!token) return { success: false, message: "Нет access_token в localStorage" };
+
+        const response = await fetch(`${baseURL}/project/set-foreman`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                first_name,
+                last_name,
+                patronymic,
+                uuid: projectUuid,
+            }),
+        });
+
+        if (response.ok) {
+            return { success: true, message: null };
+        } else {
+            const result = await response.json();
+            return { success: false, message: result.message || "Ошибка при set-foreman" };
+        }
+    } catch (error) {
+        console.error("Ошибка при set-foreman:", error);
+        return { success: false, message: String(error) };
+    }
+}
+export async function projectCommit(projectUuid: string){
+    try {
+        const token = localStorage.getItem("access_token");
+        if (!token) return { success: false, message: "Нет access_token в localStorage" };
+
+        const response = await fetch(`${baseURL}/project/project-commit?project_uuid=${projectUuid}`, {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (response.ok) {
+            return { success: true, message: null };
+        } else {
+            const result = await response.json();
+            return { success: false, message: result.message || "Ошибка при project-commit" };
+        }
+    } catch (error) {
+        console.error("Ошибка при project-commit:", error);
+        return { success: false, message: String(error) };
+    }
+}
+

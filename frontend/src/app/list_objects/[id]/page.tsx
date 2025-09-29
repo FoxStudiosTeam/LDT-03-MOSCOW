@@ -68,7 +68,8 @@ export default function ObjectDetail() {
             <main className=" w-full max-w-[1200px] bg-white px-8 pt-2">
                 {isModalWindowOpen ? (
                     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50">
-                        <div className="w-full flex flex-col max-w-[1200px] min-h-[500px] bg-white px-4 py-5 sm:px-6 md:px-8 rounded-lg shadow-lg z-50">
+                        <div
+                            className="w-full flex flex-col max-w-[1200px] min-h-[500px] bg-white px-4 py-5 sm:px-6 md:px-8 rounded-lg shadow-lg z-50">
                             <div className="flex justify-start mb-4 min-w-[250px]">
                                 <button
                                     onClick={() => setIsModalWindowOpen(false)}
@@ -77,7 +78,7 @@ export default function ObjectDetail() {
                                     Вернуться
                                 </button>
                             </div>
-
+                            <p className="text-gray-700 mb-3">Если файлы не появляются перейдите на страницу &#34;Список объектов&#34; и попробуйте снова</p>
                             <div className="flex flex-wrap gap-3">
                                 {projectData?.attachments.map((item, itemIdx) => (
                                     <div
@@ -160,19 +161,19 @@ export default function ObjectDetail() {
                                 <div className="grid grid-cols-[120px_1fr] gap-2">
                                     <p className="text-gray-700">Заказчик:</p>
                                     <p className="border-b border-[#D0D0D0]">
-                                        {projectData.project.customer || "отсутствует"}
+                                        {projectData.project.created_by || "отсутствует"}
                                     </p>
                                 </div>
 
                                 <div className="grid grid-cols-[120px_1fr] gap-2">
                                     <p className="text-gray-700">Подрядчик:</p>
                                     <p className="border-b border-[#D0D0D0]">
-                                        {projectData.project.contractor || "отсутствует"}
+                                        {projectData.project.foreman || "отсутствует"}
                                     </p>
                                 </div>
 
                                 <div className="grid grid-cols-[120px_1fr] gap-2">
-                                    <p className="text-gray-700">Инспектор:</p>
+                                    <p className="text-gray-700">Инспекторы:</p>
                                     <p className="border-b border-[#D0D0D0]">
                                         {projectData.project.inspector || "отсутствует"}
                                     </p>
@@ -210,19 +211,23 @@ export default function ObjectDetail() {
                             График работ
                         </button>
 
-                        <div className="w-full flex justify-between items-center gap-4 ">
+                        <div className="w-full flex items-center gap-4">
                             {projectData?.project.status === 0 && (
-                                <button className={`min-w-[250px] ${styles.mainButton}`}>
+                                <Link
+                                    href={"/activation/"}
+                                    className={`min-w-[250px] ${styles.mainButton}`}
+                                >
                                     Активация
-                                </button>
+                                </Link>
                             )}
 
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className={`min-w-[250px] ${styles.mainButton}`}
+                                className={`min-w-[250px] ml-auto ${styles.mainButton}`}
                             >
                                 Прикрепить документы
                             </button>
+
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -232,6 +237,7 @@ export default function ObjectDetail() {
                                 onChange={handleFileChange}
                             />
                         </div>
+
                     </div>
                 </div>
             </main>
