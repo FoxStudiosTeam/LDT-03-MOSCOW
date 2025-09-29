@@ -87,12 +87,6 @@ export default function ObjectDetail() {
                 </div>
 
                 <div className="space-y-4">
-                    {/* {projectData.coordinates && (
-                        <p>
-                            Координаты: X: {projectData.coordinates.x}, Y:{" "}
-                            {projectData.coordinates.y}, Z: {projectData.coordinates.z}
-                        </p>
-                    )} */}
                     {projectData ? (
                         <div className="border rounded-md p-4 bg-white shadow-sm">
                             <div className="flex justify-between items-center cursor-pointer">
