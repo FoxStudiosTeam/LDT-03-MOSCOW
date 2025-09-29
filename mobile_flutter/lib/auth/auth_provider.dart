@@ -11,7 +11,6 @@ import 'dart:convert';
 abstract class IAuthProvider {
   Future<AccessTokenData> login(String login, String password, Duration timeOut);
 }
-//Uri.parse('https://sso.foxstudios.ru:32460')
 
 const IAuthProviderDIToken = "I-Auth-Provider-DI-Token";
 
