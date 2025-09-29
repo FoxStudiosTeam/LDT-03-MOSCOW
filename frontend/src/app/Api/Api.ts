@@ -323,3 +323,33 @@ export async function GetStatuses() {
     return { success: false, message: data.message || "Ошибка при получении статусов", result: [] };
 }
 
+export async function uploadProjectFiles(projectId: string, files: File[] | FileList) {
+    const uploaded: string[] = [];
+    const errors: string[] = [];
+
+    for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch(
+                `${baseURL}/attach/project?id=${projectId}`,
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+            if (res.ok) {
+                uploaded.push(file.name);
+            } else {
+                errors.push(file.name);
+            }
+        } catch (err) {
+            console.error("Ошибка сети:", err);
+            errors.push(file.name);
+        }
+    }
+
+    return { uploaded, errors };
+}
