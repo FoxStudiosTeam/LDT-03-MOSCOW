@@ -191,6 +191,7 @@ dependencies = [
  "axum-prometheus",
  "futures-util",
  "serde",
+ "serde_json",
  "shared",
  "tokio",
  "tokio-util",

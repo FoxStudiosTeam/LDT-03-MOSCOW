@@ -198,9 +198,12 @@ async fn main() -> anyhow::Result<()> {
             .merge(dev_router)
         )
         .split_for_parts();
+
+    let schema = serde_json::to_string(&api).expect("Can't serialize schema");
     
     let app = axum::Router::new()
         .merge(Scalar::with_url("/api/project/docs/scalar", api))
+        .route("/api/project/openapi.json", get(|| async move {schema}))
         .merge(metrics)
         .merge(api_router)
         .layer(shared::helpers::cors::cors_layer())
