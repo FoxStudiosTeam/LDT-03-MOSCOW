@@ -133,7 +133,7 @@ export default function ObjectDetail() {
                         Вложения
                     </button>
 
-                    <Link href={`/list_objects/${params.id}/punishment`} className={`min-w-[250px] ${styles.mainButton}`}>
+                    <Link href={`/list_objects/${params.id}/punishment`} className={`min-w-[250px] text-center ${styles.mainButton}`}>
                         Список предписаний
                     </Link>
                 </div>
