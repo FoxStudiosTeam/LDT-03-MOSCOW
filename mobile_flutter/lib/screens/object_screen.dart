@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:mobile_flutter/utils/StyleUtils.dart';
 
 import '../domain/entities.dart';
 import '../di/dependency_container.dart';
