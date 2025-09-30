@@ -36,8 +36,6 @@ export default function Orders() {
         loadStatuses();
     }, [projectId]);
 
-    console.log('reports', reports)
-
     return (
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />

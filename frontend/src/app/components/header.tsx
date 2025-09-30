@@ -15,7 +15,7 @@ export function Header() {
             <div className="w-[60%] flex justify-between items-center px-8">
                 <div className="flex flex-row items-center gap-4">
                     <Link href={'/list_objects'} className="flex flex-row gap-3 items-center place-content-end">
-                        <Image src={'/logo.svg'} alt="Логотип" height={40} width={40}/>
+                        <Image src={'/logo.svg'} alt="Логотип" height={40} width={40} />
                         <span>ЭСЖ</span>
                     </Link>
 
@@ -24,7 +24,10 @@ export function Header() {
                     <Link href={"/"}>О нас</Link>
                 </div>
 
-                <button onClick={logoutHandle} className="flex place-content-end">Выход</button>
+                <button onClick={logoutHandle} className="flex place-content-end flex-row items-center gap-3">
+                    <p>Выход</p>
+                    <Image src={"/signout.svg"} alt="Выход" height={40} width={35} className="h-[40px]" />
+                </button>
             </div>
         </div>
     )

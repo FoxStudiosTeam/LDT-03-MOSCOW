@@ -1,4 +1,5 @@
 "use client";
+import { PunishmentItem } from "@/models";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -29,15 +30,41 @@ export interface ProjectWithAttachments {
     project: Project;
 }
 
+// interface PunishmentItem {
+//     uuid: string;
+//     title: string;
+//     punishment: string;
+//     punishment_item_status: number;
+//     regulation_doc: string | null;
+//     punish_datetime: string;
+//     correction_date_plan: string | null;
+//     correction_date_info: string | null;
+//     correction_date_fact: string | null;
+//     is_suspend: boolean;
+//     place: string;
+//     comment: string | null;
+// }
+
+interface PunishmentWithAttachments {
+    punishment_item: PunishmentItem;
+    attachments: Attachment[];
+}
+
 interface ProjectState {
     projects: ProjectWithAttachments[];
     total: number;
     hydrated: boolean;
 
+    punishments: PunishmentWithAttachments[];
+
     setHydrated: () => void;
     setProjects: (projects: ProjectWithAttachments[], total: number) => void;
     getProjectById: (uuid: string) => ProjectWithAttachments | undefined;
     clearProjects: () => void;
+
+    setPunishmentItem: (item: PunishmentItem | PunishmentItem[]) => void;
+    getPunishments: () => PunishmentWithAttachments[];
+    clearPunishments: () => void;
 }
 
 export const useProjectStore = create<ProjectState>()(
@@ -47,6 +74,8 @@ export const useProjectStore = create<ProjectState>()(
             total: 0,
             hydrated: false,
 
+            punishments: [],
+
             setHydrated: () => set({ hydrated: true }),
 
             setProjects: (projects, total) => set({ projects, total }),
@@ -55,6 +84,30 @@ export const useProjectStore = create<ProjectState>()(
                 get().projects.find((p) => p.project.uuid === uuid),
 
             clearProjects: () => set({ projects: [], total: 0 }),
+
+            setPunishmentItem: (input: PunishmentWithAttachments | PunishmentWithAttachments[]) =>
+                set((state) => {
+                    console.log('incoming input', input);
+                    const items = Array.isArray(input) ? input : [input];
+                    let newPunishments = [...state.punishments];
+
+                    items.forEach((item) => {
+                        const exists = newPunishments.find(p => p.punishment_item.uuid === item.punishment_item.uuid);
+                        if (exists) {
+                            newPunishments = newPunishments.map(p =>
+                                p.punishment_item.uuid === item.punishment_item.uuid ? item : p
+                            );
+                        } else {
+                            newPunishments.push(item);
+                        }
+                    });
+
+                    return { punishments: newPunishments };
+                }),
+
+            getPunishments: () => get().punishments,
+
+            clearPunishments: () => set({ punishments: [] }),
         }),
         {
             name: "project-storage",

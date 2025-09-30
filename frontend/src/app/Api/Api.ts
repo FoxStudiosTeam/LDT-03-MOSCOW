@@ -7,6 +7,7 @@ const baseURL = "https://test.foxstudios.ru:32460/Vadim/api";
 
 const authBaseURL = 'https://sso.foxstudios.ru:32460/api'
 
+
 interface TokenPayload {
     exp: number;
     uuid: string;
@@ -396,21 +397,32 @@ export async function LogOut() {
         const token = localStorage.getItem("access_token");
 
         if (!token) {
-            return {success: false, message: "Нет access_token в localStorage"};
+            return { success: false, message: "Нет access_token в localStorage" };
         }
 
-        await fetch(`${authBaseURL}/auth/session`, {
+        const res = await fetch(`${authBaseURL}/auth/session`, {
             method: "DELETE",
             credentials: "include",
             headers: {
                 "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
             },
         });
+
+        if (res.ok) {
+            localStorage.removeItem("access_token");
+            window.location.href = "/sign_in/";
+
+            return { success: true, message: "Вы успешно вышли" };
+        } else {
+            return { success: false, message: "Ошибка при удалении refresh токена" };
+        }
     } catch (error) {
         console.error("Ошибка при выходе:", error);
-        return {success: false, message: String(error)};
+        return { success: false, message: String(error) };
     }
 }
+
 
 export async function GetReports(uuid: string) {
     try {
@@ -491,3 +503,132 @@ export async function projectCommit(projectUuid: string) {
     }
 }
 
+export async function GetMaterialsById(id:string) {
+    try {
+        const response = await fetch(`${baseURL}/materials/by_project/${id}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            return {
+                successMaterials: true,
+                messageMaterials: null,
+                resultMaterials: result,
+            };
+        } else {
+            const text = await response.text();
+            let message: string;
+
+            try {
+                const parsed = JSON.parse(text);
+                message = parsed.message || text;
+            } catch {
+                message = text;
+            }
+
+            return { successMaterials: false, messageMaterials: message };
+        }
+    } catch (error) {
+        console.error("Ошибка при запросе материалов:", error);
+        return { successMaterials: false, messageMaterials: String(error) };
+    }
+}
+
+export async function GetPunishmentsById(id:string) {
+    try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(`${baseURL}/punishment/get_punishment_items_by_project?project_uuid=${id}`, {
+            method: "GET",
+            credentials: 'include',
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            return {
+                successPunishment: true,
+                messagePunishment: null,
+                resultPunishment: result.punishments,
+            };
+        } else {
+            const text = await response.text();
+            let message: string;
+
+            try {
+                const parsed = JSON.parse(text);
+                message = parsed.message || text;
+            } catch {
+                message = text;
+            }
+
+            return { successPunishment: false, messagePunishment: message };
+        }
+    } catch (error) {
+        console.error("Ошибка при запросе предписаний:", error);
+        return { successPunishment: false, messagePunishment: String(error) };
+    }
+}
+
+export async function RequestResearch(id: string) {
+    try {
+        const response = await fetch(
+            `${baseURL}/materials/request_research/${id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        if (response.ok) {
+            return { success: true, message: "Запрос на исследование отправлен успешно" };
+        } else {
+            const text = await response.text();
+            let message: string;
+
+            try {
+                const parsed = JSON.parse(text);
+                message = parsed.message || text;
+            } catch {
+                message = text;
+            }
+
+            return { success: false, message };
+        }
+    } catch (error) {
+        console.error("Ошибка при запросе исследования:", error);
+        return { success: false, message: String(error) };
+    }
+}
+
+export async function GetPunishmetStatuses() {
+    try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(`${baseURL}/punishment/get_statuses`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+    
+        const data = await response.json();
+    
+        if (response.ok) {
+            return {success: true, message: null, result: data};
+        }
+    } catch (error) {
+        console.error("Ошибка при запросе статусов:", error);
+        return { successPunishment: false, messagePunishment: String(error) };
+    }
+
+}
