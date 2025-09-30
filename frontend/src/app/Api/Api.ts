@@ -421,9 +421,6 @@ export async function LogOut() {
     }
 }
 
-const logoutHandle = async () => {
-    await LogOut();
-};
 
 export async function GetReports(uuid: string) {
     try {
