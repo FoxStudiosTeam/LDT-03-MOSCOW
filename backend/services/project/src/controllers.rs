@@ -345,3 +345,23 @@ pub async fn delete_project_schedule(
 ) -> Result<Response, AppErr> {
     return state.project_schedule_service().delete_project_schedule(r, t).await;
 }
+
+
+#[utoipa::path(
+    get,
+    path = "/get-project_inspectors",
+    tag = crate::ANY_TAG,
+    summary = "get inspectors related to project",
+    responses (
+        (status = 200, description = "Inspector list as vec", body = GetProjectInspectorsResponse),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_get_project_inspectors(
+    Extension(payload): Extension<AccessTokenPayload>,
+    State(state) : State<AppState>,
+    Json(r): Json<GetProjectInspectorsRequest>,
+) -> Result<Response, AppErr> {
+    return state.project_service().get_project_inspectors(r, payload).await;
+}

@@ -15,8 +15,8 @@ impl Project {
             end_date: Set(self.end_date),
             uuid: Set(self.uuid),
             foreman: Set(self.foreman),
+            created_at: Set(self.created_at),
             address: Set(self.address),
-            ssk: Set(self.ssk),
             created_by: Set(self.created_by),
         }
     }
@@ -32,8 +32,8 @@ pub struct Project {
     pub end_date: Option<chrono::NaiveDate>,
     pub uuid: uuid::Uuid,
     pub foreman: Option<uuid::Uuid>,
+    pub created_at: chrono::NaiveDateTime,
     pub address: String,
-    pub ssk: Option<uuid::Uuid>,
     pub created_by: Option<uuid::Uuid>,
 }
 
@@ -45,8 +45,8 @@ pub struct ActiveProject {
     pub end_date: Optional<Option<chrono::NaiveDate>>,
     pub uuid: Optional<uuid::Uuid>,
     pub foreman: Optional<Option<uuid::Uuid>>,
+    pub created_at: Optional<chrono::NaiveDateTime>,
     pub address: Optional<String>,
-    pub ssk: Optional<Option<uuid::Uuid>>,
     pub created_by: Optional<Option<uuid::Uuid>>,
 }
 
@@ -59,8 +59,8 @@ impl ActiveProject {
             end_date: self.end_date.into_option()?,
             uuid: self.uuid.into_option()?,
             foreman: self.foreman.into_option()?,
+            created_at: self.created_at.into_option()?,
             address: self.address.into_option()?,
-            ssk: self.ssk.into_option()?,
             created_by: self.created_by.into_option()?,
         })
     }
@@ -91,8 +91,8 @@ impl TableSelector for ActiveProject {
             "end_date" => self.end_date.is_set(),
             "uuid" => self.uuid.is_set(),
             "foreman" => self.foreman.is_set(),
+            "created_at" => self.created_at.is_set(),
             "address" => self.address.is_set(),
-            "ssk" => self.ssk.is_set(),
             "created_by" => self.created_by.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
@@ -142,15 +142,15 @@ impl TableSelector for ActiveProject {
                 is_primary: false,
             },
             ColumnDef{
-                name: "address",
+                name: "created_at",
                 nullable: false,
-                default: None,
+                default: Some("LOCALTIMESTAMP"),
                 is_unique: false,
                 is_primary: false,
             },
             ColumnDef{
-                name: "ssk",
-                nullable: true,
+                name: "address",
+                nullable: false,
                 default: None,
                 is_unique: false,
                 is_primary: false,
@@ -207,8 +207,8 @@ impl ModelOps<sqlx::Postgres> for ActiveProject
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
+        if let Set(v) = &self.created_at {tracing::debug!("Binded created_at"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
-        if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
         if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
         q
     }
@@ -332,8 +332,8 @@ impl ModelOps<sqlx::MySql> for ActiveProject
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
+        if let Set(v) = &self.created_at {tracing::debug!("Binded created_at"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
-        if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
         if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
         q
     }
@@ -457,8 +457,8 @@ impl ModelOps<sqlx::Sqlite> for ActiveProject
         if let Set(v) = &self.end_date {tracing::debug!("Binded end_date"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
         if let Set(v) = &self.foreman {tracing::debug!("Binded foreman"); q = q.bind(v);}
+        if let Set(v) = &self.created_at {tracing::debug!("Binded created_at"); q = q.bind(v);}
         if let Set(v) = &self.address {tracing::debug!("Binded address"); q = q.bind(v);}
-        if let Set(v) = &self.ssk {tracing::debug!("Binded ssk"); q = q.bind(v);}
         if let Set(v) = &self.created_by {tracing::debug!("Binded created_by"); q = q.bind(v);}
         q
     }

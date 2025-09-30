@@ -168,6 +168,8 @@ class _AuthScreenState extends State<AuthScreen> {
     ),
   );
 
+
+
   @override
   void dispose() {
     _loginController.dispose();

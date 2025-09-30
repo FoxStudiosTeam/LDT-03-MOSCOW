@@ -1,133 +1,204 @@
 "use client";
 
-import { useState } from "react";
-import { Header } from "@/app/components/header";
+import {useState, useEffect} from "react";
+import {Header} from "@/app/components/header";
 import Link from "next/link";
+import {GetProjects, GetStatuses} from "@/app/Api/Api";
+import {useProjectStore} from "@/storage/projectStorage";
+import {ProjectMap} from "@/app/components/map";
+import {Status} from "@/models";
 
-
-interface Project {
-    id: number;
-    address: string;
-    status: string;
-    customer?: string;
-    contractor?: string;
-    inspector?: string;
-    coordinates?: { x: number; y: number; z: number };
-    mapUrl?: string;
+interface Attachment {
+    base_entity_uuid: string;
+    content_type: string | null;
+    file_uuid: string;
+    original_filename: string;
+    uuid: string;
 }
 
-const projects: Project[] = [
-    {
-        id: 1,
-        address: "ул. Волковское шоссе, д. 12",
-        status: "В работе",
-        customer: "ГКУ МСК Представитель: Иванов И.И.",
-        contractor: "ООО СтройГрад Исполнитель: Сидоров И.И.",
-        inspector: "Петров П.П.",
-        coordinates: { x: -123, y: 45, z: -999 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Openstreetmap_map.png/640px-Openstreetmap_map.png",
-    },
-    {
-        id: 2,
-        address: "ул. Флотская, д. 54, 58к1",
-        status: "В норме",
-        customer: "ГУП МОСИНЖПРОЕКТ Представитель: Смирнов А.А.",
-        contractor: "ООО Мир Пива Исполнитель: Сидоров И.И.",
-        inspector: "Бугалин И.И.",
-        coordinates: { x: -1230, y: 68, z: -99993 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/OpenStreetMap_logo.svg/512px-OpenStreetMap_logo.svg.png",
-    },
-    {
-        id: 3,
-        address: "пр-т Мира, д. 150",
-        status: "На проверке",
-        customer: "ГКУ МосАвтоДор Представитель: Васильев В.В.",
-        contractor: "АО ИнжСтрой Исполнитель: Кузнецов К.К.",
-        inspector: "Фёдоров Ф.Ф.",
-        coordinates: { x: 100, y: -50, z: 2500 },
-        mapUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/640px-World_map_blank_without_borders.svg.png",
-    },
+interface ProjectData {
+    uuid: string;
+    address: string | null;
+    status: number;
+    ssk: string | null;
+    foreman: string | null;
+    created_by: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    polygon: string | null;
+    attachments: Attachment[];
+}
 
-];
+
 
 export default function ProjectsPage() {
-    const [openProject, setOpenProject] = useState<number | null>(null);
+    const [statuses, setStatuses] = useState<Status[]>([]);
+    const [openProject, setOpenProject] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
-    const toggleProject = (id: number) => {
-        setOpenProject(openProject === id ? null : id);
+    const limit = 5;
+
+    const {projects, total, setProjects, clearProjects} = useProjectStore();
+
+    const [totalPages, setTotalPages] = useState<number>(0);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [currentPageContent, setCurrentPageContent] = useState<ProjectData[]>([]);
+
+    const toggleProject = (uuid: string) => {
+        setOpenProject(openProject === uuid ? null : uuid);
+    };
+
+    useEffect(() => {
+        const loadProjects = async () => {
+            setLoading(true);
+            clearProjects();
+
+            const data = await GetProjects((currentPage - 1) * limit, limit);
+            console.log(data)
+
+            if (data.success && Array.isArray(data.result) && data.result.length > 0) {
+                setProjects(data.result, data.total);
+            } else {
+                console.error("Ошибка при загрузке проектов:", data.message);
+            }
+
+            setLoading(false);
+        };
+
+        const loadStatuses = async () => {
+            const data = await GetStatuses();
+            if (data.success) {
+                setStatuses(data.result);
+            } else {
+                console.error("Ошибка при загрузке статусов:", data.message);
+            }
+        };
+
+        loadProjects();
+        loadStatuses();
+    }, [currentPage, clearProjects, setProjects]);
+
+    useEffect(() => {
+        const totalPages = Math.ceil(total / limit);
+        setTotalPages(totalPages);
+    }, [total]);
+
+    useEffect(() => {
+        setCurrentPageContent(
+            projects.map((p) => ({
+                uuid: p.project.uuid,
+                address: p.project.address,
+                status: p.project.status,
+                ssk: p.project.ssk,
+                foreman: p.project.foreman,
+                created_by: p.project.created_by,
+                start_date: p.project.start_date,
+                end_date: p.project.end_date,
+                polygon: p.project.polygon,
+                attachments: (p.attachments ?? []) as Attachment[],
+            }))
+        );
+    }, [projects, currentPage, total]);
+
+    const getStatusTitle = (statusId: number) => {
+        const status = statuses.find((s) => s.id === statusId);
+        return status ? status.title : "Неизвестно";
     };
 
     return (
-        <div className="flex justify-center bg-[#D0D0D0]">
-            <Header />
-
-            <main className="w-[80%] bg-white px-8 pt-[50px]">
+        <div className="min-h-screen flex flex-col bg-[#D0D0D0]">
+            <Header/>
+            <main className="flex-1 w-full max-w-[1200px] max-w-6xl mx-auto bg-white px-6 sm:px-8 py-6 sm:py-10">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-xl font-semibold">Ваши объекты</h1>
+                    <h1 className="text-2xl sm:text-3xl font-semibold">Ваши объекты</h1>
                 </div>
 
-                <div className="flex gap-4 mb-6">
-                    <button className="bg-red-700 text-white px-4 py-2 rounded-md">
-                        В процессе
-                    </button>
-                    <button className="bg-red-700 text-white px-4 py-2 rounded-md">
-                        Завершенные
-                    </button>
-                    <Link className="bg-red-700 text-white px-4 py-2 rounded-md" href={"/list_objects/create_object/first_step/"}>
+                <div className="flex flex-wrap gap-3 mb-6">
+                    <Link
+                        className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
+                        href={"/list_objects/create_object/first_step/"}
+                    >
                         Создать новый
                     </Link>
                 </div>
 
-                <div className="space-y-4">
-                    {projects.map((project) => (
-                        <div
-                            key={project.id}
-                            className="border rounded-md p-4 bg-white shadow-sm"
-                        >
-                            <div
-                                className="flex justify-between items-center cursor-pointer"
-                                onClick={() => toggleProject(project.id)}
-                            >
-                                <div>
-                                    <p className="font-medium">{project.address}</p>
-                                    <p className="text-sm text-gray-600">
-                                        Статус: {project.status}
-                                    </p>
-                                </div>
-                                <span className="text-xl">
-                                    {openProject === project.id ? "▲" : "▼"}
-                                </span>
-                            </div>
+                {loading && <p className="text-center text-gray-600">Загрузка проектов...</p>}
 
-                            {openProject === project.id && (
-                                <div className="mt-4 space-y-2 text-sm">
-                                    {project.customer && <p>Заказчик: {project.customer}</p>}
-                                    {project.contractor && <p>Подрядчик: {project.contractor}</p>}
-                                    {project.inspector && (
-                                        <p>Ответственный инспектор: {project.inspector}</p>
-                                    )}
-                                    {/*{project.mapUrl && (*/}
-                                    {/*    <Image*/}
-                                    {/*        src={project.mapUrl}*/}
-                                    {/*        alt="Карта"*/}
-                                    {/*        className="w-full h-64 object-cover rounded-md"*/}
-                                    {/*        width={50}*/}
-                                    {/*        height={50}*/}
-                                    {/*    />*/}
-                                    {/*)}*/}
-                                    {project.coordinates && (
-                                        <p>
-                                            Координаты: X: {project.coordinates.x}, Y:{" "}
-                                            {project.coordinates.y}, Z: {project.coordinates.z}
+                <div className="space-y-4">
+                    {currentPageContent &&
+                        currentPageContent.map((project) => (
+                            <div
+                                key={project.uuid}
+                                className="border rounded-md p-4 bg-white shadow-md hover:shadow-lg transition border-[#D0D0D0]"
+                            >
+                                <div
+                                    className="flex justify-between items-center cursor-pointer"
+                                    onClick={() => toggleProject(project.uuid)}
+                                >
+                                    <div>
+                                        <Link
+                                            href={`/list_objects/${project.uuid}`}
+                                            className="font-medium text-blue-500 hover:text-blue-700 hover:underline decoration-1 underline-offset-2 transition-colors duration-200"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                            }}
+                                        >
+                                            {project.address || "Адрес не указан"}
+                                        </Link>
+
+
+                                        <p className="text-sm text-gray-600">
+                                            Статус: {getStatusTitle(project.status)}
                                         </p>
-                                    )}
+                                    </div>
+                                    <span className="text-xl">
+                                        {openProject === project.uuid ? "▲" : "▼"}
+                                    </span>
                                 </div>
-                            )}
-                        </div>
-                    ))}
+
+                                {openProject === project.uuid && (
+                                    <div className="mt-4 space-y-2 text-sm text-gray-700">
+                                        <p>Подрядчик: {project.foreman || "не указан"}</p>
+
+                                        {project.polygon ? (
+                                            <ProjectMap polygon={project.polygon} />
+                                        ) : (
+                                            <p>Карта: нет данных</p>
+                                        )}
+                                    </div>
+                                )}
+
+                            </div>
+                        ))}
+                </div>
+
+                <div className="flex justify-center mt-6 gap-2">
+                    <button
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+                        onClick={() => setCurrentPage(prev => prev - 1)}
+                    >
+                        Назад
+                    </button>
+
+                    <div className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">
+                        {currentPage}
+                    </div>
+
+                    <span className="my-auto">ИЗ</span>
+
+                    <div className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">
+                        {totalPages}
+                    </div>
+
+
+                    <button
+                        disabled={currentPage >= totalPages}
+                        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                    >
+                        Вперед
+                    </button>
                 </div>
             </main>
         </div>

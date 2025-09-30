@@ -170,6 +170,7 @@ async fn main() -> anyhow::Result<()> {
         .with_state(state.clone());
 
     let any_router = OpenApiRouter::new()
+        .routes(routes!(controllers::handle_get_project_inspectors))
         .routes(routes!(controllers::handle_get_project))
         .routes(routes!(controllers::handle_get_project_schedule)) // todo: check relationship!
         .layer(AuthLayer::new(Role::Inspector | Role::Customer | Role::Foreman)).layer(axum::middleware::from_fn(token_extractor))

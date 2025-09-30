@@ -219,7 +219,6 @@ pub struct RowProjectWithAttachment {
     pub project: Project,
     #[sqlx(flatten)]
     pub attachment: OptionalAttachments,
-    pub total_count: i64,
 }
 
 #[derive(sqlx::FromRow, Default, Debug)]
@@ -252,3 +251,20 @@ pub struct TitledSchedule {
     pub title : String,
 }
 
+
+#[derive(Deserialize, FromRow, ToSchema)]
+pub struct GetProjectInspectorsRequest {
+    pub project_uuid : Uuid
+}
+
+
+#[derive(Deserialize, Serialize, FromRow, ToSchema)]
+pub struct InspectorInfo {
+    pub uuid: Uuid,
+    pub fcs: String
+}
+
+#[derive(Deserialize, Serialize, FromRow, ToSchema)]
+pub struct GetProjectInspectorsResponse {
+    pub inspectors : Vec<InspectorInfo>,
+}

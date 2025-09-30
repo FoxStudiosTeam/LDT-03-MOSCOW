@@ -29,6 +29,7 @@ pub fn make_router(state: AppState) -> OpenApiRouter {
         .routes(routes!(
             get_reports
         ))
+        .routes(routes!(get_reports_by_project))
         .with_state(state)
 }
 
@@ -83,7 +84,6 @@ async fn add_report(
 #[derive(utoipa::ToSchema, Deserialize, Debug)]
 pub struct AddReport{
     #[schema(example="2023-8-16")]
-    #[serde(skip_serializing_if = "Option::is_none")]
     check_date: Option<chrono::NaiveDate>,
     #[schema(example="2023-8-17")]
     report_date: chrono::NaiveDate,
@@ -291,7 +291,6 @@ pub struct ReportWithTitle {
     pub uuid: Uuid,
 
     #[schema(example = "2023-08-16")]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub check_date: Option<chrono::NaiveDate>,
 
     #[schema(example = "2023-08-17")]
@@ -398,4 +397,63 @@ async fn get_reports(
 pub struct ReportsRequest {
     #[schema(example=Uuid::new_v4)]
     pub project_schedule_item: uuid::Uuid,
+}
+
+
+#[derive(serde::Deserialize, utoipa::ToSchema, IntoParams)]
+pub struct ReportsByProjectRequest {
+    #[schema(example=Uuid::new_v4)]
+    pub project_uuid: uuid::Uuid,
+}
+
+
+#[utoipa::path(
+    get,
+    path = "/get_reports_by_uuid",
+    tag = crate::MAIN_TAG,
+    summary = "Get reports",
+    params(ReportsByProjectRequest),
+    responses(
+        (status = 200, description = "Reports found", body = Vec<ReportWithAttachments>),
+        (status = 400, description = "Project schedule ton found", body=ErrorResponse)
+    )
+)]
+async fn get_reports_by_project(
+    State(app): State<AppState>,
+    Query(r): Query<ReportsByProjectRequest>,
+) -> Result<Response, AppErr> {
+    info!("Fetching report with project UUID: {}", r.project_uuid);
+    let rows = sqlx::query_as::<_, ReportWithAttachmentsRecord>("
+        SELECT rts.*, 
+       psi.title,
+       ps.project_uuid,
+       a.uuid AS attachment_uuid,
+       a.original_filename,
+       a.base_entity_uuid,
+       a.content_type
+FROM norm.reports rts
+LEFT JOIN journal.project_schedule_items psi 
+       ON psi.uuid = rts.project_schedule_item
+LEFT JOIN journal.project_schedule ps 
+       ON ps.uuid = psi.project_schedule_uuid
+LEFT JOIN attachment.attachments a 
+       ON a.base_entity_uuid = rts.uuid
+WHERE ps.project_uuid = $1;
+    ").bind(r.project_uuid).fetch_all(app.orm.get_executor()).await.into_app_err()?;
+
+    let mut hm = HashMap::new();
+
+    for row in rows {
+        let a = row.attachments.into_attachments();
+        let e = &mut hm.entry(row.report.uuid.clone())
+            .or_insert_with(|| ReportWithAttachments {
+                attachments: vec![], 
+                report: row.report
+            })
+            .attachments;
+        let Some(a) = a else {continue};
+        e.push(a);  
+    }
+    let v = hm.into_values().collect::<Vec<_>>();
+    Ok((StatusCode::OK, Json(v)).into_response())
 }
