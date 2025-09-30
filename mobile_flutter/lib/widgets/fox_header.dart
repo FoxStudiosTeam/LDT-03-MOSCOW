@@ -13,7 +13,7 @@ class FoxHeader extends StatelessWidget implements PreferredSizeWidget {
   const FoxHeader({
     super.key,
     required this.title,
-    required this.subtitle,
+    this.subtitle = "",
     this.leftIcon,
     this.rightIcon,
     this.backgroundColor = Colors.white,
@@ -49,7 +49,6 @@ class FoxHeader extends StatelessWidget implements PreferredSizeWidget {
                   style: TextStyle(
                     color: primaryTextColor,
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 if (subtitle.isNotEmpty) ...[

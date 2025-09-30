@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
+import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
@@ -10,7 +11,7 @@ import 'package:mobile_flutter/widgets/fox_button.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/object_card.dart';
 
-import '../di/dependency_container.dart';
+
 
 class ObjectsScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -24,6 +25,8 @@ class ObjectsScreen extends StatefulWidget {
 class _ObjectsScreenState extends State<ObjectsScreen> {
   String? _token;
   List<Project> projects = [];
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
 
   @override
   void initState() {
@@ -46,16 +49,6 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         _token = "NO TOKEN";
       });
     }
-  }
-
-  Future<void> _leave() async {
-    await widget.di
-        .getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken)
-        .clear();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => AuthScreen(di: widget.di)),
-    );
   }
 
   Future<void> _loadProjects() async {
@@ -81,27 +74,27 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   }
 
   void openDrawer(){
-    Scaffold.of(context).openDrawer();
+    _scaffoldKey.currentState?.openDrawer();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: FoxHeader(
-          leftIcon: IconButton(onPressed: openDrawer, icon: SvgPicture.asset(
+          leftIcon: SvgPicture.asset(
             'assets/icons/logo.svg',
             width: 24,
             height: 24,
             color: Colors.black, // если нужно перекрасить
-          )),
-          title: "ЭСЖ", 
-          subtitle: "Ваши объекты",
-          rightIcon: SvgPicture.asset(
+          ),
+          title: "ЭСЖ",
+          rightIcon: IconButton(onPressed: openDrawer, icon: SvgPicture.asset(
             'assets/icons/menu.svg',
             width: 24,
             height: 24,
             color: Colors.black, // если нужно перекрасить
-          ),
+          )),
       ),
       body: Column(
         children: [

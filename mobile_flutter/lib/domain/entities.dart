@@ -97,7 +97,7 @@ extension ProjectStatusExtension on ProjectStatus {
 
   Text toRenderingString() {
     return Text(
-      toReadableString(),
+      "Статус: ${toReadableString()}",
       style: TextStyle(
         color: getStatusColor(),
         fontWeight: FontWeight.w600,
