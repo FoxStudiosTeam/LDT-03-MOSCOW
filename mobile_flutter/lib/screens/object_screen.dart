@@ -6,6 +6,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart'
     show ProjectStatus, FoxPolygon, ProjectStatusExtension;
+import 'package:mobile_flutter/utils/StyleUtils.dart';
+import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 
 class ObjectScreen extends StatefulWidget {
@@ -38,6 +40,73 @@ class _ObjectScreenState extends State<ObjectScreen> {
       Navigator.pop(context);
     }
 
+    void openBottomBlurMenu() {
+      showBlurBottomSheet(
+        context: context,
+        builder: (ctx) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              titleAlignment: ListTileTitleAlignment.center,
+              leading: const Icon(Icons.file_copy),
+              title: const Text('Предписания'),
+              onTap: () {
+                Navigator.pop(ctx);
+              },
+            ),
+            Divider(height: 1),
+            ListTile(
+              titleAlignment: ListTileTitleAlignment.center,
+              leading: const Icon(Icons.account_balance_outlined),
+              title: const Text('Материалы'),
+              onTap: () {
+                Navigator.pop(ctx);
+              },
+            ),
+            Divider(height: 1),
+            ListTile(
+              titleAlignment: ListTileTitleAlignment.center,
+              leading: const Icon(Icons.file_open),
+              title: const Text('Отчет'),
+              onTap: () {
+                Navigator.pop(ctx);
+              },
+            ),
+            Divider(height: 1),
+            ListTile(
+              titleAlignment: ListTileTitleAlignment.center,
+              leading: const Icon(Icons.file_upload),
+              title: const Text('Прикрепить файлы'),
+              onTap: () {
+                Navigator.pop(ctx);
+              },
+            ),
+            Divider(height: 1),
+            ListTile(
+              titleAlignment: ListTileTitleAlignment.center,
+              leading: const Icon(Icons.file_present_sharp),
+              title: const Text('Нарушения'),
+              textColor: FoxThemeButtonActiveBackground,
+              iconColor: FoxThemeButtonActiveBackground,
+              onTap: () {
+                Navigator.pop(ctx);
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: FoxHeader(
         leftIcon: IconButton(
@@ -51,9 +120,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
         title: "Объект",
         subtitle: widget.title,
         rightIcon: IconButton(
-          onPressed: () {
-            showBlurMenu(context);
-          },
+          onPressed: openBottomBlurMenu,
           icon: SvgPicture.asset(
             'assets/icons/menu-kebab.svg',
             width: 32,
@@ -205,83 +272,4 @@ class _ObjectScreenState extends State<ObjectScreen> {
       ),
     );
   }
-
-  void showBlurMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.transparent,
-      builder: (context) {
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    color: Colors.black.withOpacity(0.2),
-                  ),
-                ),
-              ),
-            ),
-
-            DraggableScrollableSheet(
-              initialChildSize: 0.4,
-              minChildSize: 0.2,
-              maxChildSize: 0.8,
-              builder: (context, scrollController) {
-                return Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 16,
-                  ),
-                  child: ListView(
-                    controller: scrollController,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[400],
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const Text(
-                        'Меню',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      ListTile(
-                        leading: const Icon(Icons.camera_alt),
-                        title: const Text('Сканировать'),
-                        onTap: () => Navigator.pop(context),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.settings),
-                        title: const Text('Настройки'),
-                        onTap: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-
-
 }
