@@ -144,6 +144,7 @@ async fn main() -> anyhow::Result<()> {
     let iko_router = OpenApiRouter::new()
         .routes(routes!(controllers::handle_activate_project))
         .routes(routes!(controllers::handle_add_iko_to_project))
+        .routes(routes!(controllers::handle_get_inspector_projects))
         .layer(AuthLayer::new(Role::Inspector)).layer(axum::middleware::from_fn(token_extractor))
         .with_state(state.clone());
 

@@ -59,7 +59,10 @@ tables:
     type: uuid
     isPrimary: true
     default: "gen_random_uuid()"
-  - name: project_schedule_item
+  - name: created_at
+    type: timestamp
+    default: "LOCALTIMESTAMP"
+  - name: project
     type: uuid
   - name: delivery_date
     type: date
@@ -67,6 +70,9 @@ tables:
     type: integer
   - name: title
     type: text
+  - name: on_research
+    type: boolean
+    default: false
 - name: work_category
   schema: norm
   fields:

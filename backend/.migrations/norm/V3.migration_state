@@ -1,7 +1,64 @@
 {
-  "latest": 4,
+  "latest": 3,
   "state": {
     "tables": {
+      "report_statuses": {
+        "name": "report_statuses",
+        "schema": "norm",
+        "fields": [
+          {
+            "name": "title",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "id",
+            "type_name": "integer",
+            "type_str": "integer",
+            "is_primary": true,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          }
+        ]
+      },
+      "kpgz": {
+        "name": "kpgz",
+        "schema": "norm",
+        "fields": [
+          {
+            "name": "id",
+            "type_name": "bigint",
+            "type_str": "bigint",
+            "is_primary": true,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "title",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "code",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          }
+        ]
+      },
       "materials": {
         "name": "materials",
         "schema": "norm",
@@ -68,70 +125,19 @@
             "default": null,
             "nullable": false,
             "is_unique": false
-          },
-          {
-            "name": "on_research",
-            "type_name": "boolean",
-            "type_str": "boolean",
-            "is_primary": false,
-            "default": "false",
-            "nullable": false,
-            "is_unique": false
           }
         ]
       },
-      "kpgz": {
-        "name": "kpgz",
+      "punishment_statuses": {
+        "name": "punishment_statuses",
         "schema": "norm",
         "fields": [
           {
             "name": "id",
-            "type_name": "bigint",
-            "type_str": "bigint",
-            "is_primary": true,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "title",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "code",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          }
-        ]
-      },
-      "work_category": {
-        "name": "work_category",
-        "schema": "norm",
-        "fields": [
-          {
-            "name": "kpgz",
             "type_name": "integer",
             "type_str": "integer",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "uuid",
-            "type_name": "uuid",
-            "type_str": "uuid",
             "is_primary": true,
-            "default": "gen_random_uuid()",
+            "default": null,
             "nullable": false,
             "is_unique": false
           },
@@ -146,16 +152,16 @@
           }
         ]
       },
-      "regulation_docs": {
-        "name": "regulation_docs",
+      "measurements": {
+        "name": "measurements",
         "schema": "norm",
         "fields": [
           {
-            "name": "uuid",
-            "type_name": "uuid",
-            "type_str": "uuid",
+            "name": "id",
+            "type_name": "integer",
+            "type_str": "integer",
             "is_primary": true,
-            "default": "gen_random_uuid()",
+            "default": null,
             "nullable": false,
             "is_unique": false
           },
@@ -221,80 +227,65 @@
           }
         ]
       },
+      "regulation_docs": {
+        "name": "regulation_docs",
+        "schema": "norm",
+        "fields": [
+          {
+            "name": "uuid",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": true,
+            "default": "gen_random_uuid()",
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "title",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          }
+        ]
+      },
+      "work_category": {
+        "name": "work_category",
+        "schema": "norm",
+        "fields": [
+          {
+            "name": "kpgz",
+            "type_name": "integer",
+            "type_str": "integer",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "uuid",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": true,
+            "default": "gen_random_uuid()",
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "title",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          }
+        ]
+      },
       "project_statuses": {
         "name": "project_statuses",
-        "schema": "norm",
-        "fields": [
-          {
-            "name": "title",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "id",
-            "type_name": "integer",
-            "type_str": "integer",
-            "is_primary": true,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          }
-        ]
-      },
-      "punishment_statuses": {
-        "name": "punishment_statuses",
-        "schema": "norm",
-        "fields": [
-          {
-            "name": "id",
-            "type_name": "integer",
-            "type_str": "integer",
-            "is_primary": true,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "title",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          }
-        ]
-      },
-      "measurements": {
-        "name": "measurements",
-        "schema": "norm",
-        "fields": [
-          {
-            "name": "id",
-            "type_name": "integer",
-            "type_str": "integer",
-            "is_primary": true,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "title",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          }
-        ]
-      },
-      "report_statuses": {
-        "name": "report_statuses",
         "schema": "norm",
         "fields": [
           {
@@ -319,9 +310,33 @@
       }
     },
     "types": {
+      "uuid": {
+        "rustType": "uuid::Uuid",
+        "pgType": "uuid"
+      },
+      "bigint": {
+        "rustType": "i64",
+        "pgType": "bigint"
+      },
+      "float8": {
+        "rustType": "f64",
+        "pgType": "float8"
+      },
       "integer": {
         "rustType": "i32",
         "pgType": "integer"
+      },
+      "jsonb": {
+        "rustType": "serde_json::Value",
+        "pgType": "jsonb"
+      },
+      "timestamp": {
+        "rustType": "chrono::NaiveDateTime",
+        "pgType": "timestamp"
+      },
+      "text": {
+        "rustType": "String",
+        "pgType": "text"
       },
       "boolean": {
         "rustType": "bool",
@@ -330,30 +345,6 @@
       "date": {
         "rustType": "chrono::NaiveDate",
         "pgType": "date"
-      },
-      "float8": {
-        "rustType": "f64",
-        "pgType": "float8"
-      },
-      "timestamp": {
-        "rustType": "chrono::NaiveDateTime",
-        "pgType": "timestamp"
-      },
-      "jsonb": {
-        "rustType": "serde_json::Value",
-        "pgType": "jsonb"
-      },
-      "uuid": {
-        "rustType": "uuid::Uuid",
-        "pgType": "uuid"
-      },
-      "text": {
-        "rustType": "String",
-        "pgType": "text"
-      },
-      "bigint": {
-        "rustType": "i64",
-        "pgType": "bigint"
       }
     },
     "type_mapping": "Pg"

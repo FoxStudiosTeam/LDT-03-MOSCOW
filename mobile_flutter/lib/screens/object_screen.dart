@@ -11,23 +11,29 @@ import 'package:mobile_flutter/screens/punishments_screen.dart';
 import 'package:mobile_flutter/utils/StyleUtils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
+import 'package:mobile_flutter/screens/report_screen.dart';
+import 'package:mobile_flutter/screens/material_screen.dart';
 
 class ObjectScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String projectUuid;
-  final String title;
   final ProjectStatus status;
   final FoxPolygon polygon;
+  final String? customer;
+  final String? foreman;
+  final String? inspector;
   final String address;
 
   const ObjectScreen({
     super.key,
     required this.di,
     required this.projectUuid,
-    required this.title,
     required this.status,
     required this.polygon,
-    required this.address
+    required this.customer,
+    required this.foreman,
+    required this.inspector,
+    required this.address,
   });
 
   @override
@@ -39,8 +45,8 @@ class _ObjectScreenState extends State<ObjectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final Color textColor = Colors.black; // Можно заменить на тему
-    final Color pointBlockColor = Colors.grey.shade200; // Вместо фиолетового
+    final Color textColor = Colors.black;
+    final Color pointBlockColor = Colors.grey.shade200;
 
     void leaveHandler() {
       Navigator.pop(context);
@@ -67,43 +73,58 @@ class _ObjectScreenState extends State<ObjectScreen> {
               leading: const Icon(Icons.file_copy),
               title: const Text('Предписания'),
               onTap: () {
-                Navigator.push(ctx, MaterialPageRoute(builder: (_) => PunishmentsScreen(di: widget.di, projectUuid: widget.projectUuid, addr: widget.address)));
+                Navigator.push(
+                  ctx,
+                  MaterialPageRoute(
+                    builder: (_) => PunishmentsScreen(
+                      di: widget.di,
+                      projectUuid: widget.projectUuid,
+                      addr: widget.address,
+                    ),
+                  ),
+                );
               },
             ),
-            Divider(height: 1),
+            const Divider(height: 1),
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.account_balance_outlined),
               title: const Text('Материалы'),
               onTap: () {
-                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MaterialsScreen(
+                      di: widget.di,
+                      objectTitle: widget.address,
+                    ),
+                  ),
+                );
               },
             ),
-            Divider(height: 1),
+            const Divider(height: 1),
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.file_open),
               title: const Text('Отчет'),
               onTap: () {
-                Navigator.pop(ctx);
+                Navigator.push(
+                  ctx,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ReportScreen(
+                            di: widget.di,
+                            objectTitle: widget.address
+                        ),
+                  ),
+                );
               },
             ),
-            Divider(height: 1),
+            const Divider(height: 1),
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.file_upload),
               title: const Text('Прикрепить файлы'),
-              onTap: () {
-                Navigator.pop(ctx);
-              },
-            ),
-            Divider(height: 1),
-            ListTile(
-              titleAlignment: ListTileTitleAlignment.center,
-              leading: const Icon(Icons.file_present_sharp),
-              title: const Text('Нарушения'),
-              textColor: FoxThemeButtonActiveBackground,
-              iconColor: FoxThemeButtonActiveBackground,
               onTap: () {
                 Navigator.pop(ctx);
               },
@@ -124,7 +145,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
           ),
         ),
         title: "Объект",
-        subtitle: widget.title,
+        subtitle: widget.address,
         rightIcon: IconButton(
           onPressed: openBottomBlurMenu,
           icon: SvgPicture.asset(
@@ -144,7 +165,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 "Информация об объекте",
                 style: TextStyle(fontSize: 20, color: textColor),
               ),
-              Divider(height: 1),
+              const Divider(height: 1),
               const SizedBox(height: 16),
               widget.status.toRenderingString(),
               const SizedBox(height: 16),
@@ -193,8 +214,16 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 ),
               ),
 
+              const SizedBox(height: 16),
+
+              // Информация о участниках
+              _buildInfoCard(),
+
+              const SizedBox(height: 16),
+
               const SizedBox(height: 24),
               const Divider(height: 1),
+
               // Заголовок с кнопкой для скрытия/показа точек
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -223,7 +252,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                   ),
                 ],
               ),
-              Divider(height: 1),
+              const Divider(height: 1),
               const SizedBox(height: 12),
 
               if (_showPoints)
@@ -276,6 +305,70 @@ class _ObjectScreenState extends State<ObjectScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Участники проекта",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildParticipantRow("Заказчик:", widget.customer ?? "Не указан"),
+            const SizedBox(height: 8),
+            _buildParticipantRow("Подрядчик:", widget.foreman ?? "Не указан"),
+            const SizedBox(height: 8),
+            _buildParticipantRow(
+              "Ответственный инспектор:",
+              widget.inspector ?? "Не указан",
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildParticipantRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 160,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

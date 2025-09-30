@@ -157,7 +157,10 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                       address: project.address,
                       di: widget.di,
                       polygon: project.polygon!,
-                    )
+                      customer: project.created_by,
+                      foreman: project.foreman,
+                      inspector: project.ssk,
+                    ),
                   );
                 },
               ),

@@ -15,7 +15,9 @@ class ObjectCard extends StatefulWidget {
   final ProjectStatus status;
   final IDependencyContainer di;
   final FoxPolygon polygon;
-
+  final String? customer;
+  final String? foreman;
+  final String? inspector;
   final Color backgroundColor;
 
   const ObjectCard({
@@ -26,6 +28,9 @@ class ObjectCard extends StatefulWidget {
     required this.status,
     required this.di,
     required this.polygon,
+    required this.customer,
+    required this.foreman,
+    required this.inspector,
     this.backgroundColor = Colors.white,
   });
 
@@ -109,9 +114,11 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
                 address: widget.address,
                 projectUuid: widget.projectUuid,
                 di: widget.di,
-                title: widget.title,
                 status: widget.status,
                 polygon: widget.polygon,
+                customer: widget.customer,
+                foreman: widget.foreman,
+                inspector: widget.inspector,
               ),
             ),
           );
@@ -182,6 +189,9 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text("Заказчик: ${widget.customer}"),
+        Text("Подрядчик: ${widget.foreman}"),
+        Text("Ответственный инспектор: ${widget.inspector}"),
         // Анимированная карта
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
@@ -219,6 +229,7 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
         const SizedBox(height: 12),
 
         // Кнопка показа точек
+
         AnimatedOpacity(
           opacity: _expanded ? 1.0 : 0.0,
           duration: const Duration(milliseconds: 200),

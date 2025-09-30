@@ -11,10 +11,12 @@ impl Materials {
         ActiveMaterials {
             volume: Set(self.volume),
             uuid: Set(self.uuid),
-            project_schedule_item: Set(self.project_schedule_item),
+            created_at: Set(self.created_at),
+            project: Set(self.project),
             delivery_date: Set(self.delivery_date),
             measurement: Set(self.measurement),
             title: Set(self.title),
+            on_research: Set(self.on_research),
         }
     }
 }
@@ -25,20 +27,24 @@ impl Materials {
 pub struct Materials {
     pub volume: f64,
     pub uuid: uuid::Uuid,
-    pub project_schedule_item: uuid::Uuid,
+    pub created_at: chrono::NaiveDateTime,
+    pub project: uuid::Uuid,
     pub delivery_date: chrono::NaiveDate,
     pub measurement: i32,
     pub title: String,
+    pub on_research: bool,
 }
 
 #[derive(Clone,Debug, Default, FromRow)]
 pub struct ActiveMaterials {
     pub volume: Optional<f64>,
     pub uuid: Optional<uuid::Uuid>,
-    pub project_schedule_item: Optional<uuid::Uuid>,
+    pub created_at: Optional<chrono::NaiveDateTime>,
+    pub project: Optional<uuid::Uuid>,
     pub delivery_date: Optional<chrono::NaiveDate>,
     pub measurement: Optional<i32>,
     pub title: Optional<String>,
+    pub on_research: Optional<bool>,
 }
 
 impl ActiveMaterials {
@@ -46,10 +52,12 @@ impl ActiveMaterials {
         Some(Materials {
             volume: self.volume.into_option()?,
             uuid: self.uuid.into_option()?,
-            project_schedule_item: self.project_schedule_item.into_option()?,
+            created_at: self.created_at.into_option()?,
+            project: self.project.into_option()?,
             delivery_date: self.delivery_date.into_option()?,
             measurement: self.measurement.into_option()?,
             title: self.title.into_option()?,
+            on_research: self.on_research.into_option()?,
         })
     }
 }
@@ -75,10 +83,12 @@ impl TableSelector for ActiveMaterials {
         match field_name {
             "volume" => self.volume.is_set(),
             "uuid" => self.uuid.is_set(),
-            "project_schedule_item" => self.project_schedule_item.is_set(),
+            "created_at" => self.created_at.is_set(),
+            "project" => self.project.is_set(),
             "delivery_date" => self.delivery_date.is_set(),
             "measurement" => self.measurement.is_set(),
             "title" => self.title.is_set(),
+            "on_research" => self.on_research.is_set(),
             _ => unreachable!("Unknown field name: {}", field_name),
         }
     }
@@ -99,7 +109,14 @@ impl TableSelector for ActiveMaterials {
                 is_primary: true,
             },
             ColumnDef{
-                name: "project_schedule_item",
+                name: "created_at",
+                nullable: false,
+                default: Some("LOCALTIMESTAMP"),
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "project",
                 nullable: false,
                 default: None,
                 is_unique: false,
@@ -123,6 +140,13 @@ impl TableSelector for ActiveMaterials {
                 name: "title",
                 nullable: false,
                 default: None,
+                is_unique: false,
+                is_primary: false,
+            },
+            ColumnDef{
+                name: "on_research",
+                nullable: false,
+                default: Some("false"),
                 is_unique: false,
                 is_primary: false,
             },
@@ -167,10 +191,12 @@ impl ModelOps<sqlx::Postgres> for ActiveMaterials
         -> sqlx::query::QueryAs<'q,sqlx::Postgres,T, <sqlx::Postgres as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.volume {tracing::debug!("Binded volume"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.project_schedule_item {tracing::debug!("Binded project_schedule_item"); q = q.bind(v);}
+        if let Set(v) = &self.created_at {tracing::debug!("Binded created_at"); q = q.bind(v);}
+        if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
         if let Set(v) = &self.delivery_date {tracing::debug!("Binded delivery_date"); q = q.bind(v);}
         if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.on_research {tracing::debug!("Binded on_research"); q = q.bind(v);}
         q
     }
     
@@ -289,10 +315,12 @@ impl ModelOps<sqlx::MySql> for ActiveMaterials
         -> sqlx::query::QueryAs<'q,sqlx::MySql,T, <sqlx::MySql as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.volume {tracing::debug!("Binded volume"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.project_schedule_item {tracing::debug!("Binded project_schedule_item"); q = q.bind(v);}
+        if let Set(v) = &self.created_at {tracing::debug!("Binded created_at"); q = q.bind(v);}
+        if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
         if let Set(v) = &self.delivery_date {tracing::debug!("Binded delivery_date"); q = q.bind(v);}
         if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.on_research {tracing::debug!("Binded on_research"); q = q.bind(v);}
         q
     }
     
@@ -411,10 +439,12 @@ impl ModelOps<sqlx::Sqlite> for ActiveMaterials
         -> sqlx::query::QueryAs<'q,sqlx::Sqlite,T, <sqlx::Sqlite as sqlx::Database>::Arguments<'q> > where 's: 'q {
         if let Set(v) = &self.volume {tracing::debug!("Binded volume"); q = q.bind(v);}
         if let Set(v) = &self.uuid {tracing::debug!("Binded uuid"); q = q.bind(v);}
-        if let Set(v) = &self.project_schedule_item {tracing::debug!("Binded project_schedule_item"); q = q.bind(v);}
+        if let Set(v) = &self.created_at {tracing::debug!("Binded created_at"); q = q.bind(v);}
+        if let Set(v) = &self.project {tracing::debug!("Binded project"); q = q.bind(v);}
         if let Set(v) = &self.delivery_date {tracing::debug!("Binded delivery_date"); q = q.bind(v);}
         if let Set(v) = &self.measurement {tracing::debug!("Binded measurement"); q = q.bind(v);}
         if let Set(v) = &self.title {tracing::debug!("Binded title"); q = q.bind(v);}
+        if let Set(v) = &self.on_research {tracing::debug!("Binded on_research"); q = q.bind(v);}
         q
     }
     
