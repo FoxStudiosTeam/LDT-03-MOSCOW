@@ -145,21 +145,22 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                 : Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: ListView.builder(
-              itemCount: projects.length,
-              itemBuilder: (context, index) {
-                final project = projects[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: ObjectCard(
-                    projectUuid: project.uuid,
-                    title: project.address,
-                    status: project.status,
-                    address: project.address,
-                    di: widget.di,
-                    polygon: project.polygon!,
-                  )
-                );
-              },
+                itemCount: projects.length,
+                itemBuilder: (context, index) {
+                  final project = projects[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: ObjectCard(
+                      projectUuid: project.uuid,
+                      title: project.address,
+                      status: project.status,
+                      address: project.address,
+                      di: widget.di,
+                      polygon: project.polygon!,
+                    )
+                  );
+                },
+              ),
             ),
           ),
         ],
