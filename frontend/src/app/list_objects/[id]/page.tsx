@@ -207,9 +207,9 @@ export default function ObjectDetail() {
                             Материалы
                         </button>
 
-                        <button className={`self-end min-w-[250px] ${styles.mainButton}`}>
+                        <Link href={"/gant/"} className={`self-end min-w-[250px] ${styles.mainButton}`}>
                             График работ
-                        </button>
+                        </Link>
 
                         <div className="w-full flex items-center gap-4">
                             {projectData?.project.status === 0 && (

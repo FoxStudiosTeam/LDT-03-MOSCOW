@@ -22,8 +22,6 @@ export default function SecondStep() {
             try {
                 if (uuid) {
                     const { success, message: respMessage, result } = await GetProjectSchedule(uuid);
-                    console.log(result)
-                    console.log(uuid)
                     if (success && result && Array.isArray(result.data)) {
                         if (result.data.length > 0) {
                             clearData();

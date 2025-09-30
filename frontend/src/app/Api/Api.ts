@@ -3,7 +3,7 @@
 import {jwtDecode} from "jwt-decode";
 import {WorkItem} from "@/models";
 
-const baseURL = "https://test.foxstudios.ru:32460/Vadim/api";
+const baseURL = "https://test.foxstudios.ru:32460/api";
 
 const authBaseURL = 'https://sso.foxstudios.ru:32460/api'
 
@@ -396,21 +396,34 @@ export async function LogOut() {
         const token = localStorage.getItem("access_token");
 
         if (!token) {
-            return {success: false, message: "Нет access_token в localStorage"};
+            return { success: false, message: "Нет access_token в localStorage" };
         }
 
-        await fetch(`${authBaseURL}/auth/session`, {
+        const res = await fetch(`${authBaseURL}/auth/session`, {
             method: "DELETE",
             credentials: "include",
             headers: {
                 "Content-Type": "application/json",
             },
         });
+
+        if (res.ok) {
+            localStorage.removeItem("access_token");
+            window.location.href = "/sign_in/";
+
+            return { success: true, message: "Вы успешно вышли" };
+        } else {
+            return { success: false, message: "Ошибка при удалении refresh токена" };
+        }
     } catch (error) {
         console.error("Ошибка при выходе:", error);
-        return {success: false, message: String(error)};
+        return { success: false, message: String(error) };
     }
 }
+
+const logoutHandle = async () => {
+    await LogOut();
+};
 
 export async function GetReports(uuid: string) {
     try {
