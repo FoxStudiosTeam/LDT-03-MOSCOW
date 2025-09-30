@@ -10,6 +10,7 @@ import 'package:mobile_flutter/bridges/ocr.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:image/image.dart' as img;
 
 class OcrCameraScreen extends StatefulWidget {
   const OcrCameraScreen({super.key});
@@ -18,11 +19,56 @@ class OcrCameraScreen extends StatefulWidget {
   State<OcrCameraScreen> createState() => _OcrCameraScreenState();
 }
 
+Future<Uint8List> drawBoxes(Uint8List imageBytes, List<OcrBox> boxes) async {
+  var image = img.decodeImage(imageBytes)!;
+  final font = img.arial48;
+  final col = img.ColorInt16.fromList([255, 0, 0, 255]);
+  var i = 0;
+  // image = img.drawString(image, "ABOBA", x: 100, y: 100, font: font, color: col);
+  // image = img.drawRect(
+  //       image,
+  //       x1: box.left,
+  //       y1: box.top,
+  //       x2: box.right,
+  //       y2: box.bottom,
+  //       color: col,
+  //       thickness: 20,
+  //     );
+  for (final box in boxes) {
+    log("OCR: ${box.text} (${box.left}, ${box.top}) - (${box.right}, ${box.bottom})");
+    image = img.drawRect(
+      image,
+      x1: box.left,
+      y1: box.top,
+      x2: box.right,
+      y2: box.bottom,
+      color: col,
+      thickness: 20,
+    );
+    image = img.drawString(image, box.text, x: box.left, y: box.top - font.lineHeight, font: font, color: col);
+  }
+  return Uint8List.fromList(img.encodeJpg(image));
+}
+
 const String cameraSvg ='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="24" height="24" fill="none"/><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2"/><path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></g></svg>';
+
+
+Future<Uint8List> rotateClockwise(Uint8List bytes) async {
+  final image = img.decodeImage(bytes)!;
+  final rotated = img.copyRotate(image, angle: 90);
+  return Uint8List.fromList(img.encodeJpg(rotated));
+}
+
+Future<Uint8List> rotateCounterClockwise(Uint8List bytes) async {
+  final image = img.decodeImage(bytes)!;
+  final rotated = img.copyRotate(image, angle: -90);
+  return Uint8List.fromList(img.encodeJpg(rotated));
+}
 
 class _OcrCameraScreenState extends State<OcrCameraScreen> {
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
+  Uint8List? imageWithBoxes = null;
   bool _isCameraInitialized = false;
   @override
   void initState() {
@@ -73,27 +119,21 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
       final image = await _cameraController!.takePicture();
       log('OCR: Picture taken: ${image.path}');
 
-      // Read file as bytes
       final file = File(image.path);
+
       final Uint8List bytes = await file.readAsBytes();
+      final Uint8List rotated = bytes;
+      // final Uint8List rotated = await rotateClockwise(bytes);
+      final boxes = await OcrBridge.getBoxes(rotated);
 
-      // Call OCR
-      final boxes = await OcrBridge.getBoxes(bytes);
+      final boxed = await drawBoxes(rotated, boxes);
+
+      final Uint8List rotatedBack = await rotateCounterClockwise(boxed);
+      setState(() {
+        imageWithBoxes = rotatedBack;
+      });
+
       log("OCR: Got ${boxes.length} boxes");
-
-      for (var box in boxes) {
-        log("OCR: $box");
-      }
-      
-      // String text = await TesseractOcr.extractText(
-      //   image.path,
-      //   language: 'rus',
-      //   args: {
-      //     "psm": "4",
-      //     "preserve_interword_spaces": "1",
-      //   });
-      // print("OCR: $text");
-      
     } catch (e) {
       log('Error taking picture: $e');
     }
@@ -118,7 +158,7 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
               onPressed: () => {
                 _initCamera()
               }, 
-              child: const Text('Рарешить'),
+              child: const Text('Разрешить'),
             )
           ],
         )),
@@ -133,6 +173,7 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
         title: "Распознать", 
         subtitle: "ТНН",
         onBack: () => Navigator.pop(context),
+        onMore: () => setState(()=>imageWithBoxes = null),
       ),
       backgroundColor: Colors.black,
       body: Stack(
@@ -140,8 +181,12 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
           Center(
             child: CameraPreview(_cameraController!)
           ),
+          imageWithBoxes != null ? Image.memory(
+            imageWithBoxes!,
+            fit: BoxFit.contain, // adjust how the image scales
+          ) : Container(),
           Positioned(
-            // todo!: fix non-portrait
+            // todo!: fix non-portrait btn
             top: isPortrait ? null : (size.height / 2 - 28),
             bottom: isPortrait ? 48 : null,
             left: isPortrait ? (size.width / 2 - 28) : null,

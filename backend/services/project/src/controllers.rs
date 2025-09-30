@@ -10,6 +10,26 @@ use crate::entities::*;
 
 #[utoipa::path(
     post,
+    path = "/get-inspector-projects",
+    tag = crate::ANY_TAG,
+    summary = "Get projects related to inspector",
+    security(("bearer_access" = [])),
+    responses(
+        (status = 200, description = "Project found.", body = GetProjectWithAttachmentResult),
+        (status = 500, description = "Internal server error."),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn handle_get_inspector_projects(
+    State(state): State<AppState>,
+    Extension(payload): Extension<AccessTokenPayload>,
+    Json(r): Json<GetProjectRequest>,
+) -> Result<Response, AppErr> {
+    return state.project_service().get_inspector_projects(r, payload).await;
+}
+
+#[utoipa::path(
+    post,
     path = "/get-project",
     tag = crate::ANY_TAG,
     summary = "Get project.",

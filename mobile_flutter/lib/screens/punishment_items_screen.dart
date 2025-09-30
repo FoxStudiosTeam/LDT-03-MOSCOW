@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
+import 'package:mobile_flutter/screens/create_punishment_item.dart';
+import 'package:mobile_flutter/utils/NetworkUtils.dart';
+import 'package:mobile_flutter/utils/StyleUtils.dart';
+import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
-import 'package:mobile_flutter/widgets/base_header.dart';
+import 'package:mobile_flutter/widgets/fox_header.dart';
+import 'package:mobile_flutter/widgets/punishment_item_card.dart';
 
 import '../auth/auth_provider.dart';
 import '../utils/network_utils.dart';
@@ -14,7 +20,12 @@ class PunishmentItemsScreen extends StatefulWidget {
   final String punishmentUuid;
   final String addr;
 
-  const PunishmentItemsScreen({super.key, required this.di, required this.punishmentUuid, required this.addr});
+  const PunishmentItemsScreen({
+    super.key,
+    required this.di,
+    required this.punishmentUuid,
+    required this.addr
+  });
 
   @override
   State<PunishmentItemsScreen> createState() => _PunishmentItemsScreenState();
@@ -24,11 +35,85 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
   String? _token;
   List<PunishmentItemCard> data = [];
 
+  void leaveHandler() {
+    Navigator.pop(context);
+  }
+
+  void _openPunishmentMenu(BuildContext context) {
+    showBlurBottomSheet(
+      context: context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.add),
+            title: const Text('Создать нарушение'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _handleCreatePunishment();
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.filter_list),
+            title: const Text('Фильтровать по статусу'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _handleFilterPunishments();
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.download),
+            title: const Text('Экспорт в PDF'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _handleExportPDF();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleCreatePunishment() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreatePunishmentScreen(
+          di: widget.di,
+          objectTitle: widget.addr,
+        ),
+      ),
+    );
+  }
+
+  void _handleFilterPunishments() {
+    // TODO: Реализовать фильтрацию по статусу
+    print("Фильтровать нарушения по статусу");
+  }
+
+  void _handleExportPDF() {
+    // TODO: Реализовать экспорт в PDF
+    print("Экспорт нарушений в PDF");
+  }
 
   @override
   void initState() {
     super.initState();
-
     _loadToken();
     _loadCards().then((cards) {
       setState(() {
@@ -71,20 +156,39 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: BaseHeader(
-          title: 'Нарушения',
-          subtitle: '${widget.addr}',
-          onBack: () => {
-            Navigator.pop(context)
-          },
+      appBar: FoxHeader(
+        leftIcon: IconButton(
+          onPressed: leaveHandler,
+          icon: SvgPicture.asset(
+            'assets/icons/arrow-left.svg',
+            width: 32,
+            height: 32,
+          ),
         ),
-        body: data.isEmpty
-            ? Center(child: CircularProgressIndicator())
-            : ListView.builder(
+        title: "Нарушения",
+        subtitle: widget.addr,
+        rightIcon: IconButton(
+          onPressed: () => _openPunishmentMenu(context),
+          icon: SvgPicture.asset(
+            'assets/icons/menu-kebab.svg',
+            width: 32,
+            height: 32,
+          ),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: data.isEmpty
+            ? const Center(
+          child: CircularProgressIndicator(),
+        )
+            : ListView.separated(
           itemCount: data.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) => data[index],
         ),
-        drawer: DrawerMenu(di: widget.di)
+      ),
+      drawer: DrawerMenu(di: widget.di),
     );
   }
 
