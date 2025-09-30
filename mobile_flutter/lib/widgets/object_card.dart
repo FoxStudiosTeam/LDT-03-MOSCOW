@@ -14,30 +14,88 @@ class ObjectCard extends StatefulWidget {
   final IDependencyContainer di;
   final FoxPolygon polygon;
 
+  final Color backgroundColor;
+
   const ObjectCard({
     super.key,
     required this.title,
     required this.status,
     required this.di,
     required this.polygon,
+    this.backgroundColor = Colors.white,
   });
 
   @override
   State<ObjectCard> createState() => _ObjectCardState();
 }
 
-class _ObjectCardState extends State<ObjectCard> {
+class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateMixin {
   bool _expanded = false;
   bool _showPoints = false;
+  late AnimationController _animationController;
+  late Animation<double> _heightAnimation;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _heightAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _opacityAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.3, 1.0, curve: Curves.easeIn),
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleExpanded() {
+    setState(() {
+      _expanded = !_expanded;
+      if (_expanded) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+        _showPoints = false;
+      }
+    });
+  }
+
+  void _toggleShowPoints() {
+    setState(() {
+      _showPoints = !_showPoints;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Цвет для текста и иконок (например, основной цвет темы или черный)
-    final Color textAndIconColor = Colors.black; // Или Theme.of(context).colorScheme.primary;
+    final Color textAndIconColor = Colors.black;
 
     return Card(
       margin: const EdgeInsets.all(8.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      color: widget.backgroundColor,
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -71,131 +129,164 @@ class _ObjectCardState extends State<ObjectCard> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _expanded = !_expanded;
-                        if (!_expanded) _showPoints = false;
-                      });
-                    },
-                    child: Iconify(
-                      _expanded ? Mdi.keyboard_arrow_up : Mdi.keyboard_arrow_down,
-                      color: textAndIconColor,
-                      size: 32,
+                    onPressed: _toggleExpanded,
+                    child: AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        return Transform.rotate(
+                          angle: _animationController.value * 3.14159, // 180 градусов в радианах
+                          child: Iconify(
+                            Mdi.keyboard_arrow_down,
+                            color: textAndIconColor,
+                            size: 32,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              // Статус (оставляю как есть, предполагая что внутри toRenderingString() тоже используется тема)
               widget.status.toRenderingString(),
               const SizedBox(height: 8),
-              Text("Заказчик: "),
-              const SizedBox(height: 8),
 
-              if (_expanded)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: 200,
-                      margin: const EdgeInsets.only(top: 8),
-                      child: FlutterMap(
-                        options: MapOptions(
-                          initialCenter: widget.polygon.getCenter(),
-                          initialZoom: 15,
-                        ),
-                        children: [
-                          TileLayer(
-                            urlTemplate:
-                            'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
-                            subdomains: ['a', 'b', 'c'],
-                            userAgentPackageName: 'com.example.yourapp',
-                          ),
-                          PolygonLayer(
-                            polygons: [
-                              Polygon(
-                                points: widget.polygon.points,
-                                color: Colors.blue.withOpacity(0.3),
-                                borderColor: Colors.blue,
-                                borderStrokeWidth: 2,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+              // Анимированная область раскрытия
+              AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return SizeTransition(
+                    sizeFactor: _heightAnimation,
+                    axisAlignment: -1.0,
+                    child: FadeTransition(
+                      opacity: _opacityAnimation,
+                      child: child,
                     ),
-                    const SizedBox(height: 12),
-
-                    TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _showPoints = !_showPoints;
-                        });
-                      },
-                      icon: Iconify(
-                        _showPoints ? Mdi.keyboard_arrow_up : Mdi.keyboard_arrow_down,
-                        color: textAndIconColor,
-                      ),
-                      label: Text(
-                        _showPoints ? "Скрыть точки на полигоне" : "Показать точки на полигоне",
-                        style: TextStyle(color: textAndIconColor),
-                      ),
-                    ),
-
-                    if (_showPoints)
-                      SizedBox(
-                        height: 150,
-                        child: ListView.builder(
-                          itemCount: widget.polygon.points.length,
-                          itemBuilder: (context, index) {
-                            final point = widget.polygon.points[index];
-                            return Container(
-                              margin: const EdgeInsets.symmetric(vertical: 6),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: FoxThemeButtonTextColor,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 4,
-                                    offset: Offset(2, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Точка ${index + 1}",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: textAndIconColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Широта: ${point.latitude.toStringAsFixed(6)}",
-                                    style: TextStyle(fontSize: 14, color: textAndIconColor),
-                                  ),
-                                  Text(
-                                    "Долгота: ${point.longitude.toStringAsFixed(6)}",
-                                    style: TextStyle(fontSize: 14, color: textAndIconColor),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                  ],
-                )
+                  );
+                },
+                child: _buildExpandedContent(textAndIconColor),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildExpandedContent(Color textAndIconColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Анимированная карта
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          height: _expanded ? 200 : 0,
+          margin: const EdgeInsets.only(top: 8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: FlutterMap(
+              options: MapOptions(
+                initialCenter: widget.polygon.getCenter(),
+                initialZoom: 15,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate:
+                  'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+                  subdomains: ['a', 'b', 'c'],
+                  userAgentPackageName: 'com.example.yourapp',
+                ),
+                PolygonLayer(
+                  polygons: [
+                    Polygon(
+                      points: widget.polygon.points,
+                      color: Colors.blue.withOpacity(0.3),
+                      borderColor: Colors.blue,
+                      borderStrokeWidth: 2,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Кнопка показа точек
+        AnimatedOpacity(
+          opacity: _expanded ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          child: TextButton.icon(
+            onPressed: _toggleShowPoints,
+            icon: Iconify(
+              _showPoints ? Mdi.keyboard_arrow_up : Mdi.keyboard_arrow_down,
+              color: textAndIconColor,
+            ),
+            label: Text(
+              _showPoints ? "Скрыть точки на полигоне" : "Показать точки на полигоне",
+              style: TextStyle(color: textAndIconColor),
+            ),
+          ),
+        ),
+
+        // Анимированный список точек
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: Container(
+            height: _showPoints ? 150 : 0,
+            child: _showPoints ? _buildPointsList(textAndIconColor) : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPointsList(Color textAndIconColor) {
+    return ListView.builder(
+      itemCount: widget.polygon.points.length,
+      itemBuilder: (context, index) {
+        final point = widget.polygon.points[index];
+        return AnimatedContainer(
+          duration: Duration(milliseconds: 200 + (index * 50)),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: FoxThemeButtonTextColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 4,
+                offset: Offset(2, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Точка ${index + 1}",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: textAndIconColor,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "Широта: ${point.latitude.toStringAsFixed(6)}",
+                style: TextStyle(fontSize: 14, color: textAndIconColor),
+              ),
+              Text(
+                "Долгота: ${point.longitude.toStringAsFixed(6)}",
+                style: TextStyle(fontSize: 14, color: textAndIconColor),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
