@@ -48,7 +48,9 @@ class MainPage extends StatelessWidget {
   Future<Widget> prepareChild() async {
     var storageProvider = di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
     if (await storageProvider.getRefreshToken() != "") {
-      return ObjectsScreen(di: di);
+      // return ObjectsScreen(di: di);
+      return PunishmentsScreen(di: di, projectUuid: "f268b7a5-51ae-46c0-a22d-1128261a01df", addr: "test addr",);
+      // return AuthScreen(di:di);
     }
     return AuthScreen(di:di);
   }

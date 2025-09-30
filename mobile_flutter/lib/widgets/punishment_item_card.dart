@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
+import 'package:mobile_flutter/domain/entities.dart';
 
 class PunishmentItemCard extends StatelessWidget {
-  final DateTime punish_datetime;
-  final String punishment_status;
-  final String? custom_number;
+  final PunishmentItem data;
+  final Map<int, String> statuses;
   final IDependencyContainer di;
 
   const PunishmentItemCard({
     super.key,
     required this.di,
-    required this.punish_datetime,
-    required this.punishment_status,
-    this.custom_number
+    required this.data,
+    required this.statuses,
   });
 
   @override
@@ -28,9 +27,9 @@ class PunishmentItemCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(custom_number??"", style: Theme.of(context).textTheme.titleLarge),
+              Text('Нарушение: ${data.title}', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
-              Text(punishment_status),
+              Text('Статус: ${statuses[data.punish_item_status]}'),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,

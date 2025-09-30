@@ -9,9 +9,10 @@ import 'package:mobile_flutter/widgets/punishment_card.dart';
 import '../auth/auth_provider.dart';
 class PunishmentsScreen extends StatefulWidget {
   final IDependencyContainer di;
-  final String project;
+  final String projectUuid;
+  final String addr;
 
-  const PunishmentsScreen({super.key, required this.di, required this.project});
+  const PunishmentsScreen({super.key, required this.di, required this.projectUuid, required this.addr});
 
   @override
   State<PunishmentsScreen> createState() => _PunishmentsScreenState();
@@ -52,14 +53,13 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
   Future<List<PunishmentCard>> _loadCards() async {
     final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
     final statuses = await provider.get_statuses();
-    final punishments = await provider.get_punishments(widget.project);
+    final punishments = await provider.get_punishments(widget.projectUuid);
 
     return punishments.map((punishment) => PunishmentCard(
-        uuid: punishment.uuid,
-        di: widget.di,
-        punish_datetime: punishment.punishDatetime,
-        punishment_status: statuses[punishment.punishmentStatus] ?? "Неизвестный статус",
-        custom_number: punishment.customNumber
+      data: punishment,
+      statuses: statuses,
+      di: widget.di,
+      addr: widget.addr,
     )).toList();
   }
 
@@ -78,9 +78,11 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
               );
             },
           ),
-          title: Text('ЭСЖ'),
+          title: Text('Предписания\n${widget.addr}'),
           automaticallyImplyLeading: false,
         ),
+
+
         body: data.isEmpty
             ? Center(child: CircularProgressIndicator())
             : ListView.builder(
@@ -88,6 +90,7 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
           itemBuilder: (context, index) => data[index],
         ),
         drawer: DrawerMenu(di: widget.di)
+
     );
   }
 

@@ -12,6 +12,7 @@ import 'package:mobile_flutter/punishment/punishment_storage_provider.dart';
 abstract class IPunishmentProvider {
   Future<Map<int, String>> get_statuses();
   Future<List<Punishment>> get_punishments(String project);
+  Future<List<PunishmentItemAndAttachments>> get_punishment_items(String punishment);
 }
 
 const IPunishmentProviderDIToken = "I-Punishment-Provider-DI-Token";
@@ -40,7 +41,7 @@ class PunishmentProvider implements IPunishmentProvider {
         'Authorization': 'Bearer $_accessToken',
       },
     ).timeout(Duration(seconds: 5),onTimeout: () {
-      throw TimeoutException('Request timed out after ${Duration(seconds: 5)} ms');
+      throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
     });
 
     if (response.statusCode == 200) {
@@ -61,9 +62,9 @@ class PunishmentProvider implements IPunishmentProvider {
   }
 
   @override
-  Future<List<Punishment>> get_punishment_items(String punishment) async {
-    final uri = apiRoot.resolve('/api/punishment/get_punishment_items').replace(
-      queryParameters: {'punishment_id': punishment},
+  Future<List<Punishment>> get_punishments(String project) async {
+    final uri = apiRoot.resolve('/api/punishment/get_punishments').replace(
+      queryParameters: {'project': project},
     );
     _accessToken ??= await authStorageProvider.getAccessToken();
 
@@ -74,7 +75,7 @@ class PunishmentProvider implements IPunishmentProvider {
         'Content-Type': 'application/json',
       },
     ).timeout(Duration(seconds: 5),onTimeout: () {
-      throw TimeoutException('Request timed out after ${Duration(seconds: 5)} ms');
+      throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
     });
 
     if (response.statusCode == 200) {
@@ -93,7 +94,7 @@ class PunishmentProvider implements IPunishmentProvider {
   }
 
   @override
-  Future<List<Punishment>> get_punishment_items(String punishment) async {
+  Future<List<PunishmentItemAndAttachments>> get_punishment_items(String punishment) async {
     final uri = apiRoot.resolve('/api/punishment/get_punishment_items').replace(
       queryParameters: {'punishment_id': punishment},
     );
@@ -106,13 +107,13 @@ class PunishmentProvider implements IPunishmentProvider {
         'Content-Type': 'application/json',
       },
     ).timeout(Duration(seconds: 5),onTimeout: () {
-      throw TimeoutException('Request timed out after ${Duration(seconds: 5)} ms');
+      throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
     });
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body);
       if (jsonList.isEmpty) throw Exception('No punishments in project');
-      return jsonList.map((json) => Punishment.fromJson(json)).toList();
+      return jsonList.map((json) => PunishmentItemAndAttachments.fromJson(json)).toList();
     } else {
       try {
         final Map<String, dynamic> errorJson = jsonDecode(response.body);

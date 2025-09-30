@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
+import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/punishment/punishment_storage_provider.dart';
 import 'package:mobile_flutter/screens/punishment_items_screen.dart';
 
 class PunishmentCard extends StatelessWidget {
-  final DateTime punish_datetime;
-  final String punishment_status;
-  final String uuid;
-  final String? custom_number;
+  final Punishment data;
+  final Map<int, String> statuses;
+  final String addr;
   final IDependencyContainer di;
 
   const PunishmentCard({
     super.key,
-    required this.uuid,
+    required this.statuses,
     required this.di,
-    required this.punish_datetime,
-    required this.punishment_status,
-    this.custom_number
+    required this.data,
+    required this.addr
   });
 
   @override
@@ -24,16 +24,20 @@ class PunishmentCard extends StatelessWidget {
       margin: const EdgeInsets.all(8.0),
       child: InkWell(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => PunishmentItemsScreen(di:di, punishment: uuid)));
+          Navigator.push(context, MaterialPageRoute(builder: (_) => PunishmentItemsScreen(di:di, punishmentUuid: data.uuid, addr: addr)));
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(custom_number??"", style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                "Номер: ${data.customNumber??""}",
+                style:
+                  Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
-              Text(punishment_status),
+              Text(statuses[data.punishmentStatus]?? "Неизвестный статус"),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,

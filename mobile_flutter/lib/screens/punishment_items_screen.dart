@@ -10,9 +10,10 @@ import 'package:mobile_flutter/widgets/punishment_item_card.dart';
 import '../auth/auth_provider.dart';
 class PunishmentItemsScreen extends StatefulWidget {
   final IDependencyContainer di;
-  final String punishment;
+  final String punishmentUuid;
+  final String addr;
 
-  const PunishmentItemsScreen({super.key, required this.di, required this.punishment});
+  const PunishmentItemsScreen({super.key, required this.di, required this.punishmentUuid, required this.addr});
 
   @override
   State<PunishmentItemsScreen> createState() => _PunishmentItemsScreenState();
@@ -20,7 +21,8 @@ class PunishmentItemsScreen extends StatefulWidget {
 
 class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
   String? _token;
-  List<PunishmentCard> data = [];
+  List<PunishmentItemCard> data = [];
+
 
   @override
   void initState() {
@@ -50,16 +52,13 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
     }
   }
 
-  Future<List<PunishmentCard>> _loadCards() async {
+  Future<List<PunishmentItemCard>> _loadCards() async {
     final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
     final statuses = await provider.get_statuses();
-    final punishment_items = await provider.get_punishments(widget.punishment);
+    final punishment_items = await provider.get_punishment_items(widget.punishmentUuid);
 
-    return punishment_items.map((punishment) => PunishmentItemCard(
-        di: widget.di,
-        punish_datetime: punishment.punishDatetime,
-        punishment_status: statuses[punishment.punishmentStatus] ?? "Неизвестный статус",
-        custom_number: punishment.customNumber
+    return punishment_items.map((punishment_item_plus) => PunishmentItemCard(
+        di: widget.di, data: punishment_item_plus.punishment_item, statuses: statuses
     )).toList();
   }
 
@@ -78,7 +77,7 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
               );
             },
           ),
-          title: Text('ЭСЖ'),
+          title: Text('Нарушения\n${widget.addr}'),
           automaticallyImplyLeading: false,
         ),
         body: data.isEmpty

@@ -240,7 +240,7 @@ class Punishment {
       project: json['project'],
       punishDatetime: DateTime.parse(json['punish_datetime']),
       punishmentStatus: json['punishment_status'],
-      customNumber: json['custom_number'],
+      customNumber: json['custom_number'] as String?,
     );
   }
 
@@ -276,7 +276,7 @@ class PunishmentItem {
   final String uuid;
   final String title;
   final String punishment;
-  final Bool is_suspend;
+  final bool is_suspend;
   final String place;
   final String? comment;
   final String? correction_date_info;
@@ -284,7 +284,7 @@ class PunishmentItem {
   final DateTime correction_date_plan;
   final DateTime punish_datetime;
   final DateTime? correction_date_fact;
-  final String punish_item_status;
+  final int punish_item_status;
 
   PunishmentItem({
     required this.correction_date_plan,
@@ -300,4 +300,89 @@ class PunishmentItem {
     this.correction_date_info,
     this.regulation_doc
   });
+
+  factory PunishmentItem.fromJson(Map<String, dynamic> json) {
+    return PunishmentItem(
+      uuid: json['uuid'],
+      title: json['title'],
+      punishment: json['punishment'],
+      is_suspend: json['is_suspend'] as bool,
+      place: json['place'],
+      comment: json['comment'] as String?,
+      correction_date_info: json['correction_date_info'] as String?,
+      regulation_doc: json['regulation_doc'] as String?,
+      correction_date_plan: DateTime.parse(json['correction_date_plan']),
+      correction_date_fact: json['correction_date_fact'] != null
+        ? DateTime.parse(json['correction_date_fact'])
+        : null,
+      punish_datetime: DateTime.parse(json['punish_datetime']),
+      punish_item_status: json['punishment_item_status'],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'uuid': uuid,
+    'title': title,
+    'punishment': punishment,
+    'punishment_item_status': punish_item_status,
+    'correction_date_plan': correction_date_plan.toIso8601String().split("T").first,
+    'is_suspend': is_suspend,
+    'place': place,
+    'punish_datetime': punish_datetime.toIso8601String(),
+    'comment': comment,
+    'correction_date_fact': correction_date_fact?.toIso8601String().split("T").first,
+    'correction_date_info': correction_date_info,
+    'regulation_doc': regulation_doc
+  };
+}
+
+class Attachment {
+  final String uuid;
+  final String baseEntityUuid;
+  final String originalFilename;
+  final String? contentType;
+
+  Attachment({
+    required this.uuid,
+    required this.baseEntityUuid,
+    required this.originalFilename,
+    this.contentType,
+  });
+
+  factory Attachment.fromJson(Map<String, dynamic> json) {
+    return Attachment(
+      uuid: json['uuid'] as String,
+      baseEntityUuid: json['base_entity_uuid'] as String,
+      originalFilename: json['original_filename'] as String,
+      contentType: json['content_type'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'uuid': uuid,
+      'base_entity_uuid': baseEntityUuid,
+      'original_filename': originalFilename,
+      'content_type': contentType,
+    };
+  }
+}
+
+class PunishmentItemAndAttachments {
+  final PunishmentItem punishment_item;
+  final List<Attachment> attachments;
+
+  PunishmentItemAndAttachments({
+    required this.punishment_item,
+    required this.attachments
+  });
+  
+  factory PunishmentItemAndAttachments.fromJson(Map<String, dynamic> json) {
+    return PunishmentItemAndAttachments(
+      punishment_item: PunishmentItem.fromJson(json['punishment_item'] as Map<String, dynamic>),
+      attachments: (json['attachments'] as List<dynamic>? ?? [])
+        .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
+        .toList()
+    );
+  }
 }
