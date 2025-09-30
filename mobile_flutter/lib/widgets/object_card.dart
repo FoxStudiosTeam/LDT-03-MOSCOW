@@ -63,10 +63,10 @@ class _ObjectCardState extends State<ObjectCard> {
                 children: [
                   Expanded(
                     child: Text(
-                      widget.title,
+                      "Адрес: ${widget.title}",
                       style: Theme.of(context)
                           .textTheme
-                          .titleLarge
+                          .titleMedium
                           ?.copyWith(color: textAndIconColor),
                     ),
                   ),
@@ -88,6 +88,8 @@ class _ObjectCardState extends State<ObjectCard> {
               const SizedBox(height: 8),
               // Статус (оставляю как есть, предполагая что внутри toRenderingString() тоже используется тема)
               widget.status.toRenderingString(),
+              const SizedBox(height: 8),
+              Text("Заказчик: "),
               const SizedBox(height: 8),
 
               if (_expanded)

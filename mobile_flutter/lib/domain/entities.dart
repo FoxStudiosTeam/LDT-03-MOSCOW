@@ -99,7 +99,7 @@ extension ProjectStatusExtension on ProjectStatus {
 
   Text toRenderingString() {
     return Text(
-      toReadableString(),
+      "Статус: ${toReadableString()}",
       style: TextStyle(
         color: getStatusColor(),
         fontWeight: FontWeight.w600,
@@ -122,25 +122,51 @@ class FoxPolygon {
 
   /// Фабричный метод из JSON
   factory FoxPolygon.fromJson(Map<String, dynamic> json) {
-    final rawCoordinates = json['coordinates'] as List<dynamic>? ?? [];
+    final type = json['type'] as String? ?? '';
 
-    final coordinates = rawCoordinates
-        .map<List<List<double>>>(
-          (ring) => (ring as List<dynamic>)
-              .map<List<double>>(
-                (point) => (point as List<dynamic>)
-                    .map<double>((value) => (value as num).toDouble())
-                    .toList(),
-              )
-              .toList(),
-        )
-        .toList();
+    if (type == 'Polygon') {
+      final coordinates = (json['coordinates'] as List)
+          .map<List<List<double>>>((ring) {
+        return (ring as List)
+            .map<List<double>>((point) {
+          return (point as List)
+              .map<double>((value) => (value as num).toDouble())
+              .toList();
+        })
+            .toList();
+      })
+          .toList();
 
-    return FoxPolygon(
-      type: json['type'] as String? ?? '',
-      coordinates: coordinates,
-    );
+      return FoxPolygon(
+        type: type,
+        coordinates: coordinates,
+      );
+    } else if (type == 'MultiPolygon') {
+      // Flatten MultiPolygon into one list of rings
+      final coordinates = (json['coordinates'] as List)
+          .expand<List<List<double>>>((polygon) {
+        return (polygon as List)
+            .map<List<List<double>>>((ring) {
+          return (ring as List)
+              .map<List<double>>((point) {
+            return (point as List)
+                .map<double>((value) => (value as num).toDouble())
+                .toList();
+          })
+              .toList();
+        });
+      })
+          .toList();
+
+      return FoxPolygon(
+        type: type,
+        coordinates: coordinates,
+      );
+    } else {
+      throw FormatException("Unsupported geometry type: $type");
+    }
   }
+
 
   /// Вычисление центра полигона
   LatLng getCenter() {
