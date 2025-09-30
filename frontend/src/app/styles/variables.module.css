@@ -1,0 +1,13 @@
+
+.mainButton {
+    height: 40px;
+
+    background-color: #c10007;
+    color: white;
+    padding: 8px 16px 8px 16px;
+    border-radius: 8px;
+}
+
+.mainButton:hover {
+    background-color: #9f0712;
+}

@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:ffi';
 
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 class Pagination {
   final int limit;
@@ -16,20 +17,19 @@ class PaginationResponseWrapper<T> {
   final List<T> items;
   final int total;
 
-  PaginationResponseWrapper({
-    required this.items,
-    required this.total,
-  });
+  PaginationResponseWrapper({required this.items, required this.total});
 
   factory PaginationResponseWrapper.fromJson(
-      Map<String, dynamic> json,
-      T Function(Map<String, dynamic>) fromJsonT,
-      ) {
+    Map<String, dynamic> json,
+    T Function(Map<String, dynamic>) fromJsonT,
+  ) {
     final rawItems = json['result'];
     final List<dynamic> listItems = (rawItems is List) ? rawItems : [];
 
     return PaginationResponseWrapper<T>(
-      items: listItems.map((elem) => fromJsonT(elem as Map<String, dynamic>)).toList(),
+      items: listItems
+          .map((elem) => fromJsonT(elem as Map<String, dynamic>))
+          .toList(),
       total: json['total'] ?? 0,
     );
   }
@@ -47,61 +47,138 @@ enum ProjectStatus {
   SUSPEND,
 }
 
-ProjectStatus projectStatusFromInt(int status) {
-  if (status < 0 || status >= ProjectStatus.values.length) {
-    return ProjectStatus.NEW;
+extension ProjectStatusExtension on ProjectStatus {
+  String toReadableString() {
+    switch (this) {
+      case ProjectStatus.NEW:
+        // green
+        return "Новый";
+      case ProjectStatus.PRE_ACTIVE:
+        // yellow
+        return "Ожидает активации";
+      case ProjectStatus.NORMAL:
+        // green
+        return "В норме";
+      case ProjectStatus.SOME_WARNINGS:
+        // yellow_warning_low
+        return "Есть замечания";
+      case ProjectStatus.LOW_PUNISHMENT:
+        // yellow_warning_medium
+        return "Есть незначительные разрушения";
+        // red_error_low
+      case ProjectStatus.NORMAL_PUNISHMENT:
+        return "Есть нарушения";
+        // red_error_normal
+      case ProjectStatus.HIGH_PUNISHMENT:
+        return "Есть грубые нарушения";
+        // red_error_high
+      case ProjectStatus.SUSPEND:
+        // gray_disabled_color
+        return "Приостановлен";
+    }
   }
-  return ProjectStatus.values[status];
+
+  Color getStatusColor() {
+    switch (this) {
+      case ProjectStatus.NEW:
+      case ProjectStatus.NORMAL:
+        return Colors.green;
+      case ProjectStatus.PRE_ACTIVE:
+      case ProjectStatus.SOME_WARNINGS:
+        return Colors.orange;
+      case ProjectStatus.LOW_PUNISHMENT:
+        return Colors.amber;
+      case ProjectStatus.NORMAL_PUNISHMENT:
+        return Colors.redAccent;
+      case ProjectStatus.HIGH_PUNISHMENT:
+        return Colors.red;
+      case ProjectStatus.SUSPEND:
+        return Colors.grey;
+    }
+  }
+
+  Text toRenderingString() {
+    return Text(
+      toReadableString(),
+      style: TextStyle(
+        color: getStatusColor(),
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
 }
 
+ProjectStatus projectStatusFromInt(int value) {
+  return ProjectStatus.values[value.clamp(0, ProjectStatus.values.length - 1)];
+}
 
-class Polygon {
+class FoxPolygon {
   final String type;
   final List<List<List<double>>> coordinates;
+  final List<LatLng> points;
 
-  Polygon({required this.type, required this.coordinates});
+  FoxPolygon({required this.type, required this.coordinates})
+    : points = _extractPoints(coordinates);
 
-  factory Polygon.fromJson(Map<String, dynamic> json) {
-    return Polygon(
-      type: json['type'] ?? '',
-      coordinates: (json['coordinates'] as List<dynamic>? ?? [])
-          .map<List<List<double>>>(
-            (l1) => (l1 as List<dynamic>)
-            .map<List<double>>(
-              (l2) => (l2 as List<dynamic>).map<double>((n) => (n as num).toDouble()).toList(),
+  /// Фабричный метод из JSON
+  factory FoxPolygon.fromJson(Map<String, dynamic> json) {
+    final rawCoordinates = json['coordinates'] as List<dynamic>? ?? [];
+
+    final coordinates = rawCoordinates
+        .map<List<List<double>>>(
+          (ring) => (ring as List<dynamic>)
+              .map<List<double>>(
+                (point) => (point as List<dynamic>)
+                    .map<double>((value) => (value as num).toDouble())
+                    .toList(),
+              )
+              .toList(),
         )
-            .toList(),
-      )
-          .toList(),
+        .toList();
+
+    return FoxPolygon(
+      type: json['type'] as String? ?? '',
+      coordinates: coordinates,
     );
   }
 
-  GeoPoint getCenter() {
-    double x = 0;
-    double y = 0;
-    int count = 0;
+  /// Вычисление центра полигона
+  LatLng getCenter() {
+    if (points.isEmpty) return const LatLng(0, 0);
 
-    for (var col in coordinates) {
-      for (var point in col) {
-        x += point[0];
-        y += point[1];
-        count++;
+    final sum = points.reduce(
+      (a, b) => LatLng(a.latitude + b.latitude, a.longitude + b.longitude),
+    );
+    final avgLat = sum.latitude / points.length;
+    final avgLng = sum.longitude / points.length;
+
+    return LatLng(avgLat, avgLng);
+  }
+
+  /// Преобразование координат в LatLng
+  static List<LatLng> _extractPoints(List<List<List<double>>> coords) {
+    final List<LatLng> result = [];
+
+    for (final ring in coords) {
+      for (final point in ring) {
+        if (point.length >= 2) {
+          result.add(
+            LatLng(point[1], point[0]),
+          ); // [lon, lat] → LatLng(lat, lon)
+        }
       }
     }
 
-    x = x / count;
-    y = y / count;
-    return GeoPoint(latitude: y, longitude: x);
+    return result;
   }
 }
-
 
 class Project {
   final String address;
   final String created_by;
   final DateTime? end_date;
   final String foreman;
-  final Polygon? polygon;
+  final FoxPolygon? polygon;
   final String ssk;
   final DateTime? start_date;
   final ProjectStatus status;
@@ -130,7 +207,7 @@ class Project {
           : null,
       foreman: projectJson['foreman'] ?? '',
       polygon: projectJson['polygon'] != null
-          ? Polygon.fromJson(jsonDecode(projectJson['polygon']))
+          ? FoxPolygon.fromJson(jsonDecode(projectJson['polygon']))
           : null,
       ssk: projectJson['ssk'] ?? '',
       start_date: projectJson['start_date'] != null

@@ -1,0 +1,166 @@
+{
+  "latest": 3,
+  "state": {
+    "tables": {
+      "project": {
+        "name": "project",
+        "schema": "project",
+        "fields": [
+          {
+            "name": "status",
+            "type_name": "integer",
+            "type_str": "integer",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "polygon",
+            "type_name": "jsonb",
+            "type_str": "jsonb",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "start_date",
+            "type_name": "date",
+            "type_str": "date",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          },
+          {
+            "name": "end_date",
+            "type_name": "date",
+            "type_str": "date",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          },
+          {
+            "name": "uuid",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": true,
+            "default": "gen_random_uuid()",
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "foreman",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          },
+          {
+            "name": "address",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "ssk",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          },
+          {
+            "name": "created_by",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          }
+        ]
+      },
+      "iko_relationship": {
+        "name": "iko_relationship",
+        "schema": "project",
+        "fields": [
+          {
+            "name": "project",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "user_uuid",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          },
+          {
+            "name": "uuid",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": true,
+            "default": "gen_random_uuid()",
+            "nullable": false,
+            "is_unique": false
+          }
+        ]
+      }
+    },
+    "types": {
+      "bigint": {
+        "rustType": "i64",
+        "pgType": "bigint"
+      },
+      "boolean": {
+        "rustType": "bool",
+        "pgType": "boolean"
+      },
+      "text": {
+        "rustType": "String",
+        "pgType": "text"
+      },
+      "integer": {
+        "rustType": "i32",
+        "pgType": "integer"
+      },
+      "timestamp": {
+        "rustType": "chrono::NaiveDateTime",
+        "pgType": "timestamp"
+      },
+      "date": {
+        "rustType": "chrono::NaiveDate",
+        "pgType": "date"
+      },
+      "float8": {
+        "rustType": "f64",
+        "pgType": "float8"
+      },
+      "jsonb": {
+        "rustType": "serde_json::Value",
+        "pgType": "jsonb"
+      },
+      "uuid": {
+        "rustType": "uuid::Uuid",
+        "pgType": "uuid"
+      }
+    },
+    "type_mapping": "Pg"
+  }
+}

@@ -14,7 +14,7 @@ import 'object/object_provider.dart';
 const IAPIRootURI = "I-API-Root-URI";
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Это нужно!
+  WidgetsFlutterBinding.ensureInitialized();
 
   var builder = DependencyBuilder();
   builder.registerDependency(IAuthStorageProviderDIToken, AuthStorageProvider());
