@@ -121,11 +121,18 @@ impl IProjectService for ProjectService {
 
         let mut qstr = "
             WITH proj_page AS (
-                SELECT p.*
+                SELECT 
+                p.*,
+                uf.fcs AS foreman,
+                ao.name AS created_by
                 FROM project.project p
+                LEFT JOIN auth.users uf
+                    ON uf.uuid = p.foreman
+                left join auth.orgs ao
+                    on ao.uuid = p.created_by
                 WHERE p.address like $4
                 {{ROLE_RULE}}
-                ORDER BY p.created_at
+                ORDER BY p.created_at DESC
                 OFFSET $1 LIMIT $2
             )
             SELECT pp.*,
@@ -135,10 +142,10 @@ impl IProjectService for ProjectService {
                 a.content_type
             FROM proj_page pp
             LEFT JOIN attachment.attachments a 
-                ON a.base_entity_uuid = pp.uuid".to_string();
+                ON a.base_entity_uuid = pp.uuid;".to_string();
         
         
-        let mut q = 
+        let q = 
         match t.role.as_str() {
             FOREMAN_ROLE => {
                 qstr = qstr.replace("{{ROLE_RULE}}", "AND p.foreman = $3");
@@ -187,7 +194,7 @@ impl IProjectService for ProjectService {
             let a = row.attachment.into_attachments();
             let e = &mut hm
                 .entry(row.project.uuid.clone())
-                .or_insert_with(|| ProjectWithAttachments {
+                .or_insert_with(|| NamedProjectWithAttachments {
                     attachments: vec![],
                     project: row.project,
                 })
@@ -196,7 +203,7 @@ impl IProjectService for ProjectService {
             e.push(a);
         }
         let mut v = hm.into_values().collect::<Vec<_>>();
-        v.sort_by(|a, b| a.project.created_at.cmp(&b.project.created_at));
+        v.sort_by(|a, b| b.project.created_at.cmp(&a.project.created_at));
         let result = GetProjectWithAttachmentResult {
             result: v,
             total: total,

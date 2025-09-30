@@ -1,15 +1,24 @@
 {
-  "latest": 4,
+  "latest": 2,
   "state": {
     "tables": {
-      "materials": {
-        "name": "materials",
+      "reports": {
+        "name": "reports",
         "schema": "norm",
         "fields": [
           {
-            "name": "volume",
-            "type_name": "float8",
-            "type_str": "float8",
+            "name": "check_date",
+            "type_name": "date",
+            "type_str": "date",
+            "is_primary": false,
+            "default": null,
+            "nullable": true,
+            "is_unique": false
+          },
+          {
+            "name": "report_date",
+            "type_name": "date",
+            "type_str": "date",
             "is_primary": false,
             "default": null,
             "nullable": false,
@@ -25,16 +34,7 @@
             "is_unique": false
           },
           {
-            "name": "created_at",
-            "type_name": "timestamp",
-            "type_str": "timestamp",
-            "is_primary": false,
-            "default": "LOCALTIMESTAMP",
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "project",
+            "name": "project_schedule_item",
             "type_name": "uuid",
             "type_str": "uuid",
             "is_primary": false,
@@ -43,23 +43,20 @@
             "is_unique": false
           },
           {
-            "name": "delivery_date",
-            "type_name": "date",
-            "type_str": "date",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "measurement",
+            "name": "status",
             "type_name": "integer",
             "type_str": "integer",
             "is_primary": false,
             "default": null,
             "nullable": false,
             "is_unique": false
-          },
+          }
+        ]
+      },
+      "project_statuses": {
+        "name": "project_statuses",
+        "schema": "norm",
+        "fields": [
           {
             "name": "title",
             "type_name": "text",
@@ -70,11 +67,11 @@
             "is_unique": false
           },
           {
-            "name": "on_research",
-            "type_name": "boolean",
-            "type_str": "boolean",
-            "is_primary": false,
-            "default": "false",
+            "name": "id",
+            "type_name": "integer",
+            "type_str": "integer",
+            "is_primary": true,
+            "default": null,
             "nullable": false,
             "is_unique": false
           }
@@ -170,75 +167,24 @@
           }
         ]
       },
-      "reports": {
-        "name": "reports",
+      "measurements": {
+        "name": "measurements",
         "schema": "norm",
         "fields": [
-          {
-            "name": "check_date",
-            "type_name": "date",
-            "type_str": "date",
-            "is_primary": false,
-            "default": null,
-            "nullable": true,
-            "is_unique": false
-          },
-          {
-            "name": "report_date",
-            "type_name": "date",
-            "type_str": "date",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "uuid",
-            "type_name": "uuid",
-            "type_str": "uuid",
-            "is_primary": true,
-            "default": "gen_random_uuid()",
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "project_schedule_item",
-            "type_name": "uuid",
-            "type_str": "uuid",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "status",
-            "type_name": "integer",
-            "type_str": "integer",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          }
-        ]
-      },
-      "project_statuses": {
-        "name": "project_statuses",
-        "schema": "norm",
-        "fields": [
-          {
-            "name": "title",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
           {
             "name": "id",
             "type_name": "integer",
             "type_str": "integer",
             "is_primary": true,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "title",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
             "default": null,
             "nullable": false,
             "is_unique": false
@@ -247,30 +193,6 @@
       },
       "punishment_statuses": {
         "name": "punishment_statuses",
-        "schema": "norm",
-        "fields": [
-          {
-            "name": "id",
-            "type_name": "integer",
-            "type_str": "integer",
-            "is_primary": true,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          },
-          {
-            "name": "title",
-            "type_name": "text",
-            "type_str": "text",
-            "is_primary": false,
-            "default": null,
-            "nullable": false,
-            "is_unique": false
-          }
-        ]
-      },
-      "measurements": {
-        "name": "measurements",
         "schema": "norm",
         "fields": [
           {
@@ -316,24 +238,72 @@
             "is_unique": false
           }
         ]
+      },
+      "materials": {
+        "name": "materials",
+        "schema": "norm",
+        "fields": [
+          {
+            "name": "volume",
+            "type_name": "float8",
+            "type_str": "float8",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "uuid",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": true,
+            "default": "gen_random_uuid()",
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "project",
+            "type_name": "uuid",
+            "type_str": "uuid",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "delivery_date",
+            "type_name": "date",
+            "type_str": "date",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "measurement",
+            "type_name": "integer",
+            "type_str": "integer",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          },
+          {
+            "name": "title",
+            "type_name": "text",
+            "type_str": "text",
+            "is_primary": false,
+            "default": null,
+            "nullable": false,
+            "is_unique": false
+          }
+        ]
       }
     },
     "types": {
-      "integer": {
-        "rustType": "i32",
-        "pgType": "integer"
-      },
-      "boolean": {
-        "rustType": "bool",
-        "pgType": "boolean"
-      },
       "date": {
         "rustType": "chrono::NaiveDate",
         "pgType": "date"
-      },
-      "float8": {
-        "rustType": "f64",
-        "pgType": "float8"
       },
       "timestamp": {
         "rustType": "chrono::NaiveDateTime",
@@ -343,10 +313,6 @@
         "rustType": "serde_json::Value",
         "pgType": "jsonb"
       },
-      "uuid": {
-        "rustType": "uuid::Uuid",
-        "pgType": "uuid"
-      },
       "text": {
         "rustType": "String",
         "pgType": "text"
@@ -354,6 +320,22 @@
       "bigint": {
         "rustType": "i64",
         "pgType": "bigint"
+      },
+      "integer": {
+        "rustType": "i32",
+        "pgType": "integer"
+      },
+      "float8": {
+        "rustType": "f64",
+        "pgType": "float8"
+      },
+      "boolean": {
+        "rustType": "bool",
+        "pgType": "boolean"
+      },
+      "uuid": {
+        "rustType": "uuid::Uuid",
+        "pgType": "uuid"
       }
     },
     "type_mapping": "Pg"
