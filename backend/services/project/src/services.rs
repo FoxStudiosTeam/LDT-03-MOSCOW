@@ -28,6 +28,8 @@ pub trait IProjectService: Send + Sync {
     async fn set_project_foreman(&self, r: SetProjectForemanRequest, t: AccessTokenPayload) -> Result<Response, AppErr>;
     async fn add_iko_to_project(&self, r: AddIkoToProjectRequest, t: AccessTokenPayload) -> Result<Response, AppErr>;
     async fn get_project_statuses(&self) -> Result<Response,AppErr>;
+
+    async fn get_project_inspectors(&self, r: GetProjectInspectorsRequest, t: AccessTokenPayload) -> Result<Response, AppErr>;
 }
 
 #[derive(Clone)]
@@ -37,59 +39,58 @@ struct ProjectService {
 
 #[async_trait]
 impl IProjectService for ProjectService {
+    async fn get_project_inspectors(&self, r: GetProjectInspectorsRequest, t: AccessTokenPayload) -> Result<Response, AppErr> { 
+        let inspectors = sqlx::query_as::<_, InspectorInfo>("
+            select 
+            u.fcs,
+            u.\"uuid\"
+            from auth.users u
+            left join project.iko_relationship ir
+                on u.\"uuid\" = ir.user_uuid
+                and ir.project = $1
+        ")
+            .bind(&r.project_uuid)
+            .fetch_all(self.state.orm().get_executor())
+            .await
+            .into_app_err()?;
+        
+        Ok((StatusCode::OK, Json(GetProjectInspectorsResponse{inspectors: inspectors})).into_response())
+    }
+
+
     async fn get_project(&self, r: GetProjectRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
         let (offset, limit) = r.pagination.map(|p| (p.offset, p.limit)).unwrap_or((0, 0));
 
-        let address = r.address.unwrap_or_default();
+        let address = r.address.unwrap_or_default().trim().to_string();
 
+        let mut cq: String = "SELECT COUNT(*) FROM project.project p {{ROLE_RULE}} {{ADDRESS_RULE}}".to_string();
 
-        if limit <= 0 {
-            let total: (i64,) = sqlx::query_as::<_, (i64,)>(
-                "SELECT COUNT(*) FROM project.project WHERE address like $1",
-            )
-            .bind(format!("%{}%", address))
-            .fetch_one(self.state.orm().get_executor())
-            .await
-            .into_app_err()?;
-            return Ok((
-                StatusCode::OK,
-                Json(GetProjectResult {
-                    result: vec![],
-                    total: total.0,
-                }),
-            )
-                .into_response());
-        }
+        if address.is_empty() {
+            cq = cq.replace("{{ADDRESS_RULE}}", "");
+        } else {
+            cq = cq.replace("{{ADDRESS_RULE}}", "WHERE p.address like $2");
+        };
 
-
-        let mut qstr = "
-            SELECT p.*, 
-            a.uuid AS attachment_uuid,
-            a.original_filename,
-            a.base_entity_uuid,
-            a.content_type,
-            COUNT(*) OVER() AS total_count
-            FROM project.project p
-            LEFT JOIN attachment.attachments a ON a.base_entity_uuid = p.uuid
-            WHERE p.address like $2 {{ROLE_RULE}} offset $3 limit $4".to_string();
-        
-        let q = 
-        match t.role.as_str() {
+        let mut q = match t.role.as_str() {
             FOREMAN_ROLE => {
-                qstr = qstr.replace("{{ROLE_RULE}}", "AND p.foreman = $1");
-                sqlx::query_as::<_, RowProjectWithAttachment>(&qstr).bind(t.uuid)
+                cq = cq.replace("{{ROLE_RULE}}", "WHERE p.foreman = $1");
+                sqlx::query_as::<_, (i64,)>(&cq)
+                    .bind(t.uuid)
             }
             CUSTOMER_ROLE => {
-                qstr = qstr.replace("{{ROLE_RULE}}", "AND p.created_by = $1");
-                sqlx::query_as::<_, RowProjectWithAttachment>(&qstr).bind(t.org)
+                cq = cq.replace("{{ROLE_RULE}}", "WHERE p.created_by = $1");
+                sqlx::query_as::<_, (i64,)>(&cq)
+                    .bind(t.org)
             }
             INSPECTOR_ROLE => {
-                qstr = qstr.replace("{{ROLE_RULE}}", "AND p.inspector = $1");
-                sqlx::query_as::<_, RowProjectWithAttachment>(&qstr).bind(t.uuid)
+                cq = cq.replace("{{ROLE_RULE}}", "WHERE p.inspector = $1");
+                sqlx::query_as::<_, (i64,)>(&cq)
+                    .bind(t.uuid)
             }
             ADMINISTRATOR_ROLE => {
-                qstr = qstr.replace("{{ROLE_RULE}}", "AND $1::boolean IS NOT NULL");
-                sqlx::query_as::<_, RowProjectWithAttachment>(&qstr).bind(true)
+                cq = cq.replace("{{ROLE_RULE}}", "WHERE $1::boolean IS NOT NULL");
+                sqlx::query_as::<_, (i64,)>(&cq)
+                    .bind(true)
             }
             _ => {
                 return Err(AppErr::default()
@@ -98,21 +99,92 @@ impl IProjectService for ProjectService {
             }
         };
 
+        
+        if !address.is_empty() {q = q.bind(format!("%{}%", address))}
+
+
+        let total: i64 = q
+            .fetch_one(self.state.orm().get_executor())
+            .await
+            .into_app_err()?.0;
+
+        if limit <= 0 {
+            return Ok((
+                StatusCode::OK,
+                Json(GetProjectResult {
+                    result: vec![],
+                    total: total,
+                }),
+            )
+                .into_response());
+        }
+
+        let mut qstr = "
+            WITH proj_page AS (
+                SELECT p.*
+                FROM project.project p
+                WHERE p.address like $4
+                {{ROLE_RULE}}
+                ORDER BY p.created_at
+                OFFSET $1 LIMIT $2
+            )
+            SELECT pp.*,
+                a.uuid AS attachment_uuid,
+                a.original_filename,
+                a.base_entity_uuid,
+                a.content_type
+            FROM proj_page pp
+            LEFT JOIN attachment.attachments a 
+                ON a.base_entity_uuid = pp.uuid".to_string();
+        
+        
+        let mut q = 
+        match t.role.as_str() {
+            FOREMAN_ROLE => {
+                qstr = qstr.replace("{{ROLE_RULE}}", "AND p.foreman = $3");
+                sqlx::query_as::<_, RowProjectWithAttachment>(&qstr)
+                    .bind(offset)
+                    .bind(limit)
+                    .bind(t.uuid)
+            }
+            CUSTOMER_ROLE => {
+                qstr = qstr.replace("{{ROLE_RULE}}", "AND p.created_by = $3");
+                sqlx::query_as::<_, RowProjectWithAttachment>(&qstr)
+                    .bind(offset)
+                    .bind(limit)
+                    .bind(t.org)
+            }
+            INSPECTOR_ROLE => {
+                qstr = qstr.replace("{{ROLE_RULE}}", "AND p.inspector = $3");
+                sqlx::query_as::<_, RowProjectWithAttachment>(&qstr)
+                    .bind(offset)
+                    .bind(limit)
+                    .bind(t.uuid)
+            }
+            ADMINISTRATOR_ROLE => {
+                qstr = qstr.replace("{{ROLE_RULE}}", "AND $3::boolean IS NOT NULL");
+                sqlx::query_as::<_, RowProjectWithAttachment>(&qstr)
+                    .bind(offset)
+                    .bind(limit)
+                    .bind(true)
+            }
+            _ => {
+                return Err(AppErr::default()
+                    .with_err_response("Unknown role")
+                    .with_status(StatusCode::FORBIDDEN));
+            }
+        };
+
+
         let rows = q
             .bind(format!("%{}%", address))
-            .bind(offset)
-            .bind(limit)
             .fetch_all(self.state.orm().get_executor())
             .await
             .into_app_err()?;
-        
-
 
         let mut hm = HashMap::new();
-        let mut total = 0;
         for row in rows {
             let a = row.attachment.into_attachments();
-            total = row.total_count;
             let e = &mut hm
                 .entry(row.project.uuid.clone())
                 .or_insert_with(|| ProjectWithAttachments {
@@ -124,7 +196,7 @@ impl IProjectService for ProjectService {
             e.push(a);
         }
         let mut v = hm.into_values().collect::<Vec<_>>();
-        v.sort_by_key(|v| v.project.uuid);
+        v.sort_by(|a, b| a.project.created_at.cmp(&b.project.created_at));
         let result = GetProjectWithAttachmentResult {
             result: v,
             total: total,
@@ -201,7 +273,7 @@ impl IProjectService for ProjectService {
 
         let r = sqlx::query_as::<_, Project>("
             UPDATE project.project 
-            SET foreman_uuid = $1
+            SET foreman = $1
             WHERE created_by = $2
             AND status = $3
             AND uuid = $4
@@ -249,10 +321,10 @@ impl IProjectService for ProjectService {
             .await
             .into_app_err();
         if let Err(e) = res {
-            tx.rollback().await;
+            tx.rollback().await.into_app_err()?;
             return Err(e);
         }
-        tx.commit().await;
+        tx.commit().await.into_app_err()?;
         
         return Ok((StatusCode::OK, Json(project)).into_response());
     }
@@ -264,7 +336,7 @@ impl IProjectService for ProjectService {
     ) -> Result<Response, AppErr> {
         let project = sqlx::query_as::<_, Project>("
             UPDATE project.project 
-            status = $1
+            SET status = $1
             WHERE uuid = $2 AND status = $3 AND created_by = $4
             RETURNING *
         ")

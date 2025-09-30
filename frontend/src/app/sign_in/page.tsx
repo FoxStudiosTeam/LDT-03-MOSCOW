@@ -30,7 +30,7 @@ export default function SignIn() {
             const {success, message, decoded} = await AuthUser(data.email, data.password);
             if (success && decoded) {
                 setUserData({role:decoded.role, org:decoded.org, uuid:decoded.uuid})
-                window.location.href = '/list_objects/';
+                window.location.href = '/';
             } else {
                 setMessage(message || "Ошибка авторизации");
             }
@@ -38,7 +38,6 @@ export default function SignIn() {
             setMessage(`${error}`);
         }
     };
-
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-300 px-2">
@@ -74,7 +73,7 @@ export default function SignIn() {
                         Войти
                     </button>
 
-                    {message && <p className="w-full text-center text-red-600 mt-2">{message}</p>}
+                    {message && <p className="w-full text-center text-red-600 pt-2">{message}</p>}
                 </form>
 
             </div>
