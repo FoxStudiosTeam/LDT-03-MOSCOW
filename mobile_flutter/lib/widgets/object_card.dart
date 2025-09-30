@@ -10,6 +10,8 @@ import '../di/dependency_container.dart';
 
 class ObjectCard extends StatefulWidget {
   final String title;
+  final String address;
+  final String projectUuid;
   final ProjectStatus status;
   final IDependencyContainer di;
   final FoxPolygon polygon;
@@ -21,6 +23,8 @@ class ObjectCard extends StatefulWidget {
   const ObjectCard({
     super.key,
     required this.title,
+    required this.address,
+    required this.projectUuid,
     required this.status,
     required this.di,
     required this.polygon,
@@ -107,6 +111,8 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
             context,
             MaterialPageRoute(
               builder: (_) => ObjectScreen(
+                address: widget.address,
+                projectUuid: widget.projectUuid,
                 di: widget.di,
                 title: widget.title,
                 status: widget.status,

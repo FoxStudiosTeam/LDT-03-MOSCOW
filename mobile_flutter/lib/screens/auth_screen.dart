@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/screens/objects_screen.dart';
+import 'package:mobile_flutter/screens/punishments_screen.dart';
 
 import '../auth/auth_provider.dart';
 class AuthScreen extends StatefulWidget {
@@ -31,7 +32,8 @@ class _AuthScreenState extends State<AuthScreen> {
         const Duration(seconds: 5),
       );
       if (!mounted) return;
-      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => ObjectsScreen(di:widget.di)), (route) => false);
+      // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => ObjectsScreen(di:widget.di)), (route) => false);
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => PunishmentsScreen(di:widget.di, projectUuid: "f268b7a5-51ae-46c0-a22d-1128261a01df", addr: "test addr",)), (route) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
