@@ -132,7 +132,7 @@ impl IProjectService for ProjectService {
 
         let address = r.address.unwrap_or_default().trim().to_string();
 
-        let mut cq: String = "SELECT COUNT(*) FROM project.project p {{ROLE_RULE}} {{ADDRESS_RULE}}".to_string();
+        let mut cq: String = "SELECT COUNT(*) FROM project.project p {{ADDRESS_RULE}} {{ROLE_RULE}}".to_string();
         let addr = address.clone();
         let replace_addr = move |cq: String, i: usize| -> String {
             if addr.is_empty() {
