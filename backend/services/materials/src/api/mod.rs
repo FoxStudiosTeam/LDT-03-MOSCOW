@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::{Json, response::Response};
-use axum::extract::{Query, State};
+use axum::extract::{Path, Query, State};
 use orm::prelude::*;
-use schema::prelude::{ActiveMaterials, Attachments, OrmMaterials};
-use serde::{Deserialize};
+use schema::prelude::{ActiveMaterials, Attachments, Materials, OrmMaterials};
+use serde::{Deserialize, Serialize};
 use shared::prelude::*;
 use utoipa::{ToSchema};
 use utoipa_axum::{router::OpenApiRouter, routes};
@@ -14,6 +16,7 @@ use crate::AppState;
 
 pub fn router(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
+        .routes(routes!(request_research))
         .routes(routes!(
             insert, 
             update,
@@ -21,7 +24,7 @@ pub fn router(state: AppState) -> OpenApiRouter {
             get,
         ))
         .routes(routes!(
-            get_by_project_schedule_item,
+            get_by_project,
         ))
         .with_state(state)
         // .layer(auth_jwt::prelude::AuthLayer::new(Role::Foreman))
@@ -33,7 +36,7 @@ pub struct MaterialInsertRequest {
     #[schema(example = 1.0)]
     volume: f64,
     #[schema(example="a1b15396-7f4a-40e0-8afd-2785a0460d33")]
-    project_schedule_item: uuid::Uuid,
+    project: uuid::Uuid,
     #[schema(example = "2023-01-01")]
     delivery_date: chrono::NaiveDate,
     #[schema(example = 1)]
@@ -46,7 +49,7 @@ impl MaterialInsertRequest {
     pub fn into_active(self) -> ActiveMaterials {
         ActiveMaterials {
             volume: Set(self.volume),
-            project_schedule_item: Set(self.project_schedule_item),
+            project: Set(self.project),
             delivery_date: Set(self.delivery_date),
             measurement: Set(self.measurement),
             title: Set(self.title),
@@ -144,24 +147,13 @@ pub async fn delete(
 }
 
 
-#[derive(Clone, Debug, ToSchema)]
-pub struct MaterialsResponse {
-    pub volume: f64,
-    pub uuid: uuid::Uuid,
-    pub project_schedule_item: uuid::Uuid,
-    pub delivery_date: chrono::NaiveDate,
-    pub measurement: i32,
-    pub title: String,
-    pub attachments: Vec<Attachments>,
-}
-
 #[utoipa::path(
     get,
     path = "/material/{id}",
     tag = crate::MAIN_TAG,
-    summary = "Update a material",
+    summary = "Get a material",
     responses(
-        (status = 200, description = "Success", body = MaterialsResponse),
+        (status = 200, description = "Success", body = Materials),
         (status = 404, description = "Material with id not found"),
     )
 )]
@@ -175,19 +167,132 @@ pub async fn get(
     Ok((StatusCode::OK, Json(r)).into_response())  
 }
 
+// #[utoipa::path(
+//     get,
+//     path = "/materials/by_project_schedule_item/{id}",
+//     tag = crate::MAIN_TAG,
+//     summary = "Get all materials by subwork",
+//     params(
+//         ("project_schedule_item" = uuid::Uuid, Path, description = "ID of the project schedule item")
+//     ),
+//     responses(
+//         (status = 200, description = "Success", body = Vec<MaterialsResponse>),
+//     )
+// )]
+// pub async fn get_by_project_schedule_item(
+//     State(app) : State<AppState>,
+//     Path(project_schedule_item): Path<uuid::Uuid>
+// ) -> Result<Response, AppErr> {
+//     let r = app.orm.materials().select("where project_schedule_item = $1").bind(&project_schedule_item).fetch().await.into_app_err()?;
+//     Ok((StatusCode::OK, Json(r)).into_response())
+// }
+
+
+
+#[derive(sqlx::FromRow, Default, Debug)]
+pub struct OptionalAttachments {
+    pub original_filename: Option<String>,
+    pub attachment_uuid: Option<uuid::Uuid>,
+    pub base_entity_uuid: Option<uuid::Uuid>,
+    pub content_type: Option<String>,
+}
+
+
+
+impl OptionalAttachments {
+    fn into_attachments(self) -> Option<Attachments> {
+        Some(Attachments {
+            original_filename: self.original_filename?,
+            uuid: self.attachment_uuid?,
+            base_entity_uuid: self.base_entity_uuid?,
+            content_type: self.content_type,
+        })
+    }
+}
+
+#[derive(sqlx::FromRow, Debug)]
+struct MaterialWithAttachment {
+    #[sqlx(flatten)]
+    material: Materials,
+    #[sqlx(flatten)]
+    attachment: OptionalAttachments,
+}
+
+#[derive(Serialize, ToSchema)]
+struct MaterialWithAttachments {
+    material: Materials,
+    attachments: Vec<Attachments>,
+}
+
 #[utoipa::path(
     get,
-    path = "/materials/by_project_schedule_item/{id}",
+    path = "/materials/by_project/{id}",
     tag = crate::MAIN_TAG,
-    summary = "Update a material",
+    summary = "Get all materials by subwork",
+    params(
+        ("project" = uuid::Uuid, Path, description = "ID of the project")
+    ),
     responses(
-        (status = 200, description = "Success", body = Vec<MaterialsResponse>),
+        (status = 200, description = "Success", body = Vec<MaterialWithAttachments>),
     )
 )]
-pub async fn get_by_project_schedule_item(
+pub async fn get_by_project(
     State(app) : State<AppState>,
-    Query(s) : Query<uuid::Uuid>
+    Path(project): Path<uuid::Uuid>
 ) -> Result<Response, AppErr> {
-    let r = app.orm.materials().select("where project_schedule_item = $1").bind(&s).fetch().await.into_app_err()?;
-    Ok((StatusCode::OK, Json(r)).into_response())
+
+    let rows = sqlx::query_as::<_, MaterialWithAttachment>("
+        SELECT m.*, 
+        a.uuid AS attachment_uuid,
+        a.original_filename,
+        a.base_entity_uuid,
+        a.content_type
+        FROM norm.materials m
+        LEFT JOIN attachment.attachments a ON a.base_entity_uuid = m.uuid
+        WHERE m.project = $1
+    ").bind(&project).fetch_all(app.orm.get_executor()).await.into_app_err()?;
+
+    let mut hm = HashMap::new();
+
+    for row in rows {
+        let a = row.attachment.into_attachments();
+        let e = &mut hm.entry(row.material.uuid.clone())
+            .or_insert_with(|| MaterialWithAttachments{
+                attachments: vec![], 
+                material: row.material
+            })
+            .attachments;
+        let Some(a) = a else {continue};
+        e.push(a);  
+    }
+    let v: Vec<MaterialWithAttachments> = hm.into_values().collect::<Vec<_>>();
+    Ok((StatusCode::OK, Json(v)).into_response())
+}
+
+
+#[utoipa::path(
+    put,
+    path = "/materials/request_research/{id}",
+    tag = crate::MAIN_TAG,
+    summary = "Request mat research",
+    params(
+        ("material_id" = uuid::Uuid, Path, description = "ID of the project schedule item")
+    ),
+    responses(
+        (status = 200, description = "Success"),
+        (status = 404, description = "Material with id not found"),
+    )
+)]
+pub async fn request_research(
+    State(app) : State<AppState>,
+    Path(material_id): Path<uuid::Uuid>
+) -> Result<Response, AppErr> {
+    let m = ActiveMaterials {
+        uuid: Set(material_id),
+        on_research: Set(true),
+        ..Default::default()
+    };
+    let r = app.orm.materials()
+        .save(m, Update).await.into_app_err()?;
+    Ok((if r.is_some() {StatusCode::OK} else {StatusCode::NOT_FOUND}).into_response())
 }
