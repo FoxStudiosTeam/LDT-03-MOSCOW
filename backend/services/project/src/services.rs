@@ -40,9 +40,72 @@ struct ProjectService {
 
 #[async_trait]
 impl IProjectService for ProjectService {
-    async fn get_inspector_projects(&self, r: GetProjectRequest, _t: AccessTokenPayload) -> Result<Response, AppErr> {
+    async fn get_inspector_projects(&self, r: GetProjectRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
+        let (offset, limit) = r.pagination.map(|p| (p.offset, p.limit)).unwrap_or((0, 0));
+        
+        let total: i64 = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM project.project p 
+        inner join project.iko_relationship ir on ir.project = p.uuid 
+        WHERE ir.user_uuid = $3
+        ORDER BY p.created_at DESC
+        OFFSET $1 LIMIT $2
+        ")
+            .bind(&offset)
+            .bind(&limit)
+            .bind(&t.uuid)
+            .fetch_one(self.state.orm().get_executor())
+            .await
+            .into_app_err()?
+            .0;
+        let rows = sqlx::query_as::<_, RowProjectWithAttachment>("
+            WITH proj_page AS (
+                SELECT 
+                p.*,
+                uf.fcs AS foreman,
+                ao.name AS created_by
+                FROM project.project p
+                LEFT JOIN auth.users uf
+                    ON uf.uuid = p.foreman
+                left join auth.orgs ao
+                    on ao.uuid = p.created_by
+                inner join project.iko_relationship ir on ir.project = p.uuid AND ir.user_uuid = $3
+                WHERE p.address like $4
+                ORDER BY p.created_at DESC
+                OFFSET $1 LIMIT $2
+            )
+            SELECT pp.*,
+                a.uuid AS attachment_uuid,
+                a.original_filename,
+                a.base_entity_uuid,
+                a.content_type
+            FROM proj_page pp
+            LEFT JOIN attachment.attachments a 
+                ON a.base_entity_uuid = pp.uuid;
+        ")
+            .fetch_all(self.state.orm().get_executor())
+            .await
+            .into_app_err()?;
+    
+        let mut hm = HashMap::new();
+        for row in rows {
+            let a = row.attachment.into_attachments();
+            let e = &mut hm
+                .entry(row.project.uuid.clone())
+                .or_insert_with(|| NamedProjectWithAttachments {
+                    attachments: vec![],
+                    project: row.project,
+                })
+                .attachments;
+            let Some(a) = a else { continue };
+            e.push(a);
+        }
+        let mut v = hm.into_values().collect::<Vec<_>>();
+        v.sort_by(|a, b| b.project.created_at.cmp(&a.project.created_at));
+        let result = GetProjectWithAttachmentResult {
+            result: v,
+            total: total,
+        };
 
-        todo!()
+        return Ok((StatusCode::OK, Json(result)).into_response());
     }
 
     async fn get_project_inspectors(&self, r: GetProjectInspectorsRequest, _t: AccessTokenPayload) -> Result<Response, AppErr> { 
@@ -85,7 +148,7 @@ impl IProjectService for ProjectService {
                 FOREMAN_ROLE => format!(" AND p.foreman = {} ", <crate::DB as SqlGen>::placeholder(i)),
                 CUSTOMER_ROLE => format!(" AND p.created_by = {} ", <crate::DB as SqlGen>::placeholder(i)),
                 // INSPECTOR_ROLE => format!(" inner join project.iko_relationship ir on ir.project = p.uuid AND ir.user_uuid = {} ", <crate::DB as SqlGen>::placeholder(i)),
-                INSPECTOR_ROLE => format!(" AND {}::boolean IS NOT NULL ", <crate::DB as SqlGen>::placeholder(i)),
+                INSPECTOR_ROLE => format!(" AND {}::uuid IS NOT NULL ", <crate::DB as SqlGen>::placeholder(i)),
                 ADMINISTRATOR_ROLE => format!(" AND {}::boolean IS NOT NULL ", <crate::DB as SqlGen>::placeholder(i)),
                 _ => {
                     return Err(AppErr::default()
@@ -94,28 +157,29 @@ impl IProjectService for ProjectService {
                 }
             });
             let cq = if cq.contains("WHERE") {cq} else {cq.replace("AND", "WHERE")};
+            tracing::warn!("CQ: {}", cq);
             Ok(cq)
         };
        
 
         let mut q = match t.role.as_str() {
             FOREMAN_ROLE => {
-                cq = cq.replace("{{ROLE_RULE}}", &replace_role(replace_addr(cq.clone(), 2), 1)?);
+                cq = replace_role(replace_addr(cq.clone(), 1), 0)?;
                 sqlx::query_as::<_, (i64,)>(&cq)
                     .bind(t.uuid)
             }
             CUSTOMER_ROLE => {
-                cq = cq.replace("{{ROLE_RULE}}", &replace_role(replace_addr(cq.clone(), 2), 1)?);
+                cq = replace_role(replace_addr(cq.clone(), 1), 0)?;
                 sqlx::query_as::<_, (i64,)>(&cq)
                     .bind(t.org)
             }
             INSPECTOR_ROLE => {
-                cq = cq.replace("{{ROLE_RULE}}", &replace_role(replace_addr(cq.clone(), 2), 1)?);
+                cq = replace_role(replace_addr(cq.clone(), 1), 0)?;
                 sqlx::query_as::<_, (i64,)>(&cq)
                     .bind(t.uuid)
             }
             ADMINISTRATOR_ROLE => {
-                cq = cq.replace("{{ROLE_RULE}}", &replace_role(replace_addr(cq.clone(), 2), 1)?);
+                cq = replace_role(replace_addr(cq.clone(), 1), 0)?;
                 sqlx::query_as::<_, (i64,)>(&cq)
                     .bind(true)
             }
