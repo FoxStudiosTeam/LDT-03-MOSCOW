@@ -1,9 +1,12 @@
 import 'dart:developer';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/tabler.dart';
+import 'package:mobile_flutter/bridges/ocr.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -68,7 +71,19 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
 
     try {
       final image = await _cameraController!.takePicture();
-      log('Picture taken: ${image.path}');
+      log('OCR: Picture taken: ${image.path}');
+
+      // Read file as bytes
+      final file = File(image.path);
+      final Uint8List bytes = await file.readAsBytes();
+
+      // Call OCR
+      final boxes = await OcrBridge.getBoxes(bytes);
+      log("OCR: Got ${boxes.length} boxes");
+
+      for (var box in boxes) {
+        log("OCR: $box");
+      }
       
       // String text = await TesseractOcr.extractText(
       //   image.path,
@@ -126,6 +141,7 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
             child: CameraPreview(_cameraController!)
           ),
           Positioned(
+            // todo!: fix non-portrait
             top: isPortrait ? null : (size.height / 2 - 28),
             bottom: isPortrait ? 48 : null,
             left: isPortrait ? (size.width / 2 - 28) : null,
