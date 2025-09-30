@@ -9,12 +9,16 @@ import 'package:mobile_flutter/domain/entities.dart'
 import 'package:mobile_flutter/utils/StyleUtils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
+import 'package:mobile_flutter/screens/report_screen.dart';
 
 class ObjectScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String title;
   final ProjectStatus status;
   final FoxPolygon polygon;
+  final String? customer;
+  final String? foreman;
+  final String? inspector;
 
   const ObjectScreen({
     super.key,
@@ -22,6 +26,9 @@ class ObjectScreen extends StatefulWidget {
     required this.title,
     required this.status,
     required this.polygon,
+    required this.customer,
+    required this.foreman,
+    required this.inspector,
   });
 
   @override
@@ -31,10 +38,22 @@ class ObjectScreen extends StatefulWidget {
 class _ObjectScreenState extends State<ObjectScreen> {
   bool _showPoints = false;
 
+  void _navigateToReports() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReportScreen(
+          di: widget.di,
+          objectTitle: widget.title, // Передаем название объекта если нужно
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Color textColor = Colors.black; // Можно заменить на тему
-    final Color pointBlockColor = Colors.grey.shade200; // Вместо фиолетового
+    final Color textColor = Colors.black;
+    final Color pointBlockColor = Colors.grey.shade200;
 
     void leaveHandler() {
       Navigator.pop(context);
@@ -64,7 +83,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 Navigator.pop(ctx);
               },
             ),
-            Divider(height: 1),
+            const Divider(height: 1),
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.account_balance_outlined),
@@ -73,16 +92,17 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 Navigator.pop(ctx);
               },
             ),
-            Divider(height: 1),
+            const Divider(height: 1),
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.file_open),
               title: const Text('Отчет'),
               onTap: () {
                 Navigator.pop(ctx);
+                _navigateToReports(); // Переход к отчетам
               },
             ),
-            Divider(height: 1),
+            const Divider(height: 1),
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.file_upload),
@@ -91,7 +111,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 Navigator.pop(ctx);
               },
             ),
-            Divider(height: 1),
+            const Divider(height: 1),
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.file_present_sharp),
@@ -138,7 +158,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 "Информация об объекте",
                 style: TextStyle(fontSize: 20, color: textColor),
               ),
-              Divider(height: 1),
+              const Divider(height: 1),
               const SizedBox(height: 16),
               widget.status.toRenderingString(),
               const SizedBox(height: 16),
@@ -167,10 +187,10 @@ class _ObjectScreenState extends State<ObjectScreen> {
                     children: [
                       TileLayer(
                         urlTemplate:
-                            'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+                        'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
                         subdomains: ['a', 'b', 'c'],
                         userAgentPackageName:
-                            'ru.foxstudios.digital_building_journal',
+                        'ru.foxstudios.digital_building_journal',
                       ),
                       PolygonLayer(
                         polygons: [
@@ -187,8 +207,16 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 ),
               ),
 
+              const SizedBox(height: 16),
+
+              // Информация о участниках
+              _buildInfoCard(),
+
+              const SizedBox(height: 16),
+
               const SizedBox(height: 24),
               const Divider(height: 1),
+
               // Заголовок с кнопкой для скрытия/показа точек
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -200,15 +228,15 @@ class _ObjectScreenState extends State<ObjectScreen> {
                   IconButton(
                     icon: _showPoints
                         ? SvgPicture.asset(
-                            "assets/icons/arrow-top.svg",
-                            width: 32,
-                            height: 32,
-                          )
+                      "assets/icons/arrow-top.svg",
+                      width: 32,
+                      height: 32,
+                    )
                         : SvgPicture.asset(
-                            "assets/icons/arrow-bottom.svg",
-                            width: 32,
-                            height: 32,
-                          ),
+                      "assets/icons/arrow-bottom.svg",
+                      width: 32,
+                      height: 32,
+                    ),
                     onPressed: () {
                       setState(() {
                         _showPoints = !_showPoints;
@@ -217,7 +245,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                   ),
                 ],
               ),
-              Divider(height: 1),
+              const Divider(height: 1),
               const SizedBox(height: 12),
 
               if (_showPoints)
@@ -270,6 +298,68 @@ class _ObjectScreenState extends State<ObjectScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Участники проекта",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildParticipantRow("Заказчик:", widget.customer ?? "Не указан"),
+            const SizedBox(height: 8),
+            _buildParticipantRow("Подрядчик:", widget.foreman ?? "Не указан"),
+            const SizedBox(height: 8),
+            _buildParticipantRow(
+                "Ответственный инспектор:", widget.inspector ?? "Не указан"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildParticipantRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 160,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
