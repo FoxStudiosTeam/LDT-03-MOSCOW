@@ -7,6 +7,7 @@ import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 
 import '../auth/auth_provider.dart';
+import '../utils/NetworkUtils.dart';
 import '../widgets/punishment_item_card.dart';
 class PunishmentItemsScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -56,7 +57,7 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
     final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
     final statuses = await provider.get_statuses();
     final docs = await provider.get_documents();
-    final punishment_items = await provider.get_punishment_items(widget.punishmentUuid);
+    final punishment_items = await NetworkUtils.wrapRequest<List<PunishmentItemAndAttachments>>(() => provider.get_punishment_items(widget.punishmentUuid), context, widget.di);
 
     return punishment_items.map((punishment_item_plus) => PunishmentItemCard(
       di: widget.di,
@@ -71,7 +72,7 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: BaseHeader(
-          title: 'Вложения нарушения',
+          title: 'Нарушения',
           subtitle: '${widget.addr}',
           onBack: () => {
             Navigator.pop(context)
