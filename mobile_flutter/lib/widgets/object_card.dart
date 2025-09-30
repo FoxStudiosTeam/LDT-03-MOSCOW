@@ -114,7 +114,6 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
                 address: widget.address,
                 projectUuid: widget.projectUuid,
                 di: widget.di,
-                title: widget.title,
                 status: widget.status,
                 polygon: widget.polygon,
                 customer: widget.customer,

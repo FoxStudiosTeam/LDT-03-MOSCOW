@@ -12,11 +12,11 @@ import 'package:mobile_flutter/utils/StyleUtils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/screens/report_screen.dart';
+import 'package:mobile_flutter/screens/material_screen.dart';
 
 class ObjectScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String projectUuid;
-  final String title;
   final ProjectStatus status;
   final FoxPolygon polygon;
   final String? customer;
@@ -28,13 +28,12 @@ class ObjectScreen extends StatefulWidget {
     super.key,
     required this.di,
     required this.projectUuid,
-    required this.title,
     required this.status,
     required this.polygon,
     required this.customer,
     required this.foreman,
     required this.inspector,
-    required this.address
+    required this.address,
   });
 
   @override
@@ -43,18 +42,6 @@ class ObjectScreen extends StatefulWidget {
 
 class _ObjectScreenState extends State<ObjectScreen> {
   bool _showPoints = false;
-
-  void _navigateToReports() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ReportScreen(
-          di: widget.di,
-          objectTitle: widget.title, // Передаем название объекта если нужно
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +73,16 @@ class _ObjectScreenState extends State<ObjectScreen> {
               leading: const Icon(Icons.file_copy),
               title: const Text('Предписания'),
               onTap: () {
-                Navigator.push(ctx, MaterialPageRoute(builder: (_) => PunishmentsScreen(di: widget.di, projectUuid: widget.projectUuid, addr: widget.address)));
+                Navigator.push(
+                  ctx,
+                  MaterialPageRoute(
+                    builder: (_) => PunishmentsScreen(
+                      di: widget.di,
+                      projectUuid: widget.projectUuid,
+                      addr: widget.address,
+                    ),
+                  ),
+                );
               },
             ),
             const Divider(height: 1),
@@ -95,7 +91,15 @@ class _ObjectScreenState extends State<ObjectScreen> {
               leading: const Icon(Icons.account_balance_outlined),
               title: const Text('Материалы'),
               onTap: () {
-                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MaterialsScreen(
+                      di: widget.di,
+                      objectTitle: widget.address,
+                    ),
+                  ),
+                );
               },
             ),
             const Divider(height: 1),
@@ -104,8 +108,16 @@ class _ObjectScreenState extends State<ObjectScreen> {
               leading: const Icon(Icons.file_open),
               title: const Text('Отчет'),
               onTap: () {
-                Navigator.pop(ctx);
-                _navigateToReports(); // Переход к отчетам
+                Navigator.push(
+                  ctx,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ReportScreen(
+                            di: widget.di,
+                            objectTitle: widget.address
+                        ),
+                  ),
+                );
               },
             ),
             const Divider(height: 1),
@@ -113,17 +125,6 @@ class _ObjectScreenState extends State<ObjectScreen> {
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.file_upload),
               title: const Text('Прикрепить файлы'),
-              onTap: () {
-                Navigator.pop(ctx);
-              },
-            ),
-            const Divider(height: 1),
-            ListTile(
-              titleAlignment: ListTileTitleAlignment.center,
-              leading: const Icon(Icons.file_present_sharp),
-              title: const Text('Нарушения'),
-              textColor: FoxThemeButtonActiveBackground,
-              iconColor: FoxThemeButtonActiveBackground,
               onTap: () {
                 Navigator.pop(ctx);
               },
@@ -144,7 +145,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
           ),
         ),
         title: "Объект",
-        subtitle: widget.title,
+        subtitle: widget.address,
         rightIcon: IconButton(
           onPressed: openBottomBlurMenu,
           icon: SvgPicture.asset(
@@ -193,10 +194,10 @@ class _ObjectScreenState extends State<ObjectScreen> {
                     children: [
                       TileLayer(
                         urlTemplate:
-                        'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+                            'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
                         subdomains: ['a', 'b', 'c'],
                         userAgentPackageName:
-                        'ru.foxstudios.digital_building_journal',
+                            'ru.foxstudios.digital_building_journal',
                       ),
                       PolygonLayer(
                         polygons: [
@@ -234,15 +235,15 @@ class _ObjectScreenState extends State<ObjectScreen> {
                   IconButton(
                     icon: _showPoints
                         ? SvgPicture.asset(
-                      "assets/icons/arrow-top.svg",
-                      width: 32,
-                      height: 32,
-                    )
+                            "assets/icons/arrow-top.svg",
+                            width: 32,
+                            height: 32,
+                          )
                         : SvgPicture.asset(
-                      "assets/icons/arrow-bottom.svg",
-                      width: 32,
-                      height: 32,
-                    ),
+                            "assets/icons/arrow-bottom.svg",
+                            width: 32,
+                            height: 32,
+                          ),
                     onPressed: () {
                       setState(() {
                         _showPoints = !_showPoints;
@@ -333,7 +334,9 @@ class _ObjectScreenState extends State<ObjectScreen> {
             _buildParticipantRow("Подрядчик:", widget.foreman ?? "Не указан"),
             const SizedBox(height: 8),
             _buildParticipantRow(
-                "Ответственный инспектор:", widget.inspector ?? "Не указан"),
+              "Ответственный инспектор:",
+              widget.inspector ?? "Не указан",
+            ),
           ],
         ),
       ),
