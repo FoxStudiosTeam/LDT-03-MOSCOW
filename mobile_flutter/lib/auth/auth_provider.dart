@@ -10,6 +10,7 @@ import 'dart:convert';
 // IAuthProvider - authorization provider
 abstract class IAuthProvider {
   Future<AccessTokenData> login(String login, String password, Duration timeOut);
+  Future<AccessTokenData> refreshToken(String refreshToken, Duration timeOut);
 }
 
 const IAuthProviderDIToken = "I-Auth-Provider-DI-Token";
@@ -83,6 +84,39 @@ class AuthProvider implements IAuthProvider {
     }
 
     return null;
+  }
+
+  @override
+  Future<AccessTokenData> refreshToken(String refreshToken, Duration timeOut) async {
+    var data = AccessTokenData("", 0);
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    final response = await http.get(
+      this.apiRoot.resolve('/api/auth/refresh'),
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        HttpHeaders.setCookieHeader: 'refresh=$refreshToken'
+      },
+    ).timeout(timeOut, onTimeout: () {
+      throw TimeOutError('Request timed out after $timeOut ms');
+    });
+
+    if (response.statusCode == 200) {
+      final rawData = jsonDecode(response.body);
+      data.accessTokenValue = rawData['access_token'] ?? "";
+      data.ext = rawData['exp'] ?? 0;
+
+      var refresh = parseHeaders(response.headers);
+      if (refresh != null) {
+        await authStorageProvider.saveRefreshToken(refresh.refreshTokenValue, refresh.ext, now);
+      }
+
+      await authStorageProvider.saveAccessToken(data.accessTokenValue, data.ext);
+    } else {
+      throw AuthError("Some Error while logging ${response.statusCode}");
+    }
+
+    return data;
   }
 
 }
