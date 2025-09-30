@@ -61,7 +61,7 @@ impl IntoResponse for AppErr {
 
 #[derive(Serialize, ToSchema)]
 pub struct ErrorWrapper {
-    message : String
+    pub message : String
 }
 
 impl<E> From<E> for AppErr

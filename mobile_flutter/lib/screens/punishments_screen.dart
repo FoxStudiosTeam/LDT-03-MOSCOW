@@ -9,7 +9,10 @@ import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/punishment_card.dart';
+import 'package:mobile_flutter/utils/NetworkUtils.dart';
 
+import '../auth/auth_provider.dart';
+import '../widgets/base_header.dart';
 class PunishmentsScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String projectUuid;
@@ -129,7 +132,8 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
   Future<List<PunishmentCard>> _loadCards() async {
     final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
     final statuses = await provider.get_statuses();
-    final punishments = await provider.get_punishments(widget.projectUuid);
+
+    final punishments = await NetworkUtils.wrapRequest<List<Punishment>>(() => provider.get_punishments(widget.projectUuid),context,widget.di);
 
     return punishments.map((punishment) => PunishmentCard(
       data: punishment,

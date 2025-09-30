@@ -24,6 +24,9 @@ pub fn everyone(state: AppState) -> OpenApiRouter {
             get_punishment_items::get_punishment_items,
             update_punishment_item::update_punishment_item
         ))
+        .routes(routes!(
+            get_punishment_items::get_punishment_items_by_project,
+        ))
         .routes(routes!(get_statuses::get_punishment_statuses))
         .routes(routes!(get_regulation_docs::get_regulation_docs))
         .layer(auth_jwt::prelude::AuthLayer::new(Role::Foreman | Role::AdministratorOnly | Role::Customer | Role::Inspector))

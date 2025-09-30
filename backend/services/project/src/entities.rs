@@ -208,15 +208,34 @@ pub struct ProjectWithAttachments {
 
 #[derive(ToSchema, Serialize)]
 pub struct GetProjectWithAttachmentResult {
-    pub result : Vec<ProjectWithAttachments>,
+    pub result : Vec<NamedProjectWithAttachments>,
     pub total: i64
 }
 
+#[derive(ToSchema, Debug, Serialize)]
+pub struct NamedProjectWithAttachments {
+    pub project: NamedProject,
+    pub attachments: Vec<Attachments>,
+}
+
+
+#[derive(sqlx::FromRow, Debug, ToSchema, Serialize)]
+pub struct NamedProject {
+    pub status: i32,
+    pub polygon: serde_json::Value,
+    pub start_date: Option<chrono::NaiveDate>,
+    pub end_date: Option<chrono::NaiveDate>,
+    pub uuid: uuid::Uuid,
+    pub foreman: Option<String>,
+    pub created_at: chrono::NaiveDateTime,
+    pub address: String,
+    pub created_by: Option<String>,
+}
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct RowProjectWithAttachment {
     #[sqlx(flatten)]
-    pub project: Project,
+    pub project: NamedProject,
     #[sqlx(flatten)]
     pub attachment: OptionalAttachments,
 }

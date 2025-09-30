@@ -22,9 +22,9 @@ alter table norm.materials
     add constraint materials_measurements_id_fk
         foreign key (measurement) references norm.measurements;
 
-alter table norm.materials
-    add constraint materials_project_schedule_items_uuid_fk
-        foreign key (project_schedule_item) references journal.project_schedule_items;
+-- alter table norm.materials
+--     add constraint materials_project_schedule_items_uuid_fk
+--         foreign key (project_schedule_item) references journal.project_schedule_items;
 
 alter table norm.reports
     add constraint reports_project_schedule_items_uuid_fk

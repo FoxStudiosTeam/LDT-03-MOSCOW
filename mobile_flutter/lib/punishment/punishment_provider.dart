@@ -114,7 +114,7 @@ class PunishmentProvider implements IPunishmentProvider {
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body);
-      if (jsonList.isEmpty) throw Exception('No punishments in project');
+      if (jsonList.isEmpty) return [];
       return jsonList.map((json) => Punishment.fromJson(json)).toList();
     } else {
       try {
@@ -146,7 +146,7 @@ class PunishmentProvider implements IPunishmentProvider {
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body);
-      if (jsonList.isEmpty) throw Exception('No punishments in project');
+      if (jsonList.isEmpty) return [];
       return jsonList.map((json) => PunishmentItemAndAttachments.fromJson(json)).toList();
     } else {
       try {

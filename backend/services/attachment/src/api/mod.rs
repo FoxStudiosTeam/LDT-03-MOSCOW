@@ -14,6 +14,7 @@ pub fn router(state: AppState) -> OpenApiRouter {
         .routes(routes!(upload_project))
         .routes(routes!(upload_reports))
         .routes(routes!(upload_punishment_item))
+        .routes(routes!(upload_materials))
         .with_state(state)
         // .layer(auth_jwt::prelude::AuthLayer::new(Role::Foreman | Role::Customer | Role::Inspector))
         .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
@@ -25,6 +26,9 @@ pub struct AttachmentParams {
     pub id: uuid::Uuid
 }
 
+use axum::extract::Json;
+use shared::prelude::ErrorWrapper;
+use axum::response::IntoResponse;
 
 macro_rules! uploads {
     ($($name:ident)*) => {
@@ -49,9 +53,8 @@ macro_rules! uploads {
                     multipart : Multipart,
                 ) -> Result<axum::response::Response, shared::prelude::AppErr> {
                     if app.orm.[< $name >]().select_by_pk(&params.id).await.into_app_err()?.is_none() {
-                        // todo!: ADD NOT FOUND
-                        // return Ok((http::status::StatusCode::NOT_FOUND, concat!("Id not found in ", stringify!($name))).into_response());
-                        tracing::warn!("NOT FOUND");
+                        return Ok((http::status::StatusCode::NOT_FOUND, Json(ErrorWrapper{message: concat!("Id not found in ", stringify!($name)).to_string()})).into_response());
+                        // tracing::warn!("NOT FOUND");
                     }
                     app.upload(params, multipart).await
                 }
@@ -60,4 +63,4 @@ macro_rules! uploads {
     };
 }
 
-uploads!(project reports punishment_item);
+uploads!(project reports punishment_item materials);
