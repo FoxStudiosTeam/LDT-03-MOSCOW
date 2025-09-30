@@ -405,6 +405,7 @@ export async function LogOut() {
             credentials: "include",
             headers: {
                 "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
             },
         });
 
