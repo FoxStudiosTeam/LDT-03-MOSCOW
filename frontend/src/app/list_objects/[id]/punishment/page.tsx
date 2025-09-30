@@ -32,9 +32,8 @@ export default function PunishmentPage() {
     }, [id])
     
     const punishSelectedHandle = (punishment: PunishmentItem) => {
-        console.log('punishment', punishment)
         setPunishmentItem(punishment);
-        router.push(`/list_objects/${id}/punishment/punishment_detail`);
+        router.push(`/list_objects/${id}/punishment/punishment_detail`)
     }
 
     console.log('punishments', punishments);
@@ -50,34 +49,17 @@ export default function PunishmentPage() {
                 <table className="w-full border-collapse text-left">
                     <thead>
                         <tr className="bg-gray-100">
-                            <th className="border px-4 py-2">Код</th>
-                            <th className="border px-4 py-2">Дата отчета</th>
-                            <th className="border px-4 py-2">Дата проверки</th>
+                            <th className="border px-4 py-2">Номер</th>
+                            <th className="border px-4 py-2">Дата выдачи</th>
                             <th className="border px-4 py-2">Статус</th>
-                            <th className="border px-4 py-2"></th>
                         </tr>
                     </thead>
                     <tbody>
                         {punishments.map((punishment, punishmentIdx) => (
-                            <tr key={punishmentIdx} className="hover:bg-gray-50 cursor-pointer" onClick={() => punishSelectedHandle(punishment.punishment)}>
-                                <td className="border px-4 py-2">{punishment.custom_number}</td>
+                            <tr key={punishmentIdx} className="hover:bg-gray-50 cursor-pointer" onClick={() => punishSelectedHandle(punishment.punishment_items)}>
+                                <td className="border px-4 py-2">{punishmentIdx}</td>
                                 <td className="border px-4 py-2">{punishment.punish_datetime}</td>
-                                <td className="border px-4 py-2">{}</td>
                                 <td className="border px-4 py-2">{punishment.punishment_status}</td>
-
-                                <td className="border px-4 py-2 text-right">
-                                    {/* {m.status === "new" ? (
-                                        <button
-                                            onClick={() => handleResearchRequest(m.id)}
-                                            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                                        >
-                                            Запросить исследование
-                                        </button>
-                                    ) : (
-                                        <span className="text-gray-600 font-semibold">Идёт исследование...</span>
-                                    )} */}
-                                </td>
-
                             </tr>
                         ))}
                     </tbody>

@@ -80,7 +80,7 @@ export interface Report {
 
 export interface Attachment {
     base_entity_uuid: string;
-    content_type: string;
+    content_type: string | null;
     uuid: string;
     original_filename: string;
 }
@@ -91,25 +91,34 @@ export interface ReportItem {
 }
 
 export interface PunishmentItem {
-    comment: string ;
-    correction_date_fact: string  ;
-    correction_date_info: string ;
-    correction_date_plan: string ;
+    uuid: string;
+    title: string;
+    punishment: string;
+    punishment_item_status: number;
+    regulation_doc: string | null;
+    punish_datetime: string;
+    correction_date_plan: string | null;
+    correction_date_info: string | null;
+    correction_date_fact: string | null;
     is_suspend: boolean;
-    place: string ;
-    punish_datetime: string ;
-    punishment: string ;
-    punishment_item_status: number ;
-    regulation_doc: string ;
-    title: string ;
-    uuid: string ;
+    place: string;
+    comment: string | null;
 }
 
 export interface Punishments {
     custom_number: string;
     punish_datetime: string;
     punishment_status: string;
-    punishment: PunishmentItem;
+    punishment_items: PunishmentItem;
     attachments: Attachment[];
 }
 
+export interface PunishmentWithAttachments {
+    punishment_item: PunishmentItem;
+    attachments: Attachment[];
+}
+
+export interface Status {
+    id: number;
+    title: string;
+}

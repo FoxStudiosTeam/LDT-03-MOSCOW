@@ -1,4 +1,5 @@
 "use client";
+import { PunishmentItem } from "@/models";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -29,19 +30,24 @@ export interface ProjectWithAttachments {
     project: Project;
 }
 
-export interface PunishmentItem {
-    uuid: string;
-    title: string;
-    punishment: string;
-    punishment_item_status: number;
-    regulation_doc: string;
-    punish_datetime: string;
-    correction_date_plan: string | null;
-    correction_date_info: string | null;
-    correction_date_fact: string | null;
-    is_suspend: boolean;
-    place: string;
-    comment: string;
+// interface PunishmentItem {
+//     uuid: string;
+//     title: string;
+//     punishment: string;
+//     punishment_item_status: number;
+//     regulation_doc: string | null;
+//     punish_datetime: string;
+//     correction_date_plan: string | null;
+//     correction_date_info: string | null;
+//     correction_date_fact: string | null;
+//     is_suspend: boolean;
+//     place: string;
+//     comment: string | null;
+// }
+
+interface PunishmentWithAttachments {
+    punishment_item: PunishmentItem;
+    attachments: Attachment[];
 }
 
 interface ProjectState {
@@ -49,15 +55,15 @@ interface ProjectState {
     total: number;
     hydrated: boolean;
 
-    punishments: PunishmentItem[];
+    punishments: PunishmentWithAttachments[];
 
     setHydrated: () => void;
     setProjects: (projects: ProjectWithAttachments[], total: number) => void;
     getProjectById: (uuid: string) => ProjectWithAttachments | undefined;
     clearProjects: () => void;
 
-    setPunishmentItem: (item: PunishmentItem) => void;
-    getPunishments: () => PunishmentItem[]; 
+    setPunishmentItem: (item: PunishmentItem | PunishmentItem[]) => void;
+    getPunishments: () => PunishmentWithAttachments[];
     clearPunishments: () => void;
 }
 
@@ -79,17 +85,24 @@ export const useProjectStore = create<ProjectState>()(
 
             clearProjects: () => set({ projects: [], total: 0 }),
 
-            setPunishmentItem: (item) =>
+            setPunishmentItem: (input: PunishmentWithAttachments | PunishmentWithAttachments[]) =>
                 set((state) => {
-                    const exists = state.punishments.find((p) => p.uuid === item.uuid);
-                    if (exists) {
-                        return {
-                            punishments: state.punishments.map((p) =>
-                                p.uuid === item.uuid ? item : p
-                            ),
-                        };
-                    }
-                    return { punishments: [...state.punishments, item] };
+                    console.log('incoming input', input);
+                    const items = Array.isArray(input) ? input : [input];
+                    let newPunishments = [...state.punishments];
+
+                    items.forEach((item) => {
+                        const exists = newPunishments.find(p => p.punishment_item.uuid === item.punishment_item.uuid);
+                        if (exists) {
+                            newPunishments = newPunishments.map(p =>
+                                p.punishment_item.uuid === item.punishment_item.uuid ? item : p
+                            );
+                        } else {
+                            newPunishments.push(item);
+                        }
+                    });
+
+                    return { punishments: newPunishments };
                 }),
 
             getPunishments: () => get().punishments,
