@@ -7,12 +7,12 @@ import 'package:mobile_flutter/widgets/fox_header.dart';
 
 class ReportScreen extends StatefulWidget {
   final IDependencyContainer di;
-  final String? objectTitle;
+  final String objectTitle;
 
   const ReportScreen({
     super.key,
     required this.di,
-    this.objectTitle,
+    required this.objectTitle,
   });
 
   @override
@@ -182,15 +182,7 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
         ),
         title: "Отчеты",
-        rightIcon: IconButton(
-          onPressed: () {
-          },
-          icon: SvgPicture.asset(
-            'assets/icons/menu-kebab.svg',
-            width: 32,
-            height: 32,
-          ),
-        ),
+        subtitle: widget.objectTitle,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

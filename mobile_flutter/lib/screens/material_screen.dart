@@ -185,16 +185,6 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         ),
         title: "Материалы",
         subtitle: widget.objectTitle,
-        rightIcon: IconButton(
-          onPressed: () {
-            // Дополнительное меню если нужно
-          },
-          icon: SvgPicture.asset(
-            'assets/icons/menu-kebab.svg',
-            width: 32,
-            height: 32,
-          ),
-        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

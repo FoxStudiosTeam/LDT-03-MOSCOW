@@ -170,6 +170,10 @@ class _ObjectScreenState extends State<ObjectScreen> {
               widget.status.toRenderingString(),
               const SizedBox(height: 16),
 
+              // Информация о участниках
+              _buildInfoCard(),
+
+              const SizedBox(height: 16),
               // Карта с полигоном
               Container(
                 width: double.infinity,
@@ -214,12 +218,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
 
-              // Информация о участниках
-              _buildInfoCard(),
-
-              const SizedBox(height: 16),
 
               const SizedBox(height: 24),
               const Divider(height: 1),
