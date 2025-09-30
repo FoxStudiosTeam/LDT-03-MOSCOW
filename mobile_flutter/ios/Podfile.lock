@@ -78,6 +78,7 @@ PODS:
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
+  - TesseractOCRiOS (5.0.1)
   - url_launcher_ios (0.0.1):
     - Flutter
   - Yams (5.0.6)
@@ -92,6 +93,7 @@ DEPENDENCIES:
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - TesseractOCRiOS (from `https://github.com/gali8/Tesseract-OCR-iOS.git`, branch `master`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
@@ -132,8 +134,16 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  TesseractOCRiOS:
+    :branch: master
+    :git: https://github.com/gali8/Tesseract-OCR-iOS.git
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
+
+CHECKOUT OPTIONS:
+  TesseractOCRiOS:
+    :commit: 35385f4f73ebf375757f0b22f6e13fcfa68e0d71
+    :git: https://github.com/gali8/Tesseract-OCR-iOS.git
 
 SPEC CHECKSUMS:
   Alamofire: 7193b3b92c74a07f85569e1a6c4f4237291e7496
@@ -160,9 +170,10 @@ SPEC CHECKSUMS:
   Polyline: 2a1f29f87f8d9b7de868940f4f76deb8c678a5b1
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
+  TesseractOCRiOS: 2c189465f86abb030d0c5141c90da9705b647854
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
   Yams: e10dae147f517ed57ecae37c5e8681bdf8fcab65
 
-PODFILE CHECKSUM: 38c09c6f650820abdb8b89f3b86bb9f54a4921c7
+PODFILE CHECKSUM: 8fbc524e0bddd38cca45411800de21c2896e756b
 
 COCOAPODS: 1.16.2

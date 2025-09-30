@@ -32,7 +32,7 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
   #pod 'GoogleMLKit/TextRecognitionRussian', '~> 7.0.0'
-
+  pod 'TesseractOCRiOS', :git => 'https://github.com/gali8/Tesseract-OCR-iOS.git', :branch => 'master'
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths
@@ -61,6 +61,7 @@ post_install do |installer|
     # Добавим настройку исключения архитектуры arm64 для симулятора
     target.build_configurations.each do |config|
       config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+      config.build_settings['EXCLUDED_SOURCE_FILE_NAMES'] = 'config_auto.h'
     end
   end
 end
