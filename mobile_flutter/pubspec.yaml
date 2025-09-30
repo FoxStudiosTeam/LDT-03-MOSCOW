@@ -19,6 +19,7 @@ dependencies:
     version:  ^8.2.2
   shared_preferences:
     version: ^2.5.3
+  geolocator: ^10.1.0
   http:
     version: ^1.5.0
   flutter_native_splash: ^2.4.6

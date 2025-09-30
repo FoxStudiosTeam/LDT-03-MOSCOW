@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+	    <key>NSLocationWhenInUseUsageDescription</key>
+        <string>Нам нужно узнать ваше местоположение для отображения на карте</string>
 		<key>NSCameraUsageDescription</key>
         <string>Нам нужно использовать камеру для сканирования текста</string>
 		<key>CFBundleDevelopmentRegion</key>
