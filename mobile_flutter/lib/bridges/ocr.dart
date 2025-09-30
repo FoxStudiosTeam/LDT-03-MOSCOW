@@ -1,11 +1,13 @@
+import 'dart:developer';
+
 import 'package:flutter/services.dart';
 
 class OcrBridge {
   static const _channel = MethodChannel("ocr_channel");
 
-  static Future<List<OcrBox>> getOcrBoxes(List<int> imageBytes) async {
+  static Future<List<OcrBox>> getBoxes(List<int> imageBytes) async {
     final result = await _channel.invokeMethod<List<dynamic>>(
-      "getOcrBoxes",
+      "getBoxes",
       {"image": Uint8List.fromList(imageBytes)},
     );
 

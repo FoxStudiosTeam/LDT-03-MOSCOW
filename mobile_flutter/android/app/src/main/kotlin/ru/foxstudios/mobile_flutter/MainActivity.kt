@@ -43,10 +43,10 @@ class MainActivity : FlutterActivity() {
                             val mapped = boxes.map { box ->
                                 mapOf(
                                     "text" to box.text,
-                                    "x" to box.left,
-                                    "y" to box.top,
-                                    "w" to box.right,
-                                    "h" to box.bottom
+                                    "left" to box.left,
+                                    "top" to box.top,
+                                    "right" to box.right,
+                                    "bottom" to box.bottom
                                 )
                             }
                             result.success(mapped)
