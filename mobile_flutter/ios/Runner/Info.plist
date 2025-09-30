@@ -3,7 +3,7 @@
 <plist version="1.0">
 	<dict>
 		<key>NSCameraUsageDescription</key>
-		<string>Мы используем камеру для захвата изображений</string>
+        <string>Нам нужно использовать камеру для сканирования текста</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
