@@ -122,3 +122,19 @@ export interface Status {
     id: number;
     title: string;
 }
+
+interface MaterialItem{
+    uuid: string;
+    title: string;
+    volume: number;
+    measurement: number;
+    delivery_date: string;
+    on_research: boolean;
+    project: string;
+    created_at: string;
+}
+
+export interface MaterialResponse {
+    attachments: Attachment[];
+    material: MaterialItem;
+}
