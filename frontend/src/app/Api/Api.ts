@@ -576,30 +576,6 @@ export async function GetPunishmentsById(id:string) {
     }
 }
 
-export async function GetPunishmetStatuses() {
-    try {
-        const token = localStorage.getItem("access_token");
-        const response = await fetch(`${baseURL}/punishment/get_statuses`, {
-            method: "GET",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-        });
-    
-        const data = await response.json();
-    
-        if (response.ok) {
-            return {success: true, message: null, result: data};
-        }
-    } catch (error) {
-        console.error("Ошибка при запросе статусов:", error);
-        return { successPunishment: false, messagePunishment: String(error) };
-    }
-
-}
-
 export async function RequestResearch(id: string) {
     try {
         const response = await fetch(
@@ -631,4 +607,28 @@ export async function RequestResearch(id: string) {
         console.error("Ошибка при запросе исследования:", error);
         return { success: false, message: String(error) };
     }
+}
+
+export async function GetPunishmetStatuses() {
+    try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(`${baseURL}/punishment/get_statuses`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+    
+        const data = await response.json();
+    
+        if (response.ok) {
+            return {success: true, message: null, result: data};
+        }
+    } catch (error) {
+        console.error("Ошибка при запросе статусов:", error);
+        return { successPunishment: false, messagePunishment: String(error) };
+    }
+
 }
