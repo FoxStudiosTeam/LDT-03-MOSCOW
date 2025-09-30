@@ -1,10 +1,13 @@
 package ru.foxstudios.mobile_flutter
 
+import android.content.Context
+import android.graphics.BitmapFactory
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.util.Log
-import ru.foxstudios.digital_building_journal.neural_network.OcrTextBox
+import java.io.File
+import com.googlecode.tesseract.android.TessBaseAPI
 
 data class OcrTextBox(
     val text: String,
@@ -40,10 +43,10 @@ class MainActivity : FlutterActivity() {
                             val mapped = boxes.map { box ->
                                 mapOf(
                                     "text" to box.text,
-                                    "x" to box.x,
-                                    "y" to box.y,
-                                    "w" to box.w,
-                                    "h" to box.h
+                                    "x" to box.left,
+                                    "y" to box.top,
+                                    "w" to box.right,
+                                    "h" to box.bottom
                                 )
                             }
                             result.success(mapped)
@@ -61,7 +64,7 @@ class MainActivity : FlutterActivity() {
 class AndroidTesseractOcrEngine(private val context: Context) {
     private val tess: TessBaseAPI = TessBaseAPI()
 
-    override fun init(): Boolean {
+    fun init(): Boolean {
         try {
             val tessFolder = File(context.filesDir, "tesseract")
             val tessDataFolder = File(tessFolder, "tessdata")
@@ -116,7 +119,7 @@ class AndroidTesseractOcrEngine(private val context: Context) {
         }
     }
 
-    override fun recognize(image: ByteArray): List<OcrTextBox> {
+    fun recognize(image: ByteArray): List<OcrTextBox> {
         val bitmap = BitmapFactory.decodeByteArray(image, 0, image.size)
         tess.setImage(bitmap)
         val text = tess.utF8Text // this triggers OCR
