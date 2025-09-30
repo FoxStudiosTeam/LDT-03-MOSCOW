@@ -5,7 +5,7 @@ import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/punishment_card.dart';
-import 'package:mobile_flutter/utils/NetworkUtils.dart';
+import 'package:mobile_flutter/utils/network_utils.dart';
 
 import '../auth/auth_provider.dart';
 import '../widgets/base_header.dart';

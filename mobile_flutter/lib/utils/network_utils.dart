@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/auth/auth_provider.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
@@ -32,6 +33,15 @@ class NetworkUtils {
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  static Future<bool> connectionExists() async {
+    try {
+      final result = await InternetAddress.lookup('ya.ru');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
     }
   }
 }

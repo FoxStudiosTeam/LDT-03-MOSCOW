@@ -3,7 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
-import 'package:mobile_flutter/utils/StyleUtils.dart';
+import 'package:mobile_flutter/utils/style_utils.dart';
 import '../domain/entities.dart';
 import '../screens/object_screen.dart';
 import '../di/dependency_container.dart';

@@ -7,7 +7,7 @@ import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 
 import '../auth/auth_provider.dart';
-import '../utils/NetworkUtils.dart';
+import '../utils/network_utils.dart';
 import '../widgets/punishment_item_card.dart';
 class PunishmentItemsScreen extends StatefulWidget {
   final IDependencyContainer di;
