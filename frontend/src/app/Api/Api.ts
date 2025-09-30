@@ -3,11 +3,10 @@
 import {jwtDecode} from "jwt-decode";
 import {WorkItem} from "@/models";
 
-const baseURL = "https://test.foxstudios.ru:32460/api";
+const baseURL = "https://test.foxstudios.ru:32460/Vadim/api";
 
 const authBaseURL = 'https://sso.foxstudios.ru:32460/api'
 
-const TestBaseURL = 'https://test.foxstudios.ru:32460/Vadim/api'
 
 interface TokenPayload {
     exp: number;
@@ -505,7 +504,7 @@ export async function projectCommit(projectUuid: string) {
 
 export async function GetMaterialsById(id:string) {
     try {
-        const response = await fetch(`${TestBaseURL}/materials/by_project_schedule_item/${id}`, {
+        const response = await fetch(`${baseURL}/materials/by_project/${id}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -541,7 +540,7 @@ export async function GetMaterialsById(id:string) {
 export async function GetPunishmentsById(id:string) {
     try {
         const token = localStorage.getItem("access_token");
-        const response = await fetch(`${TestBaseURL}/punishment/get_punishment_items_by_project?project_uuid=${id}`, {
+        const response = await fetch(`${baseURL}/punishment/get_punishment_items_by_project?project_uuid=${id}`, {
             method: "GET",
             credentials: 'include',
             headers: {
@@ -573,5 +572,38 @@ export async function GetPunishmentsById(id:string) {
     } catch (error) {
         console.error("Ошибка при запросе предписаний:", error);
         return { successPunishment: false, messagePunishment: String(error) };
+    }
+}
+
+export async function RequestResearch(id: string) {
+    try {
+        const response = await fetch(
+            `${baseURL}/materials/request_research/${id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        if (response.ok) {
+            return { success: true, message: "Запрос на исследование отправлен успешно" };
+        } else {
+            const text = await response.text();
+            let message: string;
+
+            try {
+                const parsed = JSON.parse(text);
+                message = parsed.message || text;
+            } catch {
+                message = text;
+            }
+
+            return { success: false, message };
+        }
+    } catch (error) {
+        console.error("Ошибка при запросе исследования:", error);
+        return { success: false, message: String(error) };
     }
 }

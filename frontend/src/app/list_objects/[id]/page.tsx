@@ -203,9 +203,9 @@ export default function ObjectDetail() {
                             Отчеты
                         </Link>
 
-                        <button className={`self-end min-w-[250px] ${styles.mainButton}`}>
+                        <Link href={"/materials"} className={`self-end min-w-[250px] ${styles.mainButton}`}>
                             Материалы
-                        </button>
+                        </Link>
 
                         <Link href={"/gant/"} className={`self-end min-w-[250px] ${styles.mainButton}`}>
                             График работ
