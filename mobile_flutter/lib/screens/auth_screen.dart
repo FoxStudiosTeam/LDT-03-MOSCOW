@@ -93,7 +93,8 @@ class _AuthScreenState extends State<AuthScreen> {
         fontFamily: "Inter",
         fontSize: 26,
       ),
-      textAlign: TextAlign.center)
+      textAlign: TextAlign.center,
+    ),
   );
 
   Widget _buildLoginField() => Padding(
@@ -105,18 +106,22 @@ class _AuthScreenState extends State<AuthScreen> {
       controller: _loginController,
       decoration: InputDecoration(
         labelText: 'Логин',
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide(color: Colors.black38)
-        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide(color: Colors.black87,width: 2)
-        )
+          borderSide: BorderSide(color: Colors.black87, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4),
+          borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4),
+          borderSide: BorderSide(color: Colors.black38),
+        ),
       ),
       validator: (value) =>
       value == null || value.isEmpty ? 'Пожалуйста, введите логин' : null,
-    )
+    ),
   );
 
   Widget _buildPasswordField() => TextFormField(
@@ -126,20 +131,23 @@ class _AuthScreenState extends State<AuthScreen> {
     controller: _passwordController,
     decoration: InputDecoration(
         labelText: 'Пароль',
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: Colors.black38)
-        ),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: Colors.black87,width: 2)
-        )
+            borderSide: BorderSide(color: Colors.black87, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: Colors.black38),
+        ),
     ),
     obscureText: true,
     validator: (value) =>
     value == null || value.isEmpty ? 'Пожалуйста, введите пароль' : null,
   );
-
   Widget _buildSubmitButton() => SizedBox(
     width: double.infinity,
     child: ElevatedButton(

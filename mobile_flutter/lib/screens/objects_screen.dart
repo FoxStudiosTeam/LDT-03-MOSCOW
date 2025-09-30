@@ -11,8 +11,6 @@ import 'package:mobile_flutter/widgets/fox_button.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/object_card.dart';
 
-
-
 class ObjectsScreen extends StatefulWidget {
   final IDependencyContainer di;
 
@@ -26,7 +24,6 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   String? _token;
   List<Project> projects = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
 
   @override
   void initState() {
@@ -73,7 +70,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     });
   }
 
-  void openDrawer(){
+  void openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
   }
 
@@ -82,20 +79,25 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: FoxHeader(
-          leftIcon: SvgPicture.asset(
-            'assets/icons/logo.svg',
-            width: 24,
-            height: 24,
-            color: Colors.black, // если нужно перекрасить
-          ),
-          title: "ЭСЖ",
-          rightIcon: IconButton(onPressed: openDrawer, icon: SvgPicture.asset(
+        backgroundColor: Colors.white,
+        leftIcon: SvgPicture.asset(
+          'assets/icons/logo.svg',
+          width: 40,
+          height: 40,
+          color: Colors.black,
+        ),
+        title: "ЭСЖ",
+        rightIcon: IconButton(
+          onPressed: openDrawer,
+          icon: SvgPicture.asset(
             'assets/icons/menu.svg',
-            width: 24,
-            height: 24,
-            color: Colors.black, // если нужно перекрасить
-          )),
+            width: 40,
+            height: 40,
+            color: Colors.black,
+          ),
+        ),
       ),
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           const SizedBox(height: 16),
@@ -104,8 +106,24 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                FoxButton(onPressed: sortInAction, text: "В процессе"),
-                FoxButton(onPressed: sortExited, text: "Завершенные"),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 30.0, left: 8.0),
+                    child: FoxButton(
+                      onPressed: sortInAction,
+                      text: "В процессе",
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 30.0, right: 8.0),
+                    child: FoxButton(
+                      onPressed: sortExited,
+                      text: "Завершенные",
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -114,7 +132,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const OcrCameraScreen()),
+                MaterialPageRoute(builder: (_) => const OcrCameraScreen()),//КАМЕРА
               );
             },
             child: const Text("OCR"),
@@ -123,17 +141,23 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
           Expanded(
             child: projects.isEmpty
                 ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-              itemCount: projects.length,
-              itemBuilder: (context, index) {
-                final project = projects[index];
-                return ObjectCard(
-                  title: project.address,
-                  status: project.status,
-                  di: widget.di,
-                  polygon: project.polygon!,
-                );
-              },
+                : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: ListView.builder(
+                itemCount: projects.length,
+                itemBuilder: (context, index) {
+                  final project = projects[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: ObjectCard(
+                      title: project.address,
+                      status: project.status,
+                      di: widget.di,
+                      polygon: project.polygon!,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],
