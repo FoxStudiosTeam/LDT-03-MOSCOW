@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
 class Pagination {
@@ -15,25 +16,23 @@ class PaginationResponseWrapper<T> {
   final List<T> items;
   final int total;
 
-  PaginationResponseWrapper({
-    required this.items,
-    required this.total,
-  });
+  PaginationResponseWrapper({required this.items, required this.total});
 
   factory PaginationResponseWrapper.fromJson(
-      Map<String, dynamic> json,
-      T Function(Map<String, dynamic>) fromJsonT,
-      ) {
+    Map<String, dynamic> json,
+    T Function(Map<String, dynamic>) fromJsonT,
+  ) {
     final rawItems = json['result'];
     final List<dynamic> listItems = (rawItems is List) ? rawItems : [];
 
     return PaginationResponseWrapper<T>(
-      items: listItems.map((elem) => fromJsonT(elem as Map<String, dynamic>)).toList(),
+      items: listItems
+          .map((elem) => fromJsonT(elem as Map<String, dynamic>))
+          .toList(),
       total: json['total'] ?? 0,
     );
   }
 }
-
 
 enum ProjectStatus {
   NEW,
@@ -46,11 +45,69 @@ enum ProjectStatus {
   SUSPEND,
 }
 
-ProjectStatus projectStatusFromInt(int status) {
-  if (status < 0 || status >= ProjectStatus.values.length) {
-    return ProjectStatus.NEW;
+extension ProjectStatusExtension on ProjectStatus {
+  String toReadableString() {
+    switch (this) {
+      case ProjectStatus.NEW:
+        // green
+        return "Новый";
+      case ProjectStatus.PRE_ACTIVE:
+        // yellow
+        return "Ожидает активации";
+      case ProjectStatus.NORMAL:
+        // green
+        return "В норме";
+      case ProjectStatus.SOME_WARNINGS:
+        // yellow_warning_low
+        return "Есть замечания";
+      case ProjectStatus.LOW_PUNISHMENT:
+        // yellow_warning_medium
+        return "Есть незначительные разрушения";
+        // red_error_low
+      case ProjectStatus.NORMAL_PUNISHMENT:
+        return "Есть нарушения";
+        // red_error_normal
+      case ProjectStatus.HIGH_PUNISHMENT:
+        return "Есть грубые нарушения";
+        // red_error_high
+      case ProjectStatus.SUSPEND:
+        // gray_disabled_color
+        return "Приостановлен";
+    }
   }
-  return ProjectStatus.values[status];
+
+  Color getStatusColor() {
+    switch (this) {
+      case ProjectStatus.NEW:
+      case ProjectStatus.NORMAL:
+        return Colors.green;
+      case ProjectStatus.PRE_ACTIVE:
+      case ProjectStatus.SOME_WARNINGS:
+        return Colors.orange;
+      case ProjectStatus.LOW_PUNISHMENT:
+        return Colors.amber;
+      case ProjectStatus.NORMAL_PUNISHMENT:
+        return Colors.redAccent;
+      case ProjectStatus.HIGH_PUNISHMENT:
+        return Colors.red;
+      case ProjectStatus.SUSPEND:
+        return Colors.grey;
+    }
+  }
+
+  Text toRenderingString() {
+    return Text(
+      toReadableString(),
+      style: TextStyle(
+        color: getStatusColor(),
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+}
+
+ProjectStatus projectStatusFromInt(int value) {
+  return ProjectStatus.values[value.clamp(0, ProjectStatus.values.length - 1)];
 }
 
 class FoxPolygon {
@@ -58,23 +115,23 @@ class FoxPolygon {
   final List<List<List<double>>> coordinates;
   final List<LatLng> points;
 
-  FoxPolygon({
-    required this.type,
-    required this.coordinates,
-  }) : points = _extractPoints(coordinates);
+  FoxPolygon({required this.type, required this.coordinates})
+    : points = _extractPoints(coordinates);
 
   /// Фабричный метод из JSON
   factory FoxPolygon.fromJson(Map<String, dynamic> json) {
     final rawCoordinates = json['coordinates'] as List<dynamic>? ?? [];
 
     final coordinates = rawCoordinates
-        .map<List<List<double>>>((ring) =>
-        (ring as List<dynamic>)
-            .map<List<double>>((point) =>
-            (point as List<dynamic>)
-                .map<double>((value) => (value as num).toDouble())
-                .toList())
-            .toList())
+        .map<List<List<double>>>(
+          (ring) => (ring as List<dynamic>)
+              .map<List<double>>(
+                (point) => (point as List<dynamic>)
+                    .map<double>((value) => (value as num).toDouble())
+                    .toList(),
+              )
+              .toList(),
+        )
         .toList();
 
     return FoxPolygon(
@@ -87,8 +144,9 @@ class FoxPolygon {
   LatLng getCenter() {
     if (points.isEmpty) return const LatLng(0, 0);
 
-    final sum = points.reduce((a, b) =>
-        LatLng(a.latitude + b.latitude, a.longitude + b.longitude));
+    final sum = points.reduce(
+      (a, b) => LatLng(a.latitude + b.latitude, a.longitude + b.longitude),
+    );
     final avgLat = sum.latitude / points.length;
     final avgLng = sum.longitude / points.length;
 
@@ -102,7 +160,9 @@ class FoxPolygon {
     for (final ring in coords) {
       for (final point in ring) {
         if (point.length >= 2) {
-          result.add(LatLng(point[1], point[0])); // [lon, lat] → LatLng(lat, lon)
+          result.add(
+            LatLng(point[1], point[0]),
+          ); // [lon, lat] → LatLng(lat, lon)
         }
       }
     }
@@ -110,8 +170,6 @@ class FoxPolygon {
     return result;
   }
 }
-
-
 
 class Project {
   final String address;
@@ -158,4 +216,3 @@ class Project {
     );
   }
 }
-

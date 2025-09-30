@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:iconify_flutter/icons/tabler.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
+import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/screens/ocr/camera.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
+import 'package:mobile_flutter/widgets/fox_button.dart';
+import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/object_card.dart';
 
 import '../di/dependency_container.dart';
+import '../utils/StyleUtils.dart';
 
 class ObjectsScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -20,20 +26,14 @@ class ObjectsScreen extends StatefulWidget {
 }
 
 class _ObjectsScreenState extends State<ObjectsScreen> {
-  String? _token; // Переменная для хранения токена
-  List<ObjectCard> data = [];
+  String? _token;
+  List<Project> projects = [];
 
   @override
   void initState() {
     super.initState();
-
-    // Получаем токен асинхронно
     _loadToken();
-    _loadCards().then((cards) {
-      setState(() {
-        data = cards;
-      });
-    });
+    _loadProjects();
   }
 
   Future<void> _loadToken() async {
@@ -56,67 +56,96 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     await widget.di
         .getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken)
         .clear();
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => AuthScreen(di: widget.di)),
     );
   }
 
-  Future<List<ObjectCard>> _loadCards() async {
-    var objectsProvider = widget.di.getDependency<IObjectsProvider>(IObjectsProviderDIToken);
+  Future<void> _loadProjects() async {
+    var objectsProvider = widget.di.getDependency<IObjectsProvider>(
+      IObjectsProviderDIToken,
+    );
+    var response = await objectsProvider.getObjects("", 0);
+    setState(() {
+      projects = response.items;
+    });
+  }
 
+  void sortExited() {
+    setState(() {
+      projects.sort((a, b) => b.status.index.compareTo(a.status.index));
+    });
+  }
 
-    var cardsResponse = await objectsProvider.getObjects("", 0);
-
-    var cards = cardsResponse.items.map((project) {
-      return ObjectCard(
-        title: project.address, // или любое другое поле из Project
-        content: "Статус: ${project.status.name}", // пример контента
-        di: widget.di,
-        polygon: project.polygon!,
-      );
-    }).toList();
-    return cards;
+  void sortInAction() {
+    setState(() {
+      projects.sort((a, b) => a.status.index.compareTo(b.status.index));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Iconify(Tabler.menu_2, color: Colors.black87, size: 32),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-            );
-          },
-        ),
-        title: Text('ЭСЖ'),
-        automaticallyImplyLeading: false,
+      appBar: FoxHeader(
+          leftIcon: SvgPicture.asset(
+            'assets/icons/logo.svg',
+            width: 24,
+            height: 24,
+            color: Colors.black, // если нужно перекрасить
+          ),
+          title: "ЭСЖ", 
+          subtitle: "Ваши объекты",
+          rightIcon: SvgPicture.asset(
+            'assets/icons/menu.svg',
+            width: 24,
+            height: 24,
+            color: Colors.black, // если нужно перекрасить
+          ),
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                FoxButton(onPressed: sortInAction, text: "В процессе"),
+                FoxButton(onPressed: sortExited, text: "Завершенные"),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
           TextButton(
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => OcrCameraScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const OcrCameraScreen()),
+              );
             },
-            child: Text("OCR"),
+            child: const Text("OCR"),
           ),
-          data.isEmpty
-            ? Expanded(child: Center(child: CircularProgressIndicator()))
-            : Expanded(
-                child: ListView.builder(
-                  itemCount: data.length,
-                  itemBuilder: (context, index) => data[index],
-                ),
-              ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: projects.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+              itemCount: projects.length,
+              itemBuilder: (context, index) {
+                final project = projects[index];
+                return ObjectCard(
+                  title: project.address,
+                  status: project.status,
+                  di: widget.di,
+                  polygon: project.polygon!,
+                );
+              },
+            ),
+          ),
         ],
       ),
-      drawer: DrawerMenu(di: widget.di)
+      drawer: DrawerMenu(di: widget.di),
     );
   }
 }
