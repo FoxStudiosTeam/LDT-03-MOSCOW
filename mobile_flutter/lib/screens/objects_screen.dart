@@ -151,11 +151,13 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12.0),
                     child: ObjectCard(
+                      projectUuid: project.uuid,
                       title: project.address,
                       status: project.status,
+                      address: project.address,
                       di: widget.di,
                       polygon: project.polygon!,
-                    ),
+                    )
                   );
                 },
               ),

@@ -6,22 +6,28 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart'
     show ProjectStatus, FoxPolygon, ProjectStatusExtension;
+import 'package:mobile_flutter/screens/punishment_item_screen.dart';
+import 'package:mobile_flutter/screens/punishments_screen.dart';
 import 'package:mobile_flutter/utils/StyleUtils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 
 class ObjectScreen extends StatefulWidget {
   final IDependencyContainer di;
+  final String projectUuid;
   final String title;
   final ProjectStatus status;
   final FoxPolygon polygon;
+  final String address;
 
   const ObjectScreen({
     super.key,
     required this.di,
+    required this.projectUuid,
     required this.title,
     required this.status,
     required this.polygon,
+    required this.address
   });
 
   @override
@@ -61,7 +67,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
               leading: const Icon(Icons.file_copy),
               title: const Text('Предписания'),
               onTap: () {
-                Navigator.pop(ctx);
+                Navigator.push(ctx, MaterialPageRoute(builder: (_) => PunishmentsScreen(di: widget.di, projectUuid: widget.projectUuid, addr: widget.address)));
               },
             ),
             Divider(height: 1),

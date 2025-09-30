@@ -60,7 +60,7 @@ class BaseHeader extends StatelessWidget implements PreferredSizeWidget {
                             title,
                             style: TextStyle(
                               color: primaryTextColor,
-                              fontSize: 22,
+                              fontSize: 20,
                               overflow: TextOverflow.ellipsis
                             ),
                           ),
@@ -117,7 +117,7 @@ class BaseHeader extends StatelessWidget implements PreferredSizeWidget {
         top: 0,
         bottom: 0,
         child: Container(
-          width: 40,
+          width: 20,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.centerLeft,
