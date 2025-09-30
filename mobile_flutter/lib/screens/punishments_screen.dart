@@ -7,6 +7,7 @@ import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/punishment_card.dart';
 
 import '../auth/auth_provider.dart';
+import '../widgets/base_header.dart';
 class PunishmentsScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String projectUuid;
@@ -66,25 +67,15 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: Builder(
-            builder: (BuildContext context) {
-              return IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-              );
-            },
-          ),
-          title: Text('Предписания\n${widget.addr}'),
-          automaticallyImplyLeading: false,
+        appBar: BaseHeader(
+          title: 'Вложения нарушения',
+          subtitle: '${widget.addr}',
+          onBack: () => {
+            Navigator.pop(context)
+          },
         ),
-
-
         body: data.isEmpty
-            ? Center(child: CircularProgressIndicator())
+            ? Center(child: Text("Предписаний не обнаружено"))
             : ListView.builder(
           itemCount: data.length,
           itemBuilder: (context, index) => data[index],

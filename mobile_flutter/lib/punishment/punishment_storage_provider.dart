@@ -6,8 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class IPunishmentStorageProvider {
   Future<void> saveStatuses(Map<int, String> statuses);
+  Future<void> saveDocuments(Map<String, String> documents);
   Future<Map<int, String>> getStatuses();
-  // Future<String> getRegulationDocs();
+  Future<Map<String, String>> getRegulationDocs();
   Future<void> clear();
 }
 
@@ -15,6 +16,7 @@ const IPunishmentStorageProviderDIToken = "I-Punishment-Storage-Provider-DI-Toke
 
 class PunishmentStorageProvider implements IPunishmentStorageProvider {
   static const STATUSES_KEY = "punishment-statuses-key";
+  static const DOCUMENTS_KEY = "punishment-documents-key";
 
   SharedPreferences? prefs;
 
@@ -39,6 +41,28 @@ class PunishmentStorageProvider implements IPunishmentStorageProvider {
     };
 
     await prefs?.setString(STATUSES_KEY, jsonEncode(mapToStore));
+  }
+
+  @override
+  Future<void> saveDocuments(Map<String, String> documents) async {
+    await init();
+
+    await prefs?.setString(STATUSES_KEY, jsonEncode(documents));
+  }
+
+  @override
+  Future<Map<String, String>> getRegulationDocs() async {
+    if (prefs == null) {
+      await init();
+    }
+    final json = prefs?.getString(DOCUMENTS_KEY);
+    if (json == null || json.isEmpty) {
+      return {};
+    }
+
+    final Map<String, String> documents = jsonDecode(json);
+
+    return documents;
   }
 
   @override

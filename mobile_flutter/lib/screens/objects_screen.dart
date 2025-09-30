@@ -129,8 +129,10 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
               itemBuilder: (context, index) {
                 final project = projects[index];
                 return ObjectCard(
+                  projectUuid: project.uuid,
                   title: project.address,
                   status: project.status,
+                  address: project.address,
                   di: widget.di,
                   polygon: project.polygon!,
                 );

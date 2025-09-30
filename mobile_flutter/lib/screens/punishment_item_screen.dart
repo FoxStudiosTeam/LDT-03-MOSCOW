@@ -2,26 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/punishment/punishment_provider.dart';
+import 'package:mobile_flutter/widgets/attachment_card.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 
 import '../auth/auth_provider.dart';
-import '../widgets/punishment_item_card.dart';
-class PunishmentItemsScreen extends StatefulWidget {
+class PunishmentItemScreen extends StatefulWidget {
   final IDependencyContainer di;
-  final String punishmentUuid;
+  final List<Attachment> atts;
   final String addr;
 
-  const PunishmentItemsScreen({super.key, required this.di, required this.punishmentUuid, required this.addr});
+  const PunishmentItemScreen({super.key, required this.di, required this.atts, required this.addr});
 
   @override
-  State<PunishmentItemsScreen> createState() => _PunishmentItemsScreenState();
+  State<PunishmentItemScreen> createState() => _PunishmentItemScreenState();
 }
 
-class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
+class _PunishmentItemScreenState extends State< PunishmentItemScreen> {
   String? _token;
-  List<PunishmentItemCard> data = [];
+  List<PunishmentItemAttachmentCard> data = [];
 
 
   @override
@@ -52,18 +51,10 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
     }
   }
 
-  Future<List<PunishmentItemCard>> _loadCards() async {
-    final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
-    final statuses = await provider.get_statuses();
-    final docs = await provider.get_documents();
-    final punishment_items = await provider.get_punishment_items(widget.punishmentUuid);
-
-    return punishment_items.map((punishment_item_plus) => PunishmentItemCard(
+  Future<List<PunishmentItemAttachmentCard>> _loadCards() async {
+    return widget.atts.map((att) => PunishmentItemAttachmentCard(
       di: widget.di,
-      atts: punishment_item_plus.attachments,
-      data: punishment_item_plus.punishment_item,
-      statuses: statuses,
-      docs: docs,
+      data: att,
     )).toList();
   }
 
@@ -78,7 +69,7 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
           },
         ),
         body: data.isEmpty
-            ? Center(child: CircularProgressIndicator())
+            ? Center(child: Text("Вложения отсутствуют"))
             : ListView.builder(
           itemCount: data.length,
           itemBuilder: (context, index) => data[index],

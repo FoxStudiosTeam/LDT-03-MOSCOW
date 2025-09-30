@@ -11,6 +11,7 @@ import 'package:mobile_flutter/punishment/punishment_storage_provider.dart';
 
 abstract class IPunishmentProvider {
   Future<Map<int, String>> get_statuses();
+  Future<Map<String, String>> get_documents();
   Future<List<Punishment>> get_punishments(String project);
   Future<List<PunishmentItemAndAttachments>> get_punishment_items(String punishment);
 }
@@ -55,6 +56,39 @@ class PunishmentProvider implements IPunishmentProvider {
       await storageProvider.saveStatuses(statuses);
 
       return statuses;
+    } else {
+      throw Exception(
+          'Failed to fetch punishment statuses: ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<Map<String, String>> get_documents() async {
+    final uri = apiRoot.resolve('/api/punishment/get_regulation_docs')
+    .replace(queryParameters: null);
+    _accessToken ??= await authStorageProvider.getAccessToken();
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $_accessToken',
+      },
+    ).timeout(Duration(seconds: 5),onTimeout: () {
+      throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
+    });
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = jsonDecode(response.body);
+      if (jsonList.isEmpty) throw Exception('Regulation documents is empty');
+      final Map<String, String> documents = {};
+
+      for (var doc in jsonList) {
+        documents[doc['uuid']] = doc['title'];
+      };
+      await storageProvider.saveDocuments(documents);
+
+      return documents;
     } else {
       throw Exception(
           'Failed to fetch punishment statuses: ${response.statusCode}');
