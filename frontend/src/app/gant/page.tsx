@@ -3,19 +3,21 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Header } from "@/app/components/header";
 import { Chart } from "react-google-charts";
-import {useActionsStore, DataBlock as ZDataBlock, Item as ZItem,} from "@/storage/jobsStorage";
+import { useActionsStore, DataBlock as ZDataBlock, Item as ZItem, } from "@/storage/jobsStorage";
 import { GetProjectSchedule } from "@/app/Api/Api";
 import styles from "@/app/styles/variables.module.css";
+import Link from "next/link";
+import Image from "next/image";
 
 type GanttRow = [
     string,              // Task ID
     string,              // Task Name
-        string | null,       // Resource
-        Date | null,         // Start Date
-        Date | null,         // End Date
-        number | null,       // Duration
+    string | null,       // Resource
+    Date | null,         // Start Date
+    Date | null,         // End Date
+    number | null,       // Duration
     number,              // Percent Complete
-        string | null,       // Dependencies
+    string | null,       // Dependencies
 ];
 
 function parseDateFromString(dateStr: string | undefined | null): Date | null {
@@ -47,10 +49,11 @@ export default function GanttPage() {
     const [message, setMessage] = useState<string | null>(null);
     const [isEmpty, setIsEmpty] = useState(false);
 
+    const uuid = localStorage.getItem("projectUuid");
+
     useEffect(() => {
         async function loadData() {
             try {
-                const uuid = localStorage.getItem("projectUuid");
                 if (!uuid) {
                     setMessage("Ошибка: projectUuid не найден в localStorage");
                     return;
@@ -161,6 +164,20 @@ export default function GanttPage() {
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />
             <main className="w-[80%] bg-white px-8 flex flex-col items-center gap-4">
+                <div className="self-start">
+                    <Link
+                        href={`/list_objects/${uuid}`}
+                        className="flex flex-row gap-2 items-center"
+                    >
+                        <Image
+                            src={"/backArrow.svg"}
+                            alt="Вернуться"
+                            height={15}
+                            width={30}
+                        />
+                        <span>Вернуться</span>
+                    </Link>
+                </div>
                 <div className="w-full flex flex-col sm:flex-row justify-between gap-2 sm:gap-0">
                     <p className="font-bold">Диаграмма Ганта</p>
                 </div>
@@ -184,9 +201,9 @@ export default function GanttPage() {
                 </div>
 
                 <div className="w-full flex justify-end gap-4">
-                    <button className={`self-end min-w-[250px] ${styles.mainButton}`}>
+                    <Link href={"/gant/edit"} className={`text-center self-end min-w-[250px] ${styles.mainButton}`}>
                         Изменить
-                    </button>
+                    </Link>
                     <button className={`self-end min-w-[250px] ${styles.mainButton}`}>
                         Входящие изменения
                     </button>

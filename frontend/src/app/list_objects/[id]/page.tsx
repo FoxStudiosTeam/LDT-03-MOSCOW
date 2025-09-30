@@ -133,9 +133,9 @@ export default function ObjectDetail() {
                         Вложения
                     </button>
 
-                    <button className={`min-w-[250px] ${styles.mainButton}`}>
+                    <Link href={`/list_objects/${params.id}/punishment`} className={`min-w-[250px] ${styles.mainButton}`}>
                         Список предписаний
-                    </button>
+                    </Link>
                 </div>
 
                 <div className="space-y-4">

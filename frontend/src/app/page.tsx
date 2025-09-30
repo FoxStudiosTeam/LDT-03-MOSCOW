@@ -8,7 +8,7 @@ export default function AboutPage() {
     return (
         <div className="min-h-screen flex flex-col bg-[#D0D0D0]">
             <Header/>
-            <main className="flex-1 w-full max-w-6xl mx-auto bg-white mt-10 px-6 sm:px-8 py-8 sm:py-12">
+            <main className="flex-1 w-full max-w-6xl mx-auto gap-4 bg-white mt-10 px-6 sm:px-8 py-8 sm:py-12">
                 <div className="mb-8">
                     <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-4">
                         О нас
@@ -26,7 +26,7 @@ export default function AboutPage() {
                     </p>
                 </div>
 
-                <div className="mb-8">
+                <div>
                     <h2 className="text-xl font-semibold text-gray-900 mb-3">Ключевые роли в системе</h2>
                     <p className="text-base text-gray-700 leading-relaxed mb-6">
                         Для удобства и чёткой организации работы мы предусмотрели три типа пользователей.
@@ -35,7 +35,7 @@ export default function AboutPage() {
                     </p>
 
                     <div className="grid gap-6 sm:grid-cols-3">
-                        <div className="border rounded-lg shadow-sm p-5 bg-gray-50 hover:shadow-md transition">
+                        <div className="border border-[#D0D0D0] rounded-lg shadow-sm p-5 bg-gray-50 hover:shadow-md transition">
                             <h3 className="text-lg font-semibold text-red-700 mb-2">Заказчик</h3>
                             <p className="text-sm text-gray-700 leading-relaxed">
                                 Получает полный контроль над проектом: видит сроки, прогресс выполнения,
@@ -43,7 +43,7 @@ export default function AboutPage() {
                             </p>
                         </div>
 
-                        <div className="border rounded-lg shadow-sm p-5 bg-gray-50 hover:shadow-md transition">
+                        <div className="border border-[#D0D0D0] rounded-lg shadow-sm p-5 bg-gray-50 hover:shadow-md transition">
                             <h3 className="text-lg font-semibold text-red-700 mb-2">Инспектор</h3>
                             <p className="text-sm text-gray-700 leading-relaxed">
                                 Контролирует качество и соблюдение стандартов. Все замечания и проверки фиксируются
@@ -51,7 +51,7 @@ export default function AboutPage() {
                             </p>
                         </div>
 
-                        <div className="border rounded-lg shadow-sm p-5 bg-gray-50 hover:shadow-md transition">
+                        <div className="border border-[#D0D0D0] rounded-lg shadow-sm p-5 bg-gray-50 hover:shadow-md transition">
                             <h3 className="text-lg font-semibold text-red-700 mb-2">Подрядчик</h3>
                             <p className="text-sm text-gray-700 leading-relaxed">
                                 Управляет задачами своей команды, отмечает выполненные этапы и поддерживает
@@ -61,11 +61,11 @@ export default function AboutPage() {
                     </div>
                 </div>
 
-                <div className="mt-12 border rounded-lg shadow-md p-6 bg-gray-50 text-center">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                <div className="flex flex-col items-center gap-3 border mt-5 border-[#D0D0D0] rounded-lg shadow-md p-6 bg-gray-50 text-center">
+                    <h2 className="text-lg font-semibold text-gray-900">
                         Готовы начать работу?
                     </h2>
-                    <p className="text-base text-gray-700 mb-6">
+                    <p className="text-base text-gray-700">
                         Для начала перейдите в список объектов, чтобы выбрать или создать проект.
                     </p>
                     <Link

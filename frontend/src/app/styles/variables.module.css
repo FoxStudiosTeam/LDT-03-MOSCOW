@@ -1,6 +1,6 @@
 
 .mainButton {
-    height: 40px;
+    min-height: 40px;
 
     background-color: #c10007;
     color: white;

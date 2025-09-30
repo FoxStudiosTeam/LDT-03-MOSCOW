@@ -29,15 +29,36 @@ export interface ProjectWithAttachments {
     project: Project;
 }
 
+export interface PunishmentItem {
+    uuid: string;
+    title: string;
+    punishment: string;
+    punishment_item_status: number;
+    regulation_doc: string;
+    punish_datetime: string;
+    correction_date_plan: string | null;
+    correction_date_info: string | null;
+    correction_date_fact: string | null;
+    is_suspend: boolean;
+    place: string;
+    comment: string;
+}
+
 interface ProjectState {
     projects: ProjectWithAttachments[];
     total: number;
     hydrated: boolean;
 
+    punishments: PunishmentItem[];
+
     setHydrated: () => void;
     setProjects: (projects: ProjectWithAttachments[], total: number) => void;
     getProjectById: (uuid: string) => ProjectWithAttachments | undefined;
     clearProjects: () => void;
+
+    setPunishmentItem: (item: PunishmentItem) => void;
+    getPunishments: () => PunishmentItem[]; 
+    clearPunishments: () => void;
 }
 
 export const useProjectStore = create<ProjectState>()(
@@ -47,6 +68,8 @@ export const useProjectStore = create<ProjectState>()(
             total: 0,
             hydrated: false,
 
+            punishments: [],
+
             setHydrated: () => set({ hydrated: true }),
 
             setProjects: (projects, total) => set({ projects, total }),
@@ -55,6 +78,23 @@ export const useProjectStore = create<ProjectState>()(
                 get().projects.find((p) => p.project.uuid === uuid),
 
             clearProjects: () => set({ projects: [], total: 0 }),
+
+            setPunishmentItem: (item) =>
+                set((state) => {
+                    const exists = state.punishments.find((p) => p.uuid === item.uuid);
+                    if (exists) {
+                        return {
+                            punishments: state.punishments.map((p) =>
+                                p.uuid === item.uuid ? item : p
+                            ),
+                        };
+                    }
+                    return { punishments: [...state.punishments, item] };
+                }),
+
+            getPunishments: () => get().punishments,
+
+            clearPunishments: () => set({ punishments: [] }),
         }),
         {
             name: "project-storage",

@@ -89,3 +89,27 @@ export interface ReportItem {
     report: Report;
     attachments: Attachment[];
 }
+
+export interface PunishmentItem {
+    comment: string ;
+    correction_date_fact: string  ;
+    correction_date_info: string ;
+    correction_date_plan: string ;
+    is_suspend: boolean;
+    place: string ;
+    punish_datetime: string ;
+    punishment: string ;
+    punishment_item_status: number ;
+    regulation_doc: string ;
+    title: string ;
+    uuid: string ;
+}
+
+export interface Punishments {
+    custom_number: string;
+    punish_datetime: string;
+    punishment_status: string;
+    punishment: PunishmentItem;
+    attachments: Attachment[];
+}
+

@@ -57,7 +57,7 @@ export default function AddSubjobs() {
 
                 if (end && newStart > end) {
                     setMessages(["Дата начала не может быть позже даты окончания"]);
-                    return prev; // отклоняем изменение
+                    return prev;
                 }
 
                 next[rowIdx] = { ...old, startDate: value };
@@ -67,7 +67,7 @@ export default function AddSubjobs() {
 
                 if (start && newEnd < start) {
                     setMessages(["Дата окончания не может быть раньше даты начала"]);
-                    return prev; // отклоняем изменение
+                    return prev;
                 }
 
                 next[rowIdx] = { ...old, endDate: value };
@@ -158,7 +158,7 @@ export default function AddSubjobs() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (isSubmitting) return; // защита от двойных кликов
+        if (isSubmitting) return;
         setIsSubmitting(true);
 
         try {
