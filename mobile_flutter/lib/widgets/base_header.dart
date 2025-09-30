@@ -3,7 +3,7 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/tabler.dart';
 
 const String backIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="24" height="24" fill="none"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 6l-6 6l6 6"/></svg>';
-
+const String moreIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="24" height="24" fill="none"/><path fill="currentColor" d="M14 18a2 2 0 1 1-4 0a2 2 0 0 1 4 0m0-6a2 2 0 1 1-4 0a2 2 0 0 1 4 0m-2-4a2 2 0 1 0 0-4a2 2 0 0 0 0 4" stroke-width="0.4" stroke="currentColor"/></svg>';
 class BaseHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final String subtitle;
@@ -12,8 +12,10 @@ class BaseHeader extends StatelessWidget implements PreferredSizeWidget {
   final Color secondaryTextColor;
   final Color lineColor;
   final Color backColor;
+  final Color moreColor;
   final BoxShadow? shadow;
   final bool centeredTitle;
+  final void Function()? onMore;
   final void Function()? onBack;
 
   const BaseHeader({
@@ -27,7 +29,9 @@ class BaseHeader extends StatelessWidget implements PreferredSizeWidget {
     this.backColor = Colors.black,
     this.lineColor = Colors.black12,
     this.shadow,
-    this.onBack
+    this.onBack,
+    this.onMore,
+    this.moreColor = Colors.black,
   });
 
   @override
@@ -82,9 +86,59 @@ class BaseHeader extends StatelessWidget implements PreferredSizeWidget {
               ],
             ),
             ...(onBack != null ? _backButton(context, onBack!) : []),
+            ...(onMore != null ? _moreButton(context, onMore!) : []),
           ]
         )
     );
+  }
+
+  List<Widget> _moreButton(BuildContext context, void Function() onBack) {
+    return [
+      Positioned(
+        right: 0,
+        child: IconButton(
+          padding: EdgeInsets.all(0.0),
+          iconSize: 40,
+          constraints: BoxConstraints(
+            minHeight: preferredSize.height - 2,
+            maxHeight: preferredSize.height - 2,
+            minWidth: preferredSize.height - 32,
+            maxWidth: preferredSize.height - 32,
+          ),
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.all(backgroundColor),
+            shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(0),
+              ),
+            ),
+          ),
+          onPressed: onBack, 
+          icon: Iconify(
+            moreIcon, 
+            color: moreColor,
+          )
+        ),
+      ),
+      Positioned(
+        right: preferredSize.height - 32,
+        top: 0,
+        bottom: 0,
+        child: Container(
+          width: 20,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                backgroundColor.withAlpha(0),
+                backgroundColor,
+              ],
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 
   List<Widget> _backButton(BuildContext context, void Function() onBack) {

@@ -45,10 +45,10 @@ import UIKit
                         let rect = word.boundingBox
                         boxes.append([
                             "text": word.text ?? "",
-                            "x": Int(rect.origin.x),
-                            "y": Int(rect.origin.y),
-                            "w": Int(rect.width),
-                            "h": Int(rect.height),
+                            "left": Int(rect.origin.x),
+                            "top": Int(rect.origin.y),
+                            "right": Int(rect.origin.x + rect.width),
+                            "bottom": Int(rect.origin.y + rect.height),
                         ])
                     }
                 }
