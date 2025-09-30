@@ -3,6 +3,8 @@ PODS:
   - camera_avfoundation (0.0.1):
     - Flutter
   - Flutter (1.0.0)
+  - flutter_native_splash (2.4.3):
+    - Flutter
   - flutter_osm_plugin (0.0.1):
     - Alamofire
     - Flutter
@@ -30,6 +32,7 @@ PODS:
 DEPENDENCIES:
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - Flutter (from `Flutter`)
+  - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
   - flutter_osm_plugin (from `.symlinks/plugins/flutter_osm_plugin/ios`)
   - flutter_tesseract_ocr (from `.symlinks/plugins/flutter_tesseract_ocr/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
@@ -50,6 +53,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/camera_avfoundation/ios"
   Flutter:
     :path: Flutter
+  flutter_native_splash:
+    :path: ".symlinks/plugins/flutter_native_splash/ios"
   flutter_osm_plugin:
     :path: ".symlinks/plugins/flutter_osm_plugin/ios"
   flutter_tesseract_ocr:
@@ -67,6 +72,7 @@ SPEC CHECKSUMS:
   Alamofire: 7193b3b92c74a07f85569e1a6c4f4237291e7496
   camera_avfoundation: 5675ca25298b6f81fa0a325188e7df62cc217741
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
   flutter_osm_plugin: 3fb57665b32a81fcffa57c6206658d3a0d0d1a96
   flutter_tesseract_ocr: fffe5de044967e12d184feaded7fabfb546b6042
   OSMFlutterFramework: 2f1260ac2854d3398b92403f2d5e012b4ca2c620
