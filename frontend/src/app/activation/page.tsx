@@ -38,7 +38,6 @@ export default function ActivationPage() {
             return;
         }
 
-        // 1 запрос - setForeman
         const foremanRes = await setForeman(
             projectUuid,
             form.firstName,
@@ -51,7 +50,6 @@ export default function ActivationPage() {
             return;
         }
 
-        // 2 запрос - projectCommit
         const commitRes = await projectCommit(projectUuid);
         if (!commitRes.success) {
             setMessage(commitRes.message);
@@ -59,7 +57,6 @@ export default function ActivationPage() {
             return;
         }
 
-        // 3 запрос - uploadProjectFiles
         if (selectedFiles.length > 0) {
             const { uploaded, errors } = await uploadProjectFiles(projectUuid, selectedFiles);
             if (errors.length > 0) {
@@ -110,8 +107,6 @@ export default function ActivationPage() {
                             className="border border-gray-300 rounded px-3 py-2 w-full"
                         />
                     </div>
-
-                    {/* Кнопки на одном уровне */}
                     <div className="flex justify-between items-center mt-8">
                         <div className="flex items-center gap-4">
                             <button
@@ -146,7 +141,6 @@ export default function ActivationPage() {
                         </button>
                     </div>
 
-                    {/* Список выбранных файлов */}
                     {selectedFiles.length > 0 && (
                         <ul className="mt-4 list-disc list-inside text-sm text-gray-700">
                             {selectedFiles.map((file, idx) => (
@@ -155,7 +149,6 @@ export default function ActivationPage() {
                         </ul>
                     )}
 
-                    {/* Сообщения об ошибках */}
                     {message && (
                         <p className="w-full text-center text-red-600 pt-2">{message}</p>
                     )}

@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Measurement, SubJob, WorkItem } from "@/models";
 import { GetMeasurement, UpdateWorksInSchedule } from "@/app/Api/Api";
+import Link from "next/link";
 
 
 export default function EditSubjobs() {
@@ -147,7 +148,7 @@ export default function EditSubjobs() {
             }
 
             setMessages(["Этапы успешно сохранены"]);
-            router.push('/list_objects/create_object/second_step/');
+            router.push('/gant/edit');
 
         } catch (err) {
             console.error("Ошибка при сохранении:", err);
@@ -163,6 +164,21 @@ export default function EditSubjobs() {
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />
             <main className="min-h-[calc(100vh-50px)] w-[80%] bg-white px-[10%] flex flex-col items-center gap-4 ">
+                <div className="self-start">
+                    <Link
+                        href={"/gant/edit"}
+                        className="flex flex-row gap-2 items-center"
+                    >
+                        <Image
+                            src={"/backArrow.svg"}
+                            alt="Вернуться на главную страницу"
+                            height={15}
+                            width={30}
+                        />
+                        <span>Вернуться</span>
+                    </Link>
+                </div>
+                
                 <div className="w-full">
                     <p>Редактирование этапа: {block.title}</p>
                 </div>
@@ -274,11 +290,11 @@ export default function EditSubjobs() {
                                                     <div className="min-h-[36px]">{item.endDate || <span className="text-slate-400">—</span>}</div>
                                                 )}
                                             </td>
-                                            <td className="text-center align-middle">
+                                            <td className="text-center w-full">
                                                 <button
                                                     type="button"
                                                     onClick={() => deleteRow(itemIdx)}
-                                                    className="flex h-12 w-12 items-center justify-center hover:text-red-600"
+                                                    className="flex mx-auto h-12 w-12 items-center justify-center hover:text-red-600"
                                                 >
                                                     <Image alt="Удаление" src="/Tables/delete.svg" height={20} width={20} />
                                                 </button>

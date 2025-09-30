@@ -216,9 +216,9 @@ export default function FirstStep() {
                         <div className="w-full flex flex-col sm:flex-row gap-3 items-center justify-between">
                             <div className="flex flex-col sm:flex-row items-center gap-2 cursor-pointer">
                                 <label htmlFor="coords" className="cursor-pointer">
-                  <span className="text-sm font-medium">
-                    Загрузить координаты в формате JSON
-                  </span>
+                                    <span className="text-sm font-medium">
+                                        Загрузить координаты в формате JSON
+                                    </span>
                                 </label>
 
                                 <label

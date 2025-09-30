@@ -1,16 +1,15 @@
-'use client';
+"use client"
 
 import { Header } from "@/app/components/header";
 import { useActionsStore } from "@/storage/jobsStorage";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { DeleteProjectSchedule, GetProjectSchedule } from "@/app/Api/Api";
+import { GetProjectSchedule } from "@/app/Api/Api";
 import { DataBlock } from "@/models";
 
-export default function SecondStep() {
+export default function EditSchedule() {
     const data = useActionsStore((state) => state.data);
-    const deleteDataBlock = useActionsStore((state) => state.deleteDataBlock);
     const addDataBlock = useActionsStore((state) => state.addDataBlock);
     const clearData = useActionsStore((state) => state.clearData)
     const uuid = localStorage.getItem("projectUuid");
@@ -58,18 +57,24 @@ export default function SecondStep() {
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />
             <main className="w-[80%] bg-white px-8 flex flex-col items-center gap-4">
-                <div className="w-full flex flex-col sm:flex-row justify-between gap-2 sm:gap-0">
-                    <p className="font-bold">Новый объект</p>
-                    <p>Этап 2 из 2</p>
+
+                <div className="self-start">
+                    <Link
+                        href={"/gant"}
+                        className="flex flex-row gap-2 items-center"
+                    >
+                        <Image
+                            src={"/backArrow.svg"}
+                            alt="Вернуться"
+                            height={15}
+                            width={30}
+                        />
+                        <span>Вернуться</span>
+                    </Link>
                 </div>
 
-                <div className="w-full">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:gap-0 justify-between items-center">
-                        <p className="self-start">График работ</p>
-                        <Link href={"/list_objects/create_object/second_step/add_subjobs/"} className=" bg-red-700 text-center text-sm text-white px-6 py-2 rounded-lg">
-                            Добавить этап работы
-                        </Link>
-                    </div>
+                <div className="w-full flex justify-start">
+                    <p>График работ</p>
                 </div>
 
                 <div className="w-full overflow-x-scroll">
@@ -93,7 +98,7 @@ export default function SecondStep() {
                                         <td>{block.end_date}</td>
                                         <td className="px-4 py-2 text-center">
                                             <div className="flex items-center justify-center gap-3">
-                                                <Link href={`/list_objects/create_object/second_step/edit/${block.uuid}`}>
+                                                <Link href={`/gant/edit/${block.uuid}`}>
                                                     <Image
                                                         alt="Редактирование"
                                                         src="/Tables/edit.svg"
@@ -101,29 +106,6 @@ export default function SecondStep() {
                                                         width={20}
                                                     />
                                                 </Link>
-                                                <button
-                                                    onClick={async () => {
-                                                        if (!block.uuid) return;
-                                                        const isConfirmed = window.confirm("Вы действительно хотите удалить этот элемент?");
-                                                        if (!isConfirmed) return;
-                                                        const { success, message } = await DeleteProjectSchedule(block.uuid);
-
-                                                        if (success) {
-                                                            deleteDataBlock(block.uuid);
-                                                            setMessage(null);
-                                                        } else {
-                                                            setMessage(message);
-                                                        }
-                                                    }}
-                                                >
-                                                    <Image
-                                                        alt="Удаление"
-                                                        src="/Tables/delete.svg"
-                                                        height={20}
-                                                        width={20}
-                                                    />
-                                                </button>
-
                                             </div>
                                         </td>
 
@@ -140,8 +122,8 @@ export default function SecondStep() {
                     </table>
                 </div>
 
-                <Link href={"/list_objects/"} className="self-end bg-red-700 text-white px-6 py-2 rounded-lg">
-                    Создать объект
+                <Link href={"/gant/edit/add_subjob"} className="self-center bg-red-700 text-white px-6 py-2 rounded-lg">
+                    Добавить этап
                 </Link>
                 {message && <p className="w-full text-center text-red-600 pt-2">{message}</p>}
             </main>

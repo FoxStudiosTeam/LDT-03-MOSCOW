@@ -2,9 +2,10 @@ import 'dart:developer';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:flutter_tesseract_ocr/android_ios.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/tabler.dart';
+import 'package:mobile_flutter/widgets/base_header.dart';
+import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class OcrCameraScreen extends StatefulWidget {
@@ -20,7 +21,6 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
-
   @override
   void initState() {
     super.initState();
@@ -69,12 +69,15 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
     try {
       final image = await _cameraController!.takePicture();
       log('Picture taken: ${image.path}');
-      String text = await FlutterTesseractOcr.extractText(image.path, language: 'rus',
-        args: {
-          "psm": "4",
-          "preserve_interword_spaces": "1",
-        });
-      print("OCR: $text");
+      
+      // String text = await TesseractOcr.extractText(
+      //   image.path,
+      //   language: 'rus',
+      //   args: {
+      //     "psm": "4",
+      //     "preserve_interword_spaces": "1",
+      //   });
+      // print("OCR: $text");
       
     } catch (e) {
       log('Error taking picture: $e');
@@ -83,9 +86,13 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     if (!_isCameraInitialized) {
       return Scaffold(
+        appBar: BaseHeader(
+          title: "Распознать", 
+          subtitle: "ТНН",
+          onBack: () => Navigator.pop(context),
+        ),
         body: Center(child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -107,6 +114,11 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
     final isPortrait = size.height >= size.width;
 
     return Scaffold(
+      appBar: BaseHeader(
+        title: "Распознать", 
+        subtitle: "ТНН",
+        onBack: () => Navigator.pop(context),
+      ),
       backgroundColor: Colors.black,
       body: Stack(
         children: [

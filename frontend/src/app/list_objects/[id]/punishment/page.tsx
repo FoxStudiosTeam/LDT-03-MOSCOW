@@ -1,0 +1,70 @@
+"use client";
+
+import { GetPunishmentsById } from "@/app/Api/Api";
+import { Header } from "@/app/components/header";
+import { PunishmentItem, Punishments } from "@/models";
+import { useProjectStore } from "@/storage/projectStorage";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+
+export default function PunishmentPage() {
+    const router = useRouter();
+    const params = useParams();
+    const id = Array.isArray(params.id) ? params.id[0] : params.id;
+    const [punishments, setPunishments] = useState<Punishments[]>([]);
+
+    const setPunishmentItem = useProjectStore((state) => state.setPunishmentItem)
+
+    useEffect(() => {
+        const getPunishments = async () => {
+            if (!id) return;
+            const result = await GetPunishmentsById(id);
+
+            if (result) {
+                setPunishments(result.resultPunishment)
+            }
+
+        }
+        getPunishments()
+    }, [id])
+    
+    const punishSelectedHandle = (punishment: PunishmentItem) => {
+        setPunishmentItem(punishment);
+        router.push(`/list_objects/${id}/punishment/punishment_detail`)
+    }
+
+    console.log('punishments', punishments);
+
+    return (
+        <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
+            <Header />
+            <main className="w-[80%] bg-white px-8 py-6 flex flex-col items-center gap-4">
+                <div className="w-full flex flex-col sm:flex-row justify-between gap-2 sm:gap-0">
+                    <p className="font-bold">Предписания</p>
+                </div>
+
+                <table className="w-full border-collapse text-left">
+                    <thead>
+                        <tr className="bg-gray-100">
+                            <th className="border px-4 py-2">Номер</th>
+                            <th className="border px-4 py-2">Дата выдачи</th>
+                            <th className="border px-4 py-2">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {punishments.map((punishment, punishmentIdx) => (
+                            <tr key={punishmentIdx} className="hover:bg-gray-50 cursor-pointer" onClick={() => punishSelectedHandle(punishment.punishment_items)}>
+                                <td className="border px-4 py-2">{punishmentIdx}</td>
+                                <td className="border px-4 py-2">{punishment.punish_datetime}</td>
+                                <td className="border px-4 py-2">{punishment.punishment_status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </main>
+        </div>
+    )
+}
