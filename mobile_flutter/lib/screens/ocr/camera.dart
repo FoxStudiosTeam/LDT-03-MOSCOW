@@ -21,19 +21,31 @@ class OcrCameraScreen extends StatefulWidget {
 
 Future<Uint8List> drawBoxes(Uint8List imageBytes, List<OcrBox> boxes) async {
   var image = img.decodeImage(imageBytes)!;
-  final font = img.arial14;
+  final font = img.arial48;
+  final col = img.ColorInt16.fromList([255, 0, 0, 255]);
+  var i = 0;
+  // image = img.drawString(image, "ABOBA", x: 100, y: 100, font: font, color: col);
+  // image = img.drawRect(
+  //       image,
+  //       x1: box.left,
+  //       y1: box.top,
+  //       x2: box.right,
+  //       y2: box.bottom,
+  //       color: col,
+  //       thickness: 20,
+  //     );
   for (final box in boxes) {
-    log("OCR: $box.text (${box.left}, ${box.top}) - (${box.right}, ${box.bottom})");
+    log("OCR: ${box.text} (${box.left}, ${box.top}) - (${box.right}, ${box.bottom})");
     image = img.drawRect(
       image,
       x1: box.left,
       y1: box.top,
       x2: box.right,
       y2: box.bottom,
-      color: img.ColorInt16.fromList([255, 255, 255, 255]),
-      thickness: 2,
+      color: col,
+      thickness: 20,
     );
-    image = img.drawString(image, box.text, x: box.left, y: box.top - font.lineHeight, font: font);
+    image = img.drawString(image, box.text, x: box.left, y: box.top - font.lineHeight, font: font, color: col);
   }
   return Uint8List.fromList(img.encodeJpg(image));
 }
@@ -114,11 +126,11 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
       // final Uint8List rotated = await rotateClockwise(bytes);
       final boxes = await OcrBridge.getBoxes(rotated);
 
-      final boxed = await drawBoxes(bytes, boxes);
+      final boxed = await drawBoxes(rotated, boxes);
 
-      // final Uint8List rotatedBack = await rotateCounterClockwise(boxed);
+      final Uint8List rotatedBack = await rotateCounterClockwise(boxed);
       setState(() {
-        imageWithBoxes = boxed;
+        imageWithBoxes = rotatedBack;
       });
 
       log("OCR: Got ${boxes.length} boxes");
