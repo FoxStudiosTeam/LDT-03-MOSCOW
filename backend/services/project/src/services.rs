@@ -16,6 +16,7 @@ use crate::entities::*;
 #[async_trait]
 pub trait IProjectService: Send + Sync {
     async fn get_project(&self, r: GetProjectRequest, t: AccessTokenPayload) -> Result<Response, AppErr>;
+    async fn get_inspector_projects(&self, r: GetProjectRequest, t: AccessTokenPayload) -> Result<Response, AppErr>;
     async fn create_project(
         &self,
         r: CreateProjectRequest,
@@ -39,7 +40,12 @@ struct ProjectService {
 
 #[async_trait]
 impl IProjectService for ProjectService {
-    async fn get_project_inspectors(&self, r: GetProjectInspectorsRequest, t: AccessTokenPayload) -> Result<Response, AppErr> { 
+    async fn get_inspector_projects(&self, r: GetProjectRequest, _t: AccessTokenPayload) -> Result<Response, AppErr> {
+
+        todo!()
+    }
+
+    async fn get_project_inspectors(&self, r: GetProjectInspectorsRequest, _t: AccessTokenPayload) -> Result<Response, AppErr> { 
         let inspectors = sqlx::query_as::<_, InspectorInfo>("
             select 
             u.fcs,
@@ -64,31 +70,52 @@ impl IProjectService for ProjectService {
         let address = r.address.unwrap_or_default().trim().to_string();
 
         let mut cq: String = "SELECT COUNT(*) FROM project.project p {{ROLE_RULE}} {{ADDRESS_RULE}}".to_string();
-
-        if address.is_empty() {
-            cq = cq.replace("{{ADDRESS_RULE}}", "");
-        } else {
-            cq = cq.replace("{{ADDRESS_RULE}}", "WHERE p.address like $2");
+        let addr = address.clone();
+        let replace_addr = move |cq: String, i: usize| -> String {
+            if addr.is_empty() {
+                cq.replace("{{ADDRESS_RULE}}", "")
+            } else {
+                cq.replace("{{ADDRESS_RULE}}", &format!("WHERE p.address like {}", <crate::DB as SqlGen>::placeholder(i)))
+            }
         };
+
+        let role = t.role.clone();
+        let replace_role = move |cq: String, i: usize| -> Result<String, AppErr> {
+            let cq = cq.replace("{{ROLE_RULE}}", &match role.as_str() {
+                FOREMAN_ROLE => format!(" AND p.foreman = {} ", <crate::DB as SqlGen>::placeholder(i)),
+                CUSTOMER_ROLE => format!(" AND p.created_by = {} ", <crate::DB as SqlGen>::placeholder(i)),
+                // INSPECTOR_ROLE => format!(" inner join project.iko_relationship ir on ir.project = p.uuid AND ir.user_uuid = {} ", <crate::DB as SqlGen>::placeholder(i)),
+                INSPECTOR_ROLE => format!(" AND {}::boolean IS NOT NULL ", <crate::DB as SqlGen>::placeholder(i)),
+                ADMINISTRATOR_ROLE => format!(" AND {}::boolean IS NOT NULL ", <crate::DB as SqlGen>::placeholder(i)),
+                _ => {
+                    return Err(AppErr::default()
+                        .with_err_response("Unknown role")
+                        .with_status(StatusCode::FORBIDDEN));
+                }
+            });
+            let cq = if cq.contains("WHERE") {cq} else {cq.replace("AND", "WHERE")};
+            Ok(cq)
+        };
+       
 
         let mut q = match t.role.as_str() {
             FOREMAN_ROLE => {
-                cq = cq.replace("{{ROLE_RULE}}", "WHERE p.foreman = $1");
+                cq = cq.replace("{{ROLE_RULE}}", &replace_role(replace_addr(cq.clone(), 2), 1)?);
                 sqlx::query_as::<_, (i64,)>(&cq)
                     .bind(t.uuid)
             }
             CUSTOMER_ROLE => {
-                cq = cq.replace("{{ROLE_RULE}}", "WHERE p.created_by = $1");
+                cq = cq.replace("{{ROLE_RULE}}", &replace_role(replace_addr(cq.clone(), 2), 1)?);
                 sqlx::query_as::<_, (i64,)>(&cq)
                     .bind(t.org)
             }
             INSPECTOR_ROLE => {
-                cq = cq.replace("{{ROLE_RULE}}", "WHERE p.inspector = $1");
+                cq = cq.replace("{{ROLE_RULE}}", &replace_role(replace_addr(cq.clone(), 2), 1)?);
                 sqlx::query_as::<_, (i64,)>(&cq)
                     .bind(t.uuid)
             }
             ADMINISTRATOR_ROLE => {
-                cq = cq.replace("{{ROLE_RULE}}", "WHERE $1::boolean IS NOT NULL");
+                cq = cq.replace("{{ROLE_RULE}}", &replace_role(replace_addr(cq.clone(), 2), 1)?);
                 sqlx::query_as::<_, (i64,)>(&cq)
                     .bind(true)
             }
@@ -130,8 +157,8 @@ impl IProjectService for ProjectService {
                     ON uf.uuid = p.foreman
                 left join auth.orgs ao
                     on ao.uuid = p.created_by
-                WHERE p.address like $4
                 {{ROLE_RULE}}
+                AND p.address like $4
                 ORDER BY p.created_at DESC
                 OFFSET $1 LIMIT $2
             )
@@ -148,28 +175,29 @@ impl IProjectService for ProjectService {
         let q = 
         match t.role.as_str() {
             FOREMAN_ROLE => {
-                qstr = qstr.replace("{{ROLE_RULE}}", "AND p.foreman = $3");
+                qstr = qstr.replace("{{ROLE_RULE}}", "WHERE p.foreman = $3");
                 sqlx::query_as::<_, RowProjectWithAttachment>(&qstr)
                     .bind(offset)
                     .bind(limit)
                     .bind(t.uuid)
             }
             CUSTOMER_ROLE => {
-                qstr = qstr.replace("{{ROLE_RULE}}", "AND p.created_by = $3");
+                qstr = qstr.replace("{{ROLE_RULE}}", "WHERE p.created_by = $3");
                 sqlx::query_as::<_, RowProjectWithAttachment>(&qstr)
                     .bind(offset)
                     .bind(limit)
                     .bind(t.org)
             }
             INSPECTOR_ROLE => {
-                qstr = qstr.replace("{{ROLE_RULE}}", "AND p.inspector = $3");
+                // qstr = qstr.replace("{{ROLE_RULE}}", "inner join project.iko_relationship ir on ir.project = p.uuid WHERE ir.user_uuid = $3 AND");
+                qstr = qstr.replace("{{ROLE_RULE}}", "WHERE $3::uuid IS NOT NULL");
                 sqlx::query_as::<_, RowProjectWithAttachment>(&qstr)
                     .bind(offset)
                     .bind(limit)
                     .bind(t.uuid)
             }
             ADMINISTRATOR_ROLE => {
-                qstr = qstr.replace("{{ROLE_RULE}}", "AND $3::boolean IS NOT NULL");
+                qstr = qstr.replace("{{ROLE_RULE}}", "WHERE $3::boolean IS NOT NULL");
                 sqlx::query_as::<_, RowProjectWithAttachment>(&qstr)
                     .bind(offset)
                     .bind(limit)
