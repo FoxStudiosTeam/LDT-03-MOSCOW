@@ -71,7 +71,7 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: BaseHeader(
-          title: 'Вложения нарушения',
+          title: 'Нарушения',
           subtitle: '${widget.addr}',
           onBack: () => {
             Navigator.pop(context)

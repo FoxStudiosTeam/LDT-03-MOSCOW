@@ -170,16 +170,6 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
     }
   }
 
-  Color _getCardColor(MaterialStatus status) {
-    switch (status) {
-      case MaterialStatus.delivered:
-        return Colors.green.shade50;
-      case MaterialStatus.pending:
-        return Colors.orange.shade50;
-      case MaterialStatus.qualityCheck:
-        return Colors.blue.shade50;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +205,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
             final material = materials[index];
             return Card(
               elevation: 2,
-              color: _getCardColor(material.status),
+              color: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(color: Colors.grey.shade300),

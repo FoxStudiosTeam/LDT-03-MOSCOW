@@ -129,17 +129,6 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 Navigator.pop(ctx);
               },
             ),
-            const Divider(height: 1),
-            ListTile(
-              titleAlignment: ListTileTitleAlignment.center,
-              leading: const Icon(Icons.file_present_sharp),
-              title: const Text('Нарушения'),
-              textColor: FoxThemeButtonActiveBackground,
-              iconColor: FoxThemeButtonActiveBackground,
-              onTap: () {
-                Navigator.pop(ctx);
-              },
-            ),
           ],
         ),
       );
