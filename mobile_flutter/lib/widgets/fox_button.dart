@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../utils/StyleUtils.dart';
+import '../utils/style_utils.dart';
 
 class FoxButton extends StatelessWidget {
   void Function()? onPressed;

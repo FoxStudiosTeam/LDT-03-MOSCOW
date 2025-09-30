@@ -5,13 +5,15 @@ import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
 import 'package:mobile_flutter/screens/create_punishment_item.dart';
-import 'package:mobile_flutter/utils/NetworkUtils.dart';
-import 'package:mobile_flutter/utils/StyleUtils.dart';
+import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/punishment_item_card.dart';
 
+import '../auth/auth_provider.dart';
+import '../utils/network_utils.dart';
+import '../widgets/punishment_item_card.dart';
 class PunishmentItemsScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String punishmentUuid;

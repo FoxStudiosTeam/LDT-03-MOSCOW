@@ -12,6 +12,8 @@ import 'package:mobile_flutter/widgets/fox_button.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/object_card.dart';
 
+import '../utils/network_utils.dart';
+
 class ObjectsScreen extends StatefulWidget {
   final IDependencyContainer di;
 
@@ -53,7 +55,16 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     var objectsProvider = widget.di.getDependency<IObjectsProvider>(
       IObjectsProviderDIToken,
     );
-    var response = await objectsProvider.getObjects("", 0);
+
+    print("Start Request");
+
+    var response = await NetworkUtils.wrapRequest(() => objectsProvider.getObjects("", 0), context, widget.di);
+
+    print("END Request");
+    for (var elem in response.items) {
+      print("${elem.address} ${elem.polygon}");
+    }
+
     setState(() {
       projects = response.items;
     });

@@ -4,12 +4,11 @@ import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
-import 'package:mobile_flutter/utils/StyleUtils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/punishment_card.dart';
-import 'package:mobile_flutter/utils/NetworkUtils.dart';
+import 'package:mobile_flutter/utils/network_utils.dart';
 
 import '../auth/auth_provider.dart';
 import '../widgets/base_header.dart';
