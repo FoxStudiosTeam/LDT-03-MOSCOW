@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
@@ -9,10 +10,13 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/tabler.dart';
 import 'package:mobile_flutter/bridges/ocr.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
+import 'package:mobile_flutter/utils/file_utils.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
+import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image/image.dart' as img;
+import 'package:file_picker/file_picker.dart';
 
 const String cameraSvg ='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="24" height="24" fill="none"/><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2"/><path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></g></svg>';
 
@@ -52,7 +56,6 @@ String? extractVolume(String text) {
   return volume;
 }
 
-
 class MaybeTTN {
   String? name;
   String? number;
@@ -72,10 +75,14 @@ class TTNRecord {
   final String name;
   final String number;
   final String volume;
+  final String unit;
+  final List<PlatformFile> attachments;
   const TTNRecord({
-    required this.name, 
-    required this.number, 
-    required this.volume
+    required this.name,
+    required this.number,
+    required this.volume,
+    required this.unit,
+    required this.attachments,
   });
 }
 
@@ -100,7 +107,25 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _volumeController = TextEditingController();
   final TextEditingController _countController = TextEditingController();
-  
+
+  List<PlatformFile> attachments = [];
+  String? _selectedUnit;
+
+  // Список единиц измерения
+  final List<String> _units = [
+    'шт',
+    'кг',
+    'т',
+    'м',
+    'м²',
+    'м³',
+    'л',
+    'упак.',
+    'рулон',
+    'плита',
+    'Другое'
+  ];
+
   Future<bool> _requestCameraPermission() async {
     var status = await Permission.camera.status;
     if (!status.isGranted) {
@@ -157,7 +182,7 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
       setState(() {
         _maybeTTN.name = v.name ?? _maybeTTN.name;
         _maybeTTN.number = v.number ?? _maybeTTN.number;
-        _maybeTTN.volume = v.volume ?? _maybeTTN.volume;  
+        _maybeTTN.volume = v.volume ?? _maybeTTN.volume;
         log("OCR: Extracted name: ${_maybeTTN.name}");
         log("OCR: Extracted number: ${_maybeTTN.number}");
         log("OCR: Extracted volume: ${_maybeTTN.volume}");
@@ -172,6 +197,158 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
     return;
   }
 
+  // Методы для работы с вложениями
+  Future<void> _pickFiles() async {
+    final files = await FileUtils.pickFiles(context: context);
+    if (files != null && files.isNotEmpty) {
+      setState(() {
+        attachments.addAll(files);
+      });
+      FileUtils.showSuccessSnackbar('Файлы добавлены', context);
+    }
+  }
+
+  Future<void> _pickImages() async {
+    final images = await FileUtils.pickImages(context: context);
+    if (images != null && images.isNotEmpty) {
+      setState(() {
+        attachments.addAll(images);
+      });
+      FileUtils.showSuccessSnackbar('Фото добавлены', context);
+    }
+  }
+
+  void _openAddAttachmentMenu(BuildContext context) {
+    showBlurBottomSheet(
+      context: context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.attach_file),
+            title: const Text('Добавить файл'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _pickFiles();
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.photo),
+            title: const Text('Добавить фото'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _pickImages();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Виджет для отображения вложений
+  Widget _buildAttachmentsSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                "Вложения",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+              if (attachments.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Text(
+                  '(${attachments.length})',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (attachments.isEmpty)
+            Text(
+              "Документы, фото и другие файлы",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            )
+          else
+            Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.3,
+              ),
+              child: SingleChildScrollView(
+                child: Wrap(
+                  alignment: WrapAlignment.start,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: attachments.map((file) {
+                    return Chip(
+                      avatar: FileUtils.getFileIcon(file.extension ?? ''),
+                      label: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            file.name,
+                            style: const TextStyle(fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            FileUtils.formatFileSize(file.size),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      onDeleted: () {
+                        setState(() {
+                          attachments.remove(file);
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -180,93 +357,275 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
 
   @override
   Widget build(BuildContext ctx) {
-    return _inCamera ? 
+    return _inCamera ?
     _isCameraInitialized ?
     _cameraScan(ctx) : _cameraNotInitialized(ctx) : _TTNEditor(ctx);
   }
+
   Widget _cameraScan(BuildContext ctx) {
     final size = MediaQuery.of(context).size;
     final isPortrait = size.height >= size.width;
 
     return Scaffold(
       appBar: BaseHeader(
-        title: "Распознать", 
-        subtitle: "ТНН",
+        title: "Распознать ТТН",
+        subtitle: "Наведите камеру на документ",
         onBack: () => Navigator.pop(context),
       ),
       backgroundColor: Colors.black,
       body: Stack(
         children: [
           Center(
-            child: CameraPreview(_cameraController!)
+              child: CameraPreview(_cameraController!)
           ),
+
+          // Кнопка съемки
           Positioned(
-            // todo!: fix non-portrait btn
             top: isPortrait ? null : (size.height / 2 - 28),
             bottom: isPortrait ? 48 : null,
             left: isPortrait ? (size.width / 2 - 28) : null,
             right: isPortrait ? null : 48,
-            child: FloatingActionButton(
-              backgroundColor: Colors.grey.shade300,
-              onPressed: _isProcessing ? null : () => _takePictureAndMerge(),
-              shape: const CircleBorder(),
-              child: Iconify(
-                cameraSvg,
-                color: Colors.grey.shade700,
-                size: 32,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: FloatingActionButton(
+                backgroundColor: Colors.white,
+                onPressed: _isProcessing ? null : () => _takePictureAndMerge(),
+                shape: const CircleBorder(),
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.grey.shade400,
+                      width: 2,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.camera_alt,
+                    color: Colors.grey.shade700,
+                    size: 28,
+                  ),
+                ),
               ),
             ),
           ),
-          _isProcessing ? const Center(
-            child: CircularProgressIndicator(),
-          ) : const SizedBox(),
+
+          // Индикатор обработки
+          if (_isProcessing)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.7),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(FoxThemeButtonActiveBackground),
+                              strokeWidth: 3,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Обработка изображения...",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
+
   Widget _cameraNotInitialized(BuildContext ctx){
     return Scaffold(
       appBar: BaseHeader(
-        title: "Распознать", 
-        subtitle: "ТНН",
+        title: "Распознать ТТН",
+        subtitle: "Сканирование документа",
         onBack: () => Navigator.pop(context),
       ),
-      body: Center(child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text('Разрешите доступ к камере для распознавания'),
-          const Text('Пожалуйста 🙏'),
-          TextButton(
-            onPressed: () => {
-              _initCamera()
-            }, 
-            child: const Text('Разрешить'),
+      body: Container(
+        padding: const EdgeInsets.all(32),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Иконка камеры
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.grey.shade300,
+                    width: 2,
+                  ),
+                ),
+                child: Icon(
+                  Icons.camera_alt_outlined,
+                  size: 40,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Текст
+              Text(
+                'Доступ к камере',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              Text(
+                'Для распознавания ТТН необходимо разрешить доступ к камере',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Кнопки
+              Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _initCamera,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: FoxThemeButtonActiveBackground,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: const Text(
+                        'Разрешить доступ',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setState(() {
+                          _inCamera = false;
+                        });
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: FoxThemeButtonActiveBackground,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(
+                          color: FoxThemeButtonActiveBackground,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Text(
+                        'Ввести вручную',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => {
-              setState(() {
-                _inCamera = false;
-              })
-            }, 
-            child: const Text('Ввести вручную'),
-          ),
-        ],
-      )),
+        ),
+      ),
     );
   }
-  
-  Widget _buildInput(BuildContext ctx, TextEditingController controller){
+
+  Widget _buildInput(BuildContext ctx, TextEditingController controller, {String? hintText}){
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
+        hintText: hintText,
+        filled: true,
+        fillColor: Colors.grey[50],
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.grey.shade300,
+            width: 1,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.grey.shade300,
+            width: 1,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: FoxThemeButtonActiveBackground,
+            width: 2,
+          ),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
+          horizontal: 12,
           vertical: 12,
         ),
+      ),
+      style: TextStyle(
+        fontSize: 16,
+        color: Colors.grey[800],
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -281,13 +640,13 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
   Widget _TTNEditor(BuildContext ctx){
     return Scaffold(
       appBar: BaseHeader(
-        title: "Редактировать", 
-        subtitle: "ТНН",
+        title: "Редактирование ТТН",
+        subtitle: "Введите данные вручную",
         onBack: () => Navigator.pop(context),
       ),
       body: Form(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
               Expanded(
@@ -295,44 +654,219 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionTitle("Наименование"),
-                      const SizedBox(height: 8),
-                      _buildInput(ctx, _nameController),
-                      _buildSectionTitle("Количество"),
-                      const SizedBox(height: 8),
-                      _buildInput(ctx, _countController),
-                      _buildSectionTitle("Объем"),
-                      const SizedBox(height: 8),
-                      _buildInput(ctx, _volumeController),
+                      // Карточка с формой
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionTitle("Наименование товара"),
+                            const SizedBox(height: 8),
+                            _buildInput(ctx, _nameController, hintText: "Введите наименование"),
+                            const SizedBox(height: 20),
+
+                            // Количество и единицы измерения в одной строке
+                            Row(
+                              children: [
+                                // Поле количества
+                                Expanded(
+                                  flex: 4,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildSectionTitle("Количество"),
+                                      const SizedBox(height: 8),
+                                      _buildInput(ctx, _countController, hintText: "Введите количество"),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                // Селектор единиц измерения
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildSectionTitle("Единицы"),
+                                      const SizedBox(height: 8),
+                                      DropdownButtonFormField<String>(
+                                        value: _selectedUnit,
+                                        decoration: InputDecoration(
+                                          filled: true,
+                                          fillColor: Colors.grey[50],
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                              color: Colors.grey.shade300,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                              color: Colors.grey.shade300,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                              color: FoxThemeButtonActiveBackground,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          contentPadding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 16,
+                                          ),
+                                        ),
+                                        hint: Text(
+                                          "",
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        items: _units.map((String unit) {
+                                          return DropdownMenuItem<String>(
+                                            value: unit,
+                                            child: Text(
+                                              unit,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.grey[800],
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: (String? newValue) {
+                                          setState(() {
+                                            _selectedUnit = newValue;
+                                          });
+                                        },
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Выберите единицу';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+
+                            _buildSectionTitle("Объем"),
+                            const SizedBox(height: 8),
+                            _buildInput(ctx, _volumeController, hintText: "Введите объем"),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Раздел вложений
+                      _buildAttachmentsSection(),
+
+                      // Подсказка
+                      Container(
+                        margin: const EdgeInsets.only(top: 20),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.blue.shade100,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.blue.shade600,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                "Вы можете отсканировать ТТН для автоматического заполнения полей",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.blue.shade800,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
 
+              // Кнопки действий
               Container(
-                height: 50,
+                padding: const EdgeInsets.only(top: 20),
                 child: Row(
                   children: [
+                    // Кнопка сохранения
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () => {
-                          //todo!: CHECK THAT ALL FIELDS FILLED
-                          if (widget.onSubmit != null)
-                            widget.onSubmit!(
-                              TTNRecord(name: _nameController.text, number: _countController.text, volume: _volumeController.text)
-                            )
+                        onPressed: () {
+                          if (_nameController.text.isEmpty ||
+                              _countController.text.isEmpty ||
+                              _volumeController.text.isEmpty ||
+                              _selectedUnit == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Заполните все обязательные поля'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          final record = TTNRecord(
+                            name: _nameController.text,
+                            number: _countController.text,
+                            volume: _volumeController.text,
+                            unit: _selectedUnit!,
+                            attachments: attachments,
+                          );
+
+                          widget.onSubmit?.call(record);
+                          Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: FoxThemeButtonActiveBackground,
                           foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(50),
+                          minimumSize: const Size.fromHeight(56),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           elevation: 2,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: const Text(
-                          'Сохранить',
+                          'Сохранить ТТН',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -340,30 +874,56 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => {
+                    const SizedBox(width: 12),
+
+                    // Кнопка добавления вложений
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: FoxThemeButtonActiveBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        onPressed: () => _openAddAttachmentMenu(context),
+                        icon: const Icon(Icons.add, color: Colors.white, size: 24),
+                        tooltip: 'Добавить вложения',
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    // Кнопка камеры
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 1,
+                        ),
+                      ),
+                      child: IconButton(
+                        onPressed: () {
                           setState(() {
                             _inCamera = true;
-                          })
+                          });
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: FoxThemeButtonActiveBackground,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
+                        icon: Icon(
+                          Icons.camera_alt,
+                          color: Colors.grey.shade700,
+                          size: 24,
                         ),
-                        child: const Text(
-                          'Сканировать',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        tooltip: 'Сканировать',
                       ),
                     ),
                   ],
@@ -377,14 +937,35 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Colors.black87,
-      ),
+    return Row(
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[800],
+          ),
+        ),
+        const SizedBox(width: 4),
+        const Text(
+          '*',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.red,
+          ),
+        ),
+      ],
     );
   }
 
+  @override
+  void dispose() {
+    _cameraController?.dispose();
+    _nameController.dispose();
+    _volumeController.dispose();
+    _countController.dispose();
+    super.dispose();
+  }
 }

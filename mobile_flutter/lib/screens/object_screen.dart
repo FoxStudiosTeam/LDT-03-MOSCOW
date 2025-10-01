@@ -134,7 +134,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.file_open),
-              title: const Text('Отчет'),
+              title: const Text('Отчеты'),
               onTap: () {
                 Navigator.push(
                   ctx,
@@ -158,6 +158,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 Navigator.pop(ctx);
               },
             ),
+            const Divider(height: 1),
             if (_role == Role.INSPECTOR || _role == Role.ADMIN)
               const Divider(height: 1),
               ListTile(

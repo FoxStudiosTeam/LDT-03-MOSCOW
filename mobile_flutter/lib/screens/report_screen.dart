@@ -3,13 +3,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/reports/reports_provider.dart';
+import 'package:mobile_flutter/screens/create_report_screen.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/report_card.dart';
-
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -131,8 +131,10 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   void _handleCreateReport() {
-    // Создание отчета
-    // TODO: Реализовать логику создания отчета
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ReportCreationScreen(di: widget.di, address: widget.projectTitle)),
+    );
   }
 
   @override
