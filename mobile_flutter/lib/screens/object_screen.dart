@@ -71,6 +71,12 @@ class _ObjectScreenState extends State<ObjectScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadAuth();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final Color textColor = Colors.black;
     final Color pointBlockColor = Colors.grey.shade200;
@@ -158,19 +164,25 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 Navigator.pop(ctx);
               },
             ),
-            if (_role == Role.INSPECTOR || _role == Role.ADMIN)
-              const Divider(height: 1),
-              ListTile(
-                titleAlignment: ListTileTitleAlignment.center,
-                leading: const Icon(Icons.file_upload),
-                title: const Text('Подтвердить активацию'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => ChecklistActivationScreen(di: widget.di, address: widget.address)),
-                  );
-                },
-              )
+            if ((_role == Role.INSPECTOR || _role == Role.ADMIN) && widget.status == ProjectStatus.PRE_ACTIVE)
+              ...[
+                const Divider(height: 1),
+                ListTile(
+                  titleAlignment: ListTileTitleAlignment.center,
+                  leading: const Icon(Icons.file_upload),
+                  title: const Text('Подтвердить активацию'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ChecklistActivationScreen(
+                        di: widget.di, 
+                        address: widget.address, 
+                        projectUuid: widget.projectUuid,  
+                      )),
+                    );
+                  },
+                )
+              ]
           ],
         ),
       );

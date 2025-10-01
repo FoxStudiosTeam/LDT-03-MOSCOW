@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,28 +13,119 @@ import 'package:mobile_flutter/utils/style_utils.dart';
 class ChecklistActivationScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String address;
+  final String projectUuid;
 
-  const ChecklistActivationScreen({super.key, required this.di, required this.address});
+  const ChecklistActivationScreen({super.key, required this.di, required this.address, required this.projectUuid});
 
   @override
   State<ChecklistActivationScreen> createState() => _ChecklistActivationScreenState();
 }
 
-class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
+class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> { 
   List<ChecklistItem> checklistItems = [
     ChecklistItem(
+      number: "1",
+      header: "Наличие разрешительной, организационно-технологической, рабочей документации.",
+      title: "",
+      subtitle: "",
+      status: ChecklistStatus.notRequired,
+      comment: "",
+    ),
+    ChecklistItem(
       number: "1.1",
-      title: "Оформление наряд-допуска на безопасное проведение работ в местах охранной зоны:",
+      title: "Наличие приказа на ответственное лицо, осуществляющего строительство (производство работ).",
+      subtitle: "(п. 5.3. СП 48.13330.2019. Изм. №1. Организация строительства)",
       status: ChecklistStatus.notSelected,
       comment: "",
     ),
     ChecklistItem(
       number: "1.2",
-      title: "Оформление наряд-допуска на безопасное проведение работ в местах охранной зоны:",
+      title: "Наличие приказа на ответственное лицо, осуществляющее строительный контроль (с указанием идентификационного номера в НРС в области строительства).",
+      subtitle: "(п. 5.3. СП 48.13330.2019. Изм. №1. Организация строительства)",
+      status: ChecklistStatus.notSelected,
+      comment: "",
+    ),
+    ChecklistItem(
+      number: "1.3",
+      title: "Наличие приказа на ответственное лицо, осуществляющее строительный контроль (с указанием идентификационного номера в НРС в области строительства).",
+      subtitle: "(п. 5.3. СП 48.13330.2019. Изм. №1. Организация строительства)",
+      status: ChecklistStatus.notSelected,
+      comment: "",
+    ),
+    ChecklistItem(
+      number: "1.4",
+      title: "Наличие проектной документации со штампом «В производство работ».",
+      subtitle: "(п. 5.5. СП 48.13330.2019. Изм. №1. Организация строительства)",
+      status: ChecklistStatus.notSelected,
+      comment: "",
+    ),
+    ChecklistItem(
+      number: "1.5",
+      title: "Наличие проекта производства работ (утвержденного руководителем подрядной организации, согласованного Заказчиком, проектировщиком, эксплуатирующей организацией).",
+      subtitle: "(п. 6.4., п. 6.7., п. 6.9. СП 48.13330.2019. Изм. №1. Организация строительства)",
+      status: ChecklistStatus.notSelected,
+      comment: "",
+    ),
+
+    ChecklistItem(
+      number: "2",
+      header: "Инженерная подготовка строительной площадки.",
+      title: "",
+      subtitle: "",
+      status: ChecklistStatus.notRequired,
+      comment: "",
+    ),
+    ChecklistItem(
+      number: "2.1",
+      title: "Наличие акта геодезической разбивочной основы, принятых знаков (реперов).",
+      subtitle: "(п. 7.2. СП 48.13330.2019. Изм. №1. Организация строительства)",
+      status: ChecklistStatus.notSelected,
+      comment: "",
+    ),
+    ChecklistItem(
+      number: "2.2",
+      title: "Наличие генерального плана (ситуационного плана).",
+      subtitle: "(п. 7.6. СП 48.13330.2019. Изм. №1. Организация строительства)",
+      status: ChecklistStatus.notSelected,
+      comment: "",
+    ),
+    ChecklistItem(
+      number: "2.3",
+      title: "Фактическое размещение временной инженерной и бытовой инфраструктуры площадки (включая стоянку автотранспорта) согласно проекту организации. Соответствие размещённых временных инфраструктуры требованиям электробезопасности, пожарных, санитарно-эпидемиологических норм и правил.",
+      subtitle: "(п. 7.10., п. 7.34. СП 48.13330.2019. Изм. №1. Организация строительства)",
+      status: ChecklistStatus.notSelected,
+      comment: "",
+    ),
+    ChecklistItem(
+      number: "2.4",
+      title: "Наличие пунктов очистки или мойки колес транспортных средств на выездах со строительной площадки.",
+      subtitle: "(п. 7.13. СП 48.13330.2019. Изм. №1. Организация строительства)",
+      status: ChecklistStatus.notSelected,
+      comment: "",
+    ),
+    ChecklistItem(
+      number: "2.5",
+      title: "Наличие бункеров или контейнеров для сбора отдельно бытового и отдельно строительного мусора.",
+      subtitle: "(п. 7.13. СП 48.13330.2019. Изм. №1. Организация строительства)",
+      status: ChecklistStatus.notSelected,
+      comment: "",
+    ),
+    ChecklistItem(
+      number: "2.6",
+      title: "Наличие информационных щитов (знаков) с указанием: \n- наименование объекта; \n- наименование Застройщика (технического Заказчика); \n- наименование подрядной организации; \n- наименование проектной организации; \n- сроки строительства; \n- контактные телефоны ответственных по приказу лиц по организации.",
+      subtitle: "(п. 7.13. СП 48.13330.2019. Изм. №1. Организация строительства)",
+      status: ChecklistStatus.notSelected,
+      comment: "",
+    ),
+    ChecklistItem(
+      number: "2.7",
+      title: "Наличие стендов пожарной безопасности с указанием на схеме мест источников воды, средств пожаротушения.",
+      subtitle: "(п. 7.13. СП 48.13330.2019. Изм. №1. Организация строительства)",
       status: ChecklistStatus.notSelected,
       comment: "",
     ),
   ];
+
 
   List<String> attachments = [];
 
@@ -47,49 +140,6 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Шапка с кнопкой назад и информацией
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Чек-лист форма 1",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "ул. Флотская д, 54, 58к1",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 48), // Для балансировки с кнопкой назад
-              ],
-            ),
-          ),
-
-          const Divider(height: 1, color: Colors.grey),
-
           // Список пунктов чек-листа
           Expanded(
             child: ListView.builder(
@@ -105,14 +155,30 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
           if (attachments.isNotEmpty) _buildAttachmentsSection(),
 
           // Нижняя панель с кнопками
-          Container(
+          Padding(padding: EdgeInsetsGeometry.all(16),
+            child: Container(
             height: 50,
             child: Row(
               children: [
                 // Кнопка сохранения
                 Expanded(
                   child: ElevatedButton(
-                    onPressed:() {},
+                    onPressed:() {
+                      // Navigator.pop(context);
+                      for (var v in checklistItems) {
+                        if (v.status == ChecklistStatus.notSelected || v.status == ChecklistStatus.no) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Все поля должны быть ДА или НЕ ТРЕБУЕТСЯ!"),
+                              duration: Duration(seconds: 2),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+                      }
+                      // TODO: ACTIVATE OBJECT AND BACK
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: FoxThemeButtonActiveBackground,
                       foregroundColor: Colors.white,
@@ -123,7 +189,7 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
                       elevation: 2,
                     ),
                     child: const Text(
-                      'Обновить',
+                      'Подтвердить',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -154,14 +220,42 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
                 ),
               ],
             ),
-          ),
+          ),),
         ],
       ),
     );
   }
 
+
+
   Widget _buildChecklistItem(ChecklistItem item, int index) {
-    return Container(
+    
+    
+    return item.header != null ? 
+      Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+        ),
+        child: RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 22,
+                color: Colors.black,
+                fontWeight: FontWeight.w500
+              ),
+              children: [
+                TextSpan(
+                  text: "${item.number}.  ",
+                  // style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: item.header),
+              ],
+            ),
+          ),
+      )
+    : Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -189,10 +283,14 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
               ),
               children: [
                 TextSpan(
-                  text: "${item.number} ",
+                  text: "${item.number}  ",
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 TextSpan(text: item.title),
+                TextSpan(
+                  text: "\n${item.subtitle}",
+                  style: const TextStyle(fontWeight: FontWeight.normal, fontStyle: FontStyle.italic),
+                )
               ],
             ),
           ),
@@ -281,7 +379,7 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
           child: Text(
             text,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
             textAlign: TextAlign.center,
@@ -327,14 +425,18 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
 }
 
 class ChecklistItem {
+  final String? header;
   final String number;
   final String title;
+  final String subtitle;
   final ChecklistStatus status;
   final String comment;
 
   ChecklistItem({
+    this.header,
     required this.number,
     required this.title,
+    required this.subtitle,
     required this.status,
     required this.comment,
   });
@@ -346,8 +448,10 @@ class ChecklistItem {
     String? comment,
   }) {
     return ChecklistItem(
+      header: header,
       number: number ?? this.number,
       title: title ?? this.title,
+      subtitle: subtitle,
       status: status ?? this.status,
       comment: comment ?? this.comment,
     );

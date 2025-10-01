@@ -146,13 +146,18 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  SizedBox.fromSize(size: const Size(10, 0)),
                   Expanded(
                     child: Text(
                       "Адрес: ${widget.title}",
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium
-                          ?.copyWith(color: textAndIconColor),
+                          ?.copyWith(
+                            color: textAndIconColor, 
+                            fontSize: 16, 
+                            fontWeight: FontWeight.bold
+                          ),
                     ),
                   ),
                   TextButton(
@@ -173,26 +178,34 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              widget.status.toRenderingString(),
-              const SizedBox(height: 8),
-
-              // Анимированная область раскрытия
-              AnimatedBuilder(
-                animation: _animationController,
-                builder: (context, child) {
-                  return SizeTransition(
-                    sizeFactor: _heightAnimation,
-                    axisAlignment: -1.0,
-                    child: FadeTransition(
-                      opacity: _opacityAnimation,
-                      child: child,
-                    ),
-                  );
-                },
-                child: _buildExpandedContent(textAndIconColor),
+              Row(
+                children: [
+                  SizedBox.fromSize(size: const Size(10, 0)),
+                  widget.status.toRenderingString(),
+                ],
               ),
-            ],
+              const SizedBox(height: 8),
+              // Row(
+              //   children: [
+              //     SizedBox.fromSize(size: const Size(10, 0)),
+                  // Анимированная область раскрытия
+                  AnimatedBuilder(
+                    animation: _animationController,
+                    builder: (context, child) {
+                      return SizeTransition(
+                        sizeFactor: _heightAnimation,
+                        axisAlignment: -1.0,
+                        child: FadeTransition(
+                          opacity: _opacityAnimation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _buildExpandedContent(textAndIconColor),
+                  ),
+                ],
+              // ),
+            // ],
           ),
         ),
       ),
@@ -203,9 +216,9 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Заказчик: ${widget.customer}"),
-        Text("Подрядчик: ${widget.foreman}"),
-        Text("Ответственный инспектор: ${widget.inspector}"),
+        Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Заказчик: ${widget.customer}",)),
+        Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Подрядчик: ${widget.foreman}",)),
+        Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Ответственный инспектор: ${widget.inspector}",)),
         // Анимированная карта
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
