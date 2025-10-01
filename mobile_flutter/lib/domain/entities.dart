@@ -372,6 +372,19 @@ class PunishmentItem {
   };
 }
 
+class UuidResponse {
+  final String uuid;
+
+  UuidResponse({
+    required this.uuid,
+  });
+
+  factory UuidResponse.fromJson(Map<String, dynamic> json) {
+    return UuidResponse(
+        uuid: json['uuid']);
+  }
+}
+
 class Attachment {
   final String uuid;
   final String baseEntityUuid;
@@ -627,4 +640,140 @@ class ReportAndAttachments {
       "attachments" : attachments.map((e) => e.toJson()).toList()
     };
   }
+}
+
+class PunishmentCreateRequest {
+  final String project;
+  final String? customNumber;
+  final List<InsPunishmentItemCreateRequest> items;
+
+  PunishmentCreateRequest({
+    required this.project,
+    this.customNumber,
+    required this.items,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'project': project,
+    'custom_number': customNumber,
+    'items': items.map((e) => e.toJson()).toList(),
+  };
+}
+
+class InsPunishmentItemCreateRequest {
+  final DateTime punishDatetime;
+  final int punishmentItemStatus;
+
+  InsPunishmentItemCreateRequest({
+    required this.punishDatetime,
+    required this.punishmentItemStatus,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'punish_datetime': punishDatetime.toIso8601String(),
+    'punishment_item_status': punishmentItemStatus,
+  };
+}
+
+class PunishmentUpdRequest {
+  final String uuid;
+  final String? project;
+  final String? customNumber;
+  final List<PunishmentStatusUpdRequest>? items;
+
+  PunishmentUpdRequest({
+    required this.uuid,
+    this.project,
+    this.customNumber,
+    this.items,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'uuid': uuid,
+    'project': project,
+    'custom_number': customNumber,
+    'items': items?.map((e) => e.toJson()).toList(),
+  };
+}
+
+class PunishmentStatusUpdRequest {
+  final int? punishmentItemStatus;
+
+  PunishmentStatusUpdRequest({this.punishmentItemStatus});
+
+  Map<String, dynamic> toJson() => {
+    'punishment_item_status': punishmentItemStatus,
+  };
+}
+
+class PunishmentItemCreateRequest {
+  final String punishment;
+  final String title;
+  final DateTime punishDatetime;
+  final DateTime correctionDatePlan;
+  final int punishmentItemStatus;
+  final String place;
+  final String? comment;
+  final String? regulationDoc;
+  final bool isSuspended;
+
+  PunishmentItemCreateRequest({
+    required this.punishment,
+    required this.title,
+    required this.punishDatetime,
+    required this.correctionDatePlan,
+    required this.punishmentItemStatus,
+    required this.place,
+    this.comment,
+    this.regulationDoc,
+    required this.isSuspended,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'punishment': punishment,
+    'title': title,
+    'punish_datetime': punishDatetime.toIso8601String(),
+    'correction_date_plan': correctionDatePlan.toIso8601String().split("T").first,
+    'punishment_item_status': punishmentItemStatus,
+    'place': place,
+    'comment': comment,
+    'regulation_doc': regulationDoc,
+    'is_suspended': isSuspended,
+  };
+}
+
+class PunishmentItemUpdRequest {
+  final String uuid;
+  final String? title;
+  final String? punishment;
+  final bool? isSuspended;
+  final int? punishmentItemStatus;
+  final DateTime? correctionDateFact;
+  final String? correctionDateInfo;
+  final String? comment;
+  final String? regulationDoc;
+
+  PunishmentItemUpdRequest({
+    required this.uuid,
+    this.title,
+    this.punishment,
+    this.isSuspended,
+    this.punishmentItemStatus,
+    this.correctionDateFact,
+    this.correctionDateInfo,
+    this.comment,
+    this.regulationDoc,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'uuid': uuid,
+    'title': title,
+    'punishment': punishment,
+    'is_suspended': isSuspended,
+    'punishment_item_status': punishmentItemStatus,
+    'correction_date_fact': correctionDateFact?.toIso8601String().split("T").first,
+    'correction_date_info': correctionDateInfo,
+    'comment': comment,
+    'regulation_doc': regulationDoc,
+  };
 }

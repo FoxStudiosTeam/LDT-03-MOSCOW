@@ -41,7 +41,7 @@ class PunishmentProvider implements IPunishmentProvider {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $_accessToken',
       },
-    ).timeout(Duration(seconds: 5),onTimeout: () {
+    ).timeout(Duration(seconds: 20),onTimeout: () {
       throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
     });
 
@@ -73,7 +73,7 @@ class PunishmentProvider implements IPunishmentProvider {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $_accessToken',
       },
-    ).timeout(Duration(seconds: 5),onTimeout: () {
+    ).timeout(Duration(seconds: 20),onTimeout: () {
       throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
     });
 
@@ -106,7 +106,7 @@ class PunishmentProvider implements IPunishmentProvider {
         'Authorization': 'Bearer $_accessToken',
         'Content-Type': 'application/json',
       },
-    ).timeout(Duration(seconds: 5),onTimeout: () {
+    ).timeout(Duration(seconds: 20),onTimeout: () {
       throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
     });
 
@@ -138,7 +138,7 @@ class PunishmentProvider implements IPunishmentProvider {
         'Authorization': 'Bearer $_accessToken',
         'Content-Type': 'application/json',
       },
-    ).timeout(Duration(seconds: 5),onTimeout: () {
+    ).timeout(Duration(seconds: 20),onTimeout: () {
       throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
     });
 
@@ -260,6 +260,160 @@ class SmartPunishmentProvider implements IPunishmentProvider {
       return result;
     } else {
       return offline.get_punishment_items(punishment);
+    }
+  }
+
+  Future<UuidResponse?> create_punishment(PunishmentCreateRequest punishment) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final uri = remote.apiRoot.resolve('/api/punishment/create_punishment');
+      final _accessToken = await remote.authStorageProvider.getAccessToken();
+
+      final response = await http.post(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $_accessToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(punishment.toJson())
+      ).timeout(Duration(seconds: 20), onTimeout: () {
+        throw TimeoutException(
+            'Request timed out after ${Duration(seconds: 20)} ms');
+      });
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return UuidResponse.fromJson(json);
+      } else {
+        try {
+          final Map<String, dynamic> errorJson = jsonDecode(response.body);
+          final error = ErrorMessage.fromJson(errorJson);
+          throw Exception("Error ${response.statusCode}: ${error.message}");
+        } catch (e) {
+          throw Exception("Error ${response.statusCode}: ${response.body}");
+        }
+      }
+    }
+    else {
+      //TODO оффлайн функции
+    }
+  }
+
+  Future<UuidResponse?> create_punishment_item(PunishmentItemCreateRequest punishment_item) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final uri = remote.apiRoot.resolve(
+          '/api/punishment/create_punishment_item');
+      final _accessToken = await remote.authStorageProvider.getAccessToken();
+
+      final response = await http.post(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $_accessToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(punishment_item.toJson())
+      ).timeout(Duration(seconds: 20), onTimeout: () {
+        throw TimeoutException(
+            'Request timed out after ${Duration(seconds: 20)} ms');
+      });
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return UuidResponse.fromJson(json);
+      } else {
+        try {
+          final Map<String, dynamic> errorJson = jsonDecode(response.body);
+          final error = ErrorMessage.fromJson(errorJson);
+          throw Exception("Error ${response.statusCode}: ${error.message}");
+        } catch (e) {
+          throw Exception("Error ${response.statusCode}: ${response.body}");
+        }
+      }
+    }
+    else {
+      //TODO оффлайн функции
+    }
+  }
+
+  Future<UuidResponse?> update_punishment(PunishmentUpdRequest punishment) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final uri = remote.apiRoot.resolve('/api/punishment/update_punishment');
+      final _accessToken = await remote.authStorageProvider.getAccessToken();
+
+      final response = await http.put(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $_accessToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(punishment.toJson())
+      ).timeout(Duration(seconds: 20), onTimeout: () {
+        throw TimeoutException(
+            'Request timed out after ${Duration(seconds: 20)} ms');
+      });
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return UuidResponse.fromJson(json);
+      } else {
+        try {
+          final Map<String, dynamic> errorJson = jsonDecode(response.body);
+          final error = ErrorMessage.fromJson(errorJson);
+          throw Exception("Error ${response.statusCode}: ${error.message}");
+        } catch (e) {
+          throw Exception("Error ${response.statusCode}: ${response.body}");
+        }
+      }
+    }
+    else {
+      //TODO оффлайн функции
+    }
+  }
+
+  Future<UuidResponse?> update_punishment_item(PunishmentItemUpdRequest punishment_item) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final uri = remote.apiRoot.resolve(
+          '/api/punishment/update_punishment_item');
+      final _accessToken = await remote.authStorageProvider.getAccessToken();
+
+      final response = await http.post(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $_accessToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(punishment_item.toJson())
+      ).timeout(Duration(seconds: 20), onTimeout: () {
+        throw TimeoutException(
+            'Request timed out after ${Duration(seconds: 20)} ms');
+      });
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return UuidResponse.fromJson(json);
+      } else {
+        try {
+          final Map<String, dynamic> errorJson = jsonDecode(response.body);
+          final error = ErrorMessage.fromJson(errorJson);
+          throw Exception("Error ${response.statusCode}: ${error.message}");
+        } catch (e) {
+          throw Exception("Error ${response.statusCode}: ${response.body}");
+        }
+      }
+    }
+    else {
+      //TODO оффлайн функции
     }
   }
 }
