@@ -511,3 +511,69 @@ class MaterialsAndAttachments {
     );
   }
 }
+
+class Report {
+  final DateTime? checkDate;
+  final int status;
+  final String projectScheduleItem;
+  final String title;
+  final String uuid;
+  final DateTime reportDate;
+
+  Report({
+    required this.title,
+    required this.reportDate,
+    required this.checkDate,
+    required this.projectScheduleItem,
+    required this.status,
+    required this.uuid,
+  });
+
+  factory Report.fromJson(Map<String, dynamic> json) {
+    return Report(
+      checkDate: json['check_date'] != null
+          ? DateTime.parse(json['check_date'])
+          : null,
+      status: json['status'] as int,
+      projectScheduleItem: json['project_schedule_item'],
+      title: json['title'],
+      uuid: json['uuid'],
+      reportDate: DateTime.parse(json['report_date']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'check_date': checkDate,
+      'status': status,
+      'check_date': checkDate?.toIso8601String()
+        .split('T').first,
+      'report_date' : reportDate.toIso8601String()
+        .split('T').first,
+      'project_schedule_item': projectScheduleItem,
+      'uuid': uuid,
+      'title': title
+    };
+  }
+}
+
+class ReportAndAttachments {
+  final Report report;
+  final List<Attachment> attachments;
+
+  ReportAndAttachments({
+    required this.report,
+    required this.attachments
+  });
+
+  factory ReportAndAttachments.fromJson(Map<String, dynamic> json) {
+    return ReportAndAttachments(
+      report: Report.fromJson(
+        json['report'] as Map<String, dynamic>,
+      ),
+      attachments: (json['attachments'] as List<dynamic>? ?? [])
+          .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}

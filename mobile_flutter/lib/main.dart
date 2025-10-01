@@ -8,6 +8,7 @@ import 'package:mobile_flutter/materials/materials_provider.dart';
 import 'package:mobile_flutter/object/object_storage_provider.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
 import 'package:mobile_flutter/punishment/punishment_storage_provider.dart';
+import 'package:mobile_flutter/reports/reports_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/screens/objects_screen.dart';
 import 'package:mobile_flutter/screens/punishments_screen.dart';
@@ -39,6 +40,11 @@ void main() async {
   builder.registerDependency(IMaterialsProviderDIToken, MaterialsProvider(
     apiRoot: builder.getDependency(IAPIRootURI),
     authStorageProvider: builder.getDependency(IAuthStorageProviderDIToken)
+  ));
+
+  builder.registerDependency(IReportsProviderDIToken, ReportsProvider(
+      apiRoot: builder.getDependency(IAPIRootURI),
+      authStorageProvider: builder.getDependency(IAuthStorageProviderDIToken)
   ));
 
   builder.registerDependency(IObjectsProviderDIToken, SmartObjectsProvider(remote: onlineObjectProvider, offline: offlineObjectProvider, storage: objectStorageProvider));

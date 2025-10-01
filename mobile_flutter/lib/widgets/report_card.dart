@@ -5,21 +5,21 @@ import 'package:mobile_flutter/domain/entities.dart';
 
 import 'blur_menu.dart';
 
-class MaterialCard extends StatelessWidget {
-  final MaterialsAndAttachments data;
+class ReportCard extends StatelessWidget {
+  final ReportAndAttachments data;
   final IDependencyContainer di;
   final Role? role;
-  final Map<int, String> measurements;
+  final Map<int, String> statuses;
 
-  const MaterialCard({
+  const ReportCard({
     super.key,
     required this.data,
     required this.di,
     required this.role,
-    required this.measurements,
+    required this.statuses,
   });
 
-  void _openMaterialMenu(BuildContext context) {
+  void _openReportMenu(BuildContext context) {
     showBlurBottomSheet(
       context: context,
       builder: (ctx) => Column(
@@ -35,54 +35,67 @@ class MaterialCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-
-          (data.attachments.isEmpty)
-          ? const Text("Вложений не обнаружено")
-          : ConstrainedBox (
-            constraints: const BoxConstraints(
-              maxHeight: 300
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: data.attachments.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final att = data.attachments[index];
-                return ListTile(
-                  titleAlignment: ListTileTitleAlignment.center,
-                  leading: const Icon(Icons.download),
-                  title: Text('Скачать ${att.originalFilename}'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _handleDownload(att.uuid);
-                  },
-                );
-              },
-            )
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.attach_file),
+            title: const Text('Вложения'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _handleAttachments();
+            },
           ),
-          if (role == Role.INSPECTOR || role == Role.ADMIN)
-            ListTile(
-              titleAlignment: ListTileTitleAlignment.center,
-              leading: const Icon(Icons.science),
-              title: const Text('Запросить исследование'),
-              onTap: () {
-                Navigator.pop(ctx);
-              },
-            ),
+          const Divider(height: 1),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.check_circle, color: Colors.green),
+            title: const Text('Принять', style: TextStyle(color: Colors.green)),
+            onTap: () {
+              Navigator.pop(ctx);
+              _handleApprove();
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.cancel, color: Colors.red),
+            title: const Text('Отклонить', style: TextStyle(color: Colors.red)),
+            onTap: () {
+              Navigator.pop(ctx);
+              _handleReject();
+            },
+          ),
         ],
       ),
     );
   }
 
-  void _handleDownload(String uuid) {
-    // TODO: Реализовать логику скачивания документа
+  void _handleAttachments() {
+    // Обработка просмотра вложений
+    // TODO: Реализовать логику просмотра вложений
   }
 
-  void _handleRequestResearch(int materialIndex) {
-    // Обработка запроса исследования
-    print("Запросить исследование для: ${data.material.title}");
-    // TODO: Реализовать логику запроса исследования
+  void _handleApprove() {
+    // TODO: Реализовать логику принятия отчета
+  }
+
+  void _handleReject() {
+    // TODO: Реализовать логику отклонения отчета
+  }
+
+  Color _getStatusColor(int status) {
+    switch (status) {
+      case 1:
+        return Colors.orange;
+      case 0:
+        return Colors.green;
+      case 2:
+        return Colors.red;
+      default: return Colors.grey;
+    }
+  }
+
+  String _getStatusText(int status) {
+    return statuses[status] ?? "Unknown status";
   }
 
   Widget _buildInfoRow({
@@ -130,13 +143,12 @@ class MaterialCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Заголовок и кнопка меню
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
-                    data.material.title,
+                    data.report.title,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -147,32 +159,36 @@ class MaterialCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => _openMaterialMenu(context),
+                  onPressed: () => _openReportMenu(context),
                   icon: SvgPicture.asset(
                     'assets/icons/menu-kebab.svg',
-                    width: 24,
-                    height: 24,
+                    width: 20,
+                    height: 20,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
 
-            // Объем
+            // Дата создания
             _buildInfoRow(
-              icon: Icons.scale,
-              label: "Объем:",
-              value: "${data.material.volume.toString()} ${measurements[data.material.measurement] ?? "у.е."}",
+              icon: Icons.calendar_today,
+              label: "Дата создания:",
+              value: "${data.report.reportDate.day}."
+                  "${data.report.reportDate.month}."
+                  "${data.report.reportDate.year}.",
             ),
             const SizedBox(height: 8),
 
-            // Дата поставки
+            // Дата проверки
             _buildInfoRow(
-              icon: Icons.calendar_today,
-              label: "Дата поставки:",
-              value: "${data.material.deliveryDate.day}."
-                  "${data.material.deliveryDate.month}."
-                  "${data.material.deliveryDate.year}",
+              icon: Icons.verified,
+              label: "Дата проверки:",
+              value: data.report.checkDate != null
+                  ? "${data.report.reportDate.day}."
+                    "${data.report.reportDate.month}."
+                    "${data.report.reportDate.year}."
+                  : "Не проверено",
             ),
             const SizedBox(height: 8),
 
@@ -181,15 +197,15 @@ class MaterialCard extends StatelessWidget {
               children: [
                 Icon(
                   Icons.circle,
-                  color: (data.material.onResearch)? Colors.orange : Colors.green,
+                  color: _getStatusColor(data.report.status),
                   size: 16,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  (data.material.onResearch)? "Требуется проверка" : "В норме",
+                  _getStatusText(data.report.status),
                   style: TextStyle(
                     fontSize: 14,
-                    color: (data.material.onResearch)? Colors.orange : Colors.green,
+                    color: _getStatusColor(data.report.status),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

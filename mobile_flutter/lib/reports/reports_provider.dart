@@ -7,26 +7,26 @@ import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'dart:convert';
 
-abstract class IMaterialsProvider {
-  Future<Map<int, String>> get_measurments();
-  Future<List<MaterialsAndAttachments>> get_materials(String project);
+abstract class IReportsProvider {
+  Future<Map<int, String>> get_statuses();
+  Future<List<ReportAndAttachments>> get_reports(String project);
 }
 
-const IMaterialsProviderDIToken = "I-Materials-Provider-DI-Token";
+const IReportsProviderDIToken = "I-Reports-Provider-DI-Token";
 
-class MaterialsProvider implements IMaterialsProvider {
+class ReportsProvider implements IReportsProvider {
   final Uri apiRoot;
   final IAuthStorageProvider authStorageProvider;
   String? _accessToken;
 
-  MaterialsProvider({
+  ReportsProvider({
     required this.apiRoot,
     required this.authStorageProvider,
   });
 
   @override
-  Future<Map<int, String>> get_measurments() async {
-    final uri = apiRoot.resolve('/api/project/get-measurements');
+  Future<Map<int, String>> get_statuses() async {
+    final uri = apiRoot.resolve('/api/report/get_statuses');
     _accessToken ??= await authStorageProvider.getAccessToken();
 
     final response = await http.get(
@@ -41,14 +41,14 @@ class MaterialsProvider implements IMaterialsProvider {
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body);
-      if (jsonList.isEmpty) throw Exception('Measurements is empty');
-      final Map<int, String> measurements = {};
+      if (jsonList.isEmpty) throw Exception('Statuses is empty');
+      final Map<int, String> statuses = {};
 
       for (var status in jsonList) {
-        measurements[status['id']] = status['title'];
+        statuses[status['id']] = status['title'];
       };
 
-      return measurements;
+      return statuses;
     } else {
       throw Exception(
           'Failed to fetch measurements: ${response.statusCode}');
@@ -56,8 +56,9 @@ class MaterialsProvider implements IMaterialsProvider {
   }
 
   @override
-  Future<List<MaterialsAndAttachments>> get_materials(String project) async {
-    final uri = apiRoot.resolve('/api/materials/by_project/$project');
+  Future<List<ReportAndAttachments>> get_reports(String project) async {
+    final uri = apiRoot.resolve('/api/report/get_reports_by_uuid')
+    .replace(queryParameters: {"project_uuid":project});
     _accessToken ??= await authStorageProvider.getAccessToken();
 
     final response = await http.get(
@@ -74,10 +75,8 @@ class MaterialsProvider implements IMaterialsProvider {
       final List<dynamic> jsonList = jsonDecode(response.body);
       if (jsonList.isEmpty) return [];
 
-      if (jsonList.isEmpty) return [];
-
-      final matAatt = jsonList.map((json) => MaterialsAndAttachments.fromJson(json)).toList();
-      return matAatt;
+      final repAatt = jsonList.map((json) => ReportAndAttachments.fromJson(json)).toList();
+      return repAatt;
     } else {
       try {
         final Map<String, dynamic> errorJson = jsonDecode(response.body);

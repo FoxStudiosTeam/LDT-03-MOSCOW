@@ -114,11 +114,21 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         title: "Материалы",
         subtitle: widget.projectTitle,
         onBack: leaveHandler,
-        onMore: (_role == Role.FOREMAN) ? _openMaterialMenu : null,
+        onMore: (_role == Role.FOREMAN || _role == Role.ADMIN) ? _openMaterialMenu : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView.separated(
+        child: materials.isEmpty
+          ? const Center(
+            child: Text(
+              "Материалов не обнаружено",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+          )
+          : ListView.separated(
           itemCount: materials.length,
           separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) => materials[index],

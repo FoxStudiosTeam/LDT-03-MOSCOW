@@ -113,8 +113,9 @@ class _ObjectScreenState extends State<ObjectScreen> {
                   MaterialPageRoute(
                     builder: (_) =>
                         ReportScreen(
-                            di: widget.di,
-                            objectTitle: widget.address
+                          di: widget.di,
+                          projectUuid: widget.projectUuid,
+                          projectTitle: widget.address,
                         ),
                   ),
                 );
