@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
@@ -49,9 +50,9 @@ class ObjectsProvider implements IObjectsProvider {
       );
     } else {
       if (response.statusCode == 401){
-          throw Exception('Unauthorized');
+          throw HttpException('Unauthorized 401');
       }
-      throw Exception('Failed to load projects');
+      throw HttpException('Failed to load projects');
     }
   }
 }

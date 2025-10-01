@@ -14,7 +14,7 @@ class NetworkUtils {
     try {
       return await func();
     } on HttpException catch (e) {
-      if (e.message == '401') {
+      if (e.message.contains('401')) {
         var authStorageProvider = di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
         final refreshed = await di.getDependency<IAuthProvider>(IAuthProviderDIToken).refreshToken(await authStorageProvider.getRefreshToken(), Duration(seconds: 2));
         if (refreshed.accessTokenValue != "") {
@@ -22,8 +22,8 @@ class NetworkUtils {
         } else {
           await authStorageProvider.clear();
           Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => AuthScreen(di: di)),
+                context,
+                MaterialPageRoute(builder: (_) => AuthScreen(di: di)),
                 (_) => false,
           );
           throw Exception('Unauthorized and refresh failed');
