@@ -19,7 +19,7 @@ class ObjectCard extends StatefulWidget {
   final FoxPolygon polygon;
   final String? customer;
   final String? foreman;
-  final String? inspector;
+  final List<InspectorInfo> inspector;
   final Color backgroundColor;
   final bool isStatic;
 
@@ -235,12 +235,12 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
       children: [
         Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Заказчик: ${widget.customer}",)),
         Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Подрядчик: ${widget.foreman}",)),
-        Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Ответственный инспектор: ${widget.inspector}",)),
+        Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Ответственный инспектор: \n${widget.inspector.map((e) => e.fcs).join('\n')}"),),
         Padding(padding: const EdgeInsets.only(left: 10.0), child: 
           Text("${isNear ? 'Вы находитесь в зоне объекта' : 'Вы не находитесь в зоне объекта'}", style: TextStyle(color: isNear ? Colors.green : Colors.red),),
         ),
-
-        // Анимированная карта
+        
+        
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,

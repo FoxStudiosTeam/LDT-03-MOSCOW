@@ -10,6 +10,7 @@ import 'package:mobile_flutter/utils/network_utils.dart';
 
 abstract class IObjectsProvider {
   Future<PaginationResponseWrapper<Project>> getObjects(String address, int offset);
+  Future<List<InspectorInfo>> getObjectInspectors(String project_uuid);
 }
 
 const IObjectsProviderDIToken = "IObjectsProvider";
@@ -58,6 +59,34 @@ class ObjectsProvider implements IObjectsProvider {
       throw HttpException('Failed to load projects');
     }
   }
+
+  @override
+  Future<List<InspectorInfo>> getObjectInspectors(String projectUuid) async {
+    final uri = apiRoot.resolve('/api/project/get-project_inspectors')
+    .replace(queryParameters: {'project_uuid':projectUuid});
+    _accessToken = await authStorageProvider.getAccessToken();
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $_accessToken',
+      },
+    ).timeout(Duration(seconds: 20),onTimeout: () {
+      throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
+    });
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = jsonDecode(response.body)['inspectors'];
+
+      final inspectors = jsonList.map((e) => InspectorInfo.fromJson(e, projectUuid)).toList();
+
+      return inspectors;
+    } else {
+      throw Exception(
+          'Failed to fetch measurements: ${response.statusCode}');
+    }
+  }
 }
 
 class OfflineObjectsProvider implements IObjectsProvider {
@@ -69,6 +98,12 @@ class OfflineObjectsProvider implements IObjectsProvider {
   Future<PaginationResponseWrapper<Project>> getObjects(String address, int offset) async{
     var data = await objectStorageProvider.getObjects();
     return PaginationResponseWrapper(items: data, total: data.length);
+  }
+
+  @override
+  Future<List<InspectorInfo>> getObjectInspectors(String projectUuid) async {
+    var data = await objectStorageProvider.getObjectInspectors(projectUuid);
+    return data;
   }
 }
 
@@ -98,6 +133,20 @@ class SmartObjectsProvider implements IObjectsProvider {
       return result;
     } else {
       return offline.getObjects(address, offset);
+    }
+  }
+
+  @override
+  Future<List<InspectorInfo>> getObjectInspectors(String projectUuid) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final result = await remote.getObjectInspectors(projectUuid);
+
+      return result;
+    } else {
+      return offline.getObjectInspectors(projectUuid);
     }
   }
 

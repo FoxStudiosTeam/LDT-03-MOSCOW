@@ -47,6 +47,7 @@ class LocationProvider implements ILocationProvider {
   Timer? _timer;
 
   final ValueNotifier<LatLng?> _reactiveLocation = ValueNotifier(null);
+  
   @override
   ValueNotifier<LatLng?> get reactiveLocation => _reactiveLocation;
 

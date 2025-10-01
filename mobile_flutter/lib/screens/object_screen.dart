@@ -5,7 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart'
-    show ProjectStatus, FoxPolygon, ProjectStatusExtension, Role, roleFromString;
+    show ProjectStatus, FoxPolygon, ProjectStatusExtension, Role, roleFromString, InspectorInfo;
 import 'package:mobile_flutter/screens/activation_screen.dart';
 import 'package:mobile_flutter/screens/punishments_screen.dart';
 import 'package:mobile_flutter/utils/geo_utils.dart';
@@ -26,7 +26,7 @@ class ObjectScreen extends StatefulWidget {
   final FoxPolygon polygon;
   final String? customer;
   final String? foreman;
-  final String? inspector;
+  final List<InspectorInfo> inspector;
   final String address;
 
   const ObjectScreen({
@@ -397,8 +397,8 @@ class _ObjectScreenState extends State<ObjectScreen> {
             _buildParticipantRow("Подрядчик:", widget.foreman ?? "Не указан"),
             const SizedBox(height: 8),
             _buildParticipantRow(
-              "Ответственный инспектор:",
-              widget.inspector ?? "Не указан",
+              "Ответственные инспекторы:",
+              widget.inspector.map((e) => e.fcs).join('\n'),
             ),
           ],
         ),
