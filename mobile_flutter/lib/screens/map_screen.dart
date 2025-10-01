@@ -13,23 +13,23 @@ import 'package:mobile_flutter/widgets/object_card.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:latlong2/latlong.dart';
 
-class ObjectsScreen extends StatefulWidget {
+class MapScreen extends StatefulWidget {
   final IDependencyContainer di;
 
-  const ObjectsScreen({super.key, required this.di});
+  const MapScreen({super.key, required this.di});
 
   @override
-  State<ObjectsScreen> createState() => _ObjectsScreenState();
+  State<MapScreen> createState() => _MapScreenState();
 }
-
-class _ObjectsScreenState extends State<ObjectsScreen> {
+class _MapScreenState extends State<MapScreen> {
   String? _token;
   Role? _role;
   List<Project> projects = [];
-  bool _isLoading = true; // флаг загрузки
+  bool _isLoading = true;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  List<FoxPolygon> polygons = [];
   final MapController _mapController = MapController();
+
+  Project? currentProject; // ✅ Сделали nullable
 
   @override
   void initState() {
@@ -56,9 +56,10 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
       });
     }
   }
+
   Future<void> _loadProjects() async {
     setState(() {
-      _isLoading = true; // начинаем загрузку
+      _isLoading = true;
     });
 
     var objectsProvider = widget.di.getDependency<IObjectsProvider>(
@@ -73,7 +74,10 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
 
     setState(() {
       projects = response.items;
-      _isLoading = false; // загрузка завершена
+      _isLoading = false;
+      if (projects.isNotEmpty) {
+        currentProject = projects.first; // ✅ Установка первого проекта по умолчанию
+      }
     });
   }
 
@@ -93,12 +97,11 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     _scaffoldKey.currentState?.openDrawer();
   }
 
-  double _currentZoom = 15.0;
+  double _currentZoom = 8.0;
 
   void zoomIn() {
     final newZoom = (_currentZoom + 1).clamp(1.0, 18.0);
     _currentZoom = newZoom;
-    // Используем current center карты
     final center = _mapController.camera.center ?? calcCameraPosition();
     _mapController.move(center, newZoom);
     setState(() {});
@@ -112,40 +115,28 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     setState(() {});
   }
 
-
   LatLng calcCameraPosition() {
-    List<LatLng> points = [];
+    final points = projects
+        .where((p) => p.polygon != null)
+        .map((p) => p.polygon!.getCenter())
+        .where((point) =>
+    point.latitude.isFinite && point.longitude.isFinite)
+        .toList();
 
-    for (var project in projects) {
-      if (project.polygon != null) {
-        final center = project.polygon!.getCenter();
-        points.add(center);
-      }
-    }
+    if (points.isEmpty) return const LatLng(55.753930, 37.620795); // fallback
 
-    if (points.isEmpty)
-      return const LatLng(55.7558, 37.6173); // Москва как fallback
-
-    double sumLat = 0;
-    double sumLng = 0;
-    int i = 0;
-
-    for (var point in points) {
-      if (point.longitude.isFinite && point.latitude.isFinite) {
-        sumLat += point.latitude;
-        sumLng += point.longitude;
-        i++;
-      }
-    }
-
-    final avgLat = sumLat / i;
-    final avgLng = sumLng / i;
-
-    if (avgLat.isNaN || avgLng.isNaN || !avgLat.isFinite || !avgLng.isFinite) {
-      return const LatLng(55.7558, 37.6173); // fallback
-    }
+    final sumLat = points.fold(0.0, (sum, p) => sum + p.latitude);
+    final sumLng = points.fold(0.0, (sum, p) => sum + p.longitude);
+    final avgLat = sumLat / points.length;
+    final avgLng = sumLng / points.length;
 
     return LatLng(avgLat, avgLng);
+  }
+
+  void onClickMapPin(Project p) {
+    setState(() {
+      currentProject = p;
+    });
   }
 
   @override
@@ -172,48 +163,27 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         ),
       ),
       backgroundColor: Colors.white,
+      drawer: DrawerMenu(di: widget.di),
       body: _isLoading
-          ? const Center(
-        child: CircularProgressIndicator(),
-      ) // Крутилка пока грузим
+          ? const Center(child: CircularProgressIndicator())
           : Column(
         children: [
           Expanded(
             child: Stack(
               children: [
-                Positioned(
-                  right: 1,
-                  bottom: 1,
-                  child: Column(
-                    children: [
-                      FloatingActionButton(
-                        heroTag: 'zoomInBtn',
-                        mini: true,
-                        onPressed: zoomIn,
-                        child: Icon(Icons.zoom_in),
-                      ),
-                      SizedBox(height: 10),
-                      FloatingActionButton(
-                        heroTag: 'zoomOutBtn',
-                        mini: true,
-                        onPressed: zoomOut,
-                        child: Icon(Icons.zoom_out),
-                      ),
-                    ],
-                  ),
-                ),
                 FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
                     initialCenter: calcCameraPosition(),
                     initialZoom: _currentZoom,
-                    onPositionChanged: (MapCamera camera, bool hasGesture) {
+                    onPositionChanged:
+                        (MapCamera camera, bool hasGesture) {
                       setState(() {
                         _currentZoom = camera.zoom ?? _currentZoom;
                       });
                     },
                     interactionOptions: InteractionOptions(
-                        flags: InteractiveFlag.all
+                      flags: InteractiveFlag.all,
                     ),
                   ),
                   children: [
@@ -225,19 +195,15 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                     ),
                     PolygonLayer(
                       polygons: projects
-                          .where(
-                            (p) =>
-                        p.polygon != null &&
-                            p.polygon!.points.isNotEmpty,
-                      )
-                          .map(
-                            (p) => Polygon(
-                          points: p.polygon!.points,
-                          color: Colors.blue.withOpacity(0.3),
-                          borderColor: Colors.blue,
-                          borderStrokeWidth: 2,
-                        ),
-                      )
+                          .where((p) =>
+                      p.polygon != null &&
+                          p.polygon!.points.isNotEmpty)
+                          .map((p) => Polygon(
+                        points: p.polygon!.points,
+                        color: Colors.blue.withOpacity(0.3),
+                        borderColor: Colors.blue,
+                        borderStrokeWidth: 2,
+                      ))
                           .toList(),
                     ),
                     MarkerLayer(
@@ -248,10 +214,13 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                           point: p.polygon!.getCenter(),
                           width: 30,
                           height: 30,
-                          child: const Icon(
-                            Icons.location_pin,
-                            color: Colors.red,
-                            size: 30,
+                          child: IconButton(
+                            onPressed: () => onClickMapPin(p),
+                            icon: const Icon(
+                              Icons.location_pin,
+                              color: Colors.red,
+                              size: 30,
+                            ),
                           ),
                         ),
                       )
@@ -259,85 +228,50 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      right: 30.0,
-                      left: 8.0,
-                    ),
-                    child: FoxButton(
-                      onPressed: sortInAction,
-                      text: "В процессе",
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      left: 30.0,
-                      right: 8.0,
-                    ),
-                    child: FoxButton(
-                      onPressed: sortExited,
-                      text: "Завершенные",
-                    ),
+
+                /// ✅ Кнопки зума поверх карты
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: Column(
+                    children: [
+                      FloatingActionButton(
+                        heroTag: 'zoomInBtn',
+                        mini: true,
+                        onPressed: zoomIn,
+                        child: const Icon(Icons.zoom_in),
+                      ),
+                      const SizedBox(height: 10),
+                      FloatingActionButton(
+                        heroTag: 'zoomOutBtn',
+                        mini: true,
+                        onPressed: zoomOut,
+                        child: const Icon(Icons.zoom_out),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 8),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const OcrCameraScreen(),
-                ),
-              );
-            },
-            child: const Text("OCR"),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: projects.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ListView.builder(
-                itemCount: projects.length,
-                itemBuilder: (context, index) {
-                  final project = projects[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: ObjectCard(
-                      projectUuid: project.uuid,
-                      title: project.address,
-                      status: project.status,
-                      address: project.address,
-                      di: widget.di,
-                      polygon: project.polygon!,
-                      customer: project.created_by,
-                      foreman: project.foreman,
-                      inspector: project.ssk,
-                    ),
-                  );
-                },
-              ),
+
+          /// ✅ Показываем карточку только если выбран проект
+          if (currentProject != null)
+            ObjectCard(
+              projectUuid: currentProject!.uuid,
+              title: currentProject!.address,
+              status: currentProject!.status,
+              address: currentProject!.address,
+              di: widget.di,
+              polygon: currentProject!.polygon!,
+              customer: currentProject!.created_by,
+              foreman: currentProject!.foreman,
+              inspector: currentProject!.ssk,
+              isStatic: true,
             ),
-          ),
         ],
       ),
-      drawer: DrawerMenu(di: widget.di),
     );
   }
 }
