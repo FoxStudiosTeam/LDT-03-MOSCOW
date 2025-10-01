@@ -80,6 +80,7 @@ extension ProjectStatusExtension on ProjectStatus {
   Color getStatusColor() {
     switch (this) {
       case ProjectStatus.NEW:
+        return const Color.fromARGB(255, 0, 255, 8);
       case ProjectStatus.NORMAL:
         return Colors.green;
       case ProjectStatus.PRE_ACTIVE:
@@ -92,9 +93,13 @@ extension ProjectStatusExtension on ProjectStatus {
       case ProjectStatus.HIGH_PUNISHMENT:
         return Colors.red;
       case ProjectStatus.SUSPEND:
-        return Colors.grey;
+        return const Color.fromARGB(255, 54, 54, 54);
     }
   }
+
+    Color getTintedStatusColor() {
+      return this.getStatusColor().withOpacity(0.5);
+    }
 
   Text toRenderingString() {
     return Text(

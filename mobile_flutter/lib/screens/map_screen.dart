@@ -1,6 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/emojione_monotone.dart';
+import 'package:iconify_flutter/icons/mdi.dart';
+import 'package:iconify_flutter/icons/tabler.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
@@ -212,15 +218,40 @@ class _MapScreenState extends State<MapScreen> {
                           .map(
                             (p) => Marker(
                           point: p.polygon!.getCenter(),
-                          width: 30,
-                          height: 30,
+                          width: 42,
+                          height: 42,
                           child: IconButton(
                             onPressed: () => onClickMapPin(p),
-                            icon: const Icon(
-                              Icons.location_pin,
-                              color: Colors.red,
-                              size: 30,
+                            style: ButtonStyle(
+                              backgroundColor: WidgetStateProperty.all(p.status.getStatusColor()),
+                              shadowColor: WidgetStateProperty.all(Colors.black),
                             ),
+                            // constraints: BoxConstraints(
+                            //   minHeight: 30,
+                            //   maxHeight: 30,
+                            //   minWidth: 30,
+                            //   maxWidth: 30,
+                            // ),
+                            icon: 
+                              Stack(children: [
+                                ImageFiltered(
+                                  imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                                  child: Iconify(Mdi.worker, color: Colors.black.withOpacity(1.0), size: 42),
+                                ),
+                                Iconify(Mdi.worker, color: Colors.white, size: 42),
+                              ],)
+                            // icon: Iconify(
+                            //   icon: Iconify(),
+                            //   color: p.status.getStatusColor(),  
+                            //   shadows: [
+                            //     Shadow(
+                            //       color: Colors.black,
+                            //       offset: const Offset(1, 1),
+                            //       blurRadius: 2,
+                            //     ),
+                            //   ],
+                            //   size: 30,
+                            // ),
                           ),
                         ),
                       )

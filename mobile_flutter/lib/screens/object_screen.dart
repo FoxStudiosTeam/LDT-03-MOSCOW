@@ -167,7 +167,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => ChecklistActivationScreen(di: widget.di)),
+                    MaterialPageRoute(builder: (_) => ChecklistActivationScreen(di: widget.di, address: widget.address)),
                   );
                 },
               )
@@ -210,9 +210,9 @@ class _ObjectScreenState extends State<ObjectScreen> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: const [
                     BoxShadow(
-                      color: Colors.black12,
+                      color: Colors.black26,
                       blurRadius: 5,
-                      offset: Offset(2, 2),
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
@@ -337,11 +337,12 @@ class _ObjectScreenState extends State<ObjectScreen> {
 
   Widget _buildInfoCard() {
     return Card(
-      elevation: 2,
+      elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: Colors.grey.shade300),
       ),
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

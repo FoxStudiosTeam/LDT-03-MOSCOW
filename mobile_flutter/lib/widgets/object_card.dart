@@ -112,6 +112,7 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
 
     return Card(
       margin: const EdgeInsets.all(8.0),
+      elevation: 4.0,
       shape: RoundedRectangleBorder(
         side: const BorderSide(color: Colors.grey),
         borderRadius: BorderRadius.circular(8.0),
@@ -136,6 +137,7 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
           );
         },
         child: Padding(
+          // padding: const EdgeInsets.only(top: 6.0, bottom: 8.0, left: 18.0, right: 18.0),
           padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

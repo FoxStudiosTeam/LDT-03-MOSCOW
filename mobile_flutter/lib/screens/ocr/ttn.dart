@@ -81,10 +81,9 @@ class TTNRecord {
 
 class TTNScanScreen extends StatefulWidget {
   final void Function(TTNRecord record)? onSubmit;
-  final void Function(String error)? onErr;
   final void Function()? onBack;
 
-  const TTNScanScreen({super.key, this.onSubmit, this.onErr, this.onBack});
+  const TTNScanScreen({super.key, this.onSubmit, this.onBack});
 
   @override
   State<TTNScanScreen> createState() => _TTNScanScreenState();
@@ -316,7 +315,13 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () => {},
+                        onPressed: () => {
+                          //todo!: CHECK THAT ALL FIELDS FILLED
+                          if (widget.onSubmit != null)
+                            widget.onSubmit!(
+                              TTNRecord(name: _nameController.text, number: _countController.text, volume: _volumeController.text)
+                            )
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: FoxThemeButtonActiveBackground,
                           foregroundColor: Colors.white,
