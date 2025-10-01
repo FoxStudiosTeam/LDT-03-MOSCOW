@@ -418,6 +418,13 @@ class PunishmentItemAndAttachments {
           .toList(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "punishment_item": punishment_item.toJson(),
+      "attachments" : attachments.map((e) => e.toJson()).toList()
+    };
+  }
 }
 
 enum Role {
