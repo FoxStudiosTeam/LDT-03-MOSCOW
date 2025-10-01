@@ -10,7 +10,7 @@ permissions:
   pages: write
 
 env:
-  INSTANCE: 'docs/ldc-moscow'
+  INSTANCE: 'docs/ldt-moscow'
   DOCKER_VERSION: '2025.03.8312'
 
 jobs:
