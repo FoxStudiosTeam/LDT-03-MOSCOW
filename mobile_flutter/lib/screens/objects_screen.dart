@@ -25,6 +25,8 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   Role? _role;
   List<Project> projects = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isLoading = false;
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -53,22 +55,46 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   }
 
   Future<void> _loadProjects() async {
-    var objectsProvider = widget.di.getDependency<IObjectsProvider>(
-      IObjectsProviderDIToken,
-    );
-
-    print("Start Request");
-
-    var response = await NetworkUtils.wrapRequest(() => objectsProvider.getObjects("", 0), context, widget.di);
-
-    print("END Request");
-    for (var elem in response.items) {
-      print("${elem.address} ${elem.polygon}");
-    }
+    if (_isLoading) return;
 
     setState(() {
-      projects = response.items;
+      _isLoading = true;
     });
+
+    try {
+      var objectsProvider = widget.di.getDependency<IObjectsProvider>(
+        IObjectsProviderDIToken,
+      );
+
+      print("Start Request");
+
+      var response = await NetworkUtils.wrapRequest(() => objectsProvider.getObjects("", 0), context, widget.di);
+
+      print("END Request");
+      for (var elem in response.items) {
+        print("${elem.address} ${elem.polygon}");
+      }
+
+      setState(() {
+        projects = response.items;
+      });
+    } catch (e) {
+      // Обработка ошибок
+      print("Error loading projects: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+        _isRefreshing = false;
+      });
+    }
+  }
+
+  // Метод для обновления при свайпе
+  Future<void> _handleRefresh() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+    await _loadProjects();
   }
 
   void sortExited() {
@@ -142,36 +168,65 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: projects.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ListView.builder(
-                itemCount: projects.length,
-                itemBuilder: (context, index) {
-                  final project = projects[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: ObjectCard(
-                      projectUuid: project.uuid,
-                      title: project.address,
-                      status: project.status,
-                      address: project.address,
-                      di: widget.di,
-                      polygon: project.polygon!,
-                      customer: project.created_by,
-                      foreman: project.foreman,
-                      inspector: project.ssk,
-                      isStatic: false,
-                    ),
-                  );
-                },
-              ),
+            child: RefreshIndicator(
+              onRefresh: _handleRefresh,
+              color: Colors.red, // Цвет индикатора
+              backgroundColor: Colors.white, // Фон индикатора
+              displacement: 40.0, // Отступ от верха
+              strokeWidth: 3.0, // Толщина линии индикатора
+              child: projects.isEmpty
+                  ? _buildLoadingState()
+                  : _buildProjectsList(),
             ),
           ),
         ],
       ),
       drawer: DrawerMenu(di: widget.di),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    } else {
+      return ListView(
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: const Center(
+              child: Text(
+                "Нет объектов для отображения",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
+  Widget _buildProjectsList() {
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(), // Важно для RefreshIndicator
+      itemCount: projects.length,
+      itemBuilder: (context, index) {
+        final project = projects[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: ObjectCard(
+            projectUuid: project.uuid,
+            title: project.address,
+            status: project.status,
+            address: project.address,
+            di: widget.di,
+            polygon: project.polygon!,
+            customer: project.created_by,
+            foreman: project.foreman,
+            inspector: project.ssk,
+            isStatic: false,
+          ),
+        );
+      },
     );
   }
 }
