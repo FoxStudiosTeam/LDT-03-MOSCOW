@@ -4,7 +4,7 @@ import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/screens/punishment_item_screen.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
-
+import 'package:mobile_flutter/screens/update_punishment_item.dart';
 class PunishmentItemCard extends StatelessWidget {
   final PunishmentItem data;
   final List<Attachment> atts;
@@ -42,8 +42,28 @@ class PunishmentItemCard extends StatelessWidget {
             leading: const Icon(Icons.edit),
             title: const Text('Редактировать'),
             onTap: () {
-              Navigator.pop(ctx);
-              _handleEditItem();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => UpdatePunishmentScreen(
+                    di: di,
+                    projectUuid: data.uuid,
+                    addr: data.title,
+                    objectTitle: "Название объекта",
+                    initialData: {
+                      'title': 'Нарушение конструкции',
+                      'regulation_doc': 'ГОСТ 31937-2011',
+                      'correction_date_plan': '2024-01-15',
+                      'correction_date_fact': '2024-01-20',
+                      'correction_date_info': 'Перенос по техническим причинам',
+                      'comment': 'Требуется дополнительная проверка',
+                      'status': 'Замечание',
+                      'is_work_stopped': true,
+
+                    },
+                  ),
+                ),
+              );
             },
           ),
           const Divider(height: 1),
@@ -61,15 +81,6 @@ class PunishmentItemCard extends StatelessWidget {
     );
   }
 
-  void _handleViewDetails(BuildContext context) {
-    // TODO: Реализовать просмотр деталей
-    print("Просмотреть детали нарушения: ${data.title}");
-  }
-
-  void _handleEditItem() {
-    // TODO: Реализовать редактирование
-    print("Редактировать нарушение: ${data.title}");
-  }
 
   void _handleViewAttachments(BuildContext context) {
     Navigator.push(

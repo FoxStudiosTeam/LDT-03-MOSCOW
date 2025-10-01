@@ -44,26 +44,6 @@ class PunishmentCard extends StatelessWidget {
               _handleViewDetails(context);
             },
           ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.edit),
-            title: const Text('Редактировать'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleEditPunishment();
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.download),
-            title: const Text('Скачать документ'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleDownloadDocument();
-            },
-          ),
         ],
       ),
     );
@@ -80,16 +60,6 @@ class PunishmentCard extends StatelessWidget {
             )
         )
     );
-  }
-
-  void _handleEditPunishment() {
-    // TODO: Реализовать редактирование предписания
-    print("Редактировать предписание: ${data.customNumber}");
-  }
-
-  void _handleDownloadDocument() {
-    // TODO: Реализовать скачивание документа
-    print("Скачать документ предписания: ${data.customNumber}");
   }
 
   Color _getStatusColor(int status) {

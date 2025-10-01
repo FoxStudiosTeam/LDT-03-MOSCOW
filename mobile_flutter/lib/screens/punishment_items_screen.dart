@@ -63,26 +63,6 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
               _handleCreatePunishment();
             },
           ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.filter_list),
-            title: const Text('Фильтровать по статусу'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleFilterPunishments();
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.download),
-            title: const Text('Экспорт в PDF'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleExportPDF();
-            },
-          ),
         ],
       ),
     );
@@ -98,16 +78,6 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
         ),
       ),
     );
-  }
-
-  void _handleFilterPunishments() {
-    // TODO: Реализовать фильтрацию по статусу
-    print("Фильтровать нарушения по статусу");
-  }
-
-  void _handleExportPDF() {
-    // TODO: Реализовать экспорт в PDF
-    print("Экспорт нарушений в PDF");
   }
 
   @override
