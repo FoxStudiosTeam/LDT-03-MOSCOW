@@ -22,12 +22,12 @@ tables:
     type: uuid
     nullable: true
     default: null
+  - name: created_at
+    type: timestamp
+    nullable: false
+    default: "LOCALTIMESTAMP"
   - name: address
     type: text
-  - name: ssk
-    type: uuid
-    nullable: true
-    default: null
   - name: created_by
     type: uuid
     nullable: true

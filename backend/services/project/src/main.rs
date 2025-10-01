@@ -170,6 +170,7 @@ async fn main() -> anyhow::Result<()> {
         .with_state(state.clone());
 
     let any_router = OpenApiRouter::new()
+        .routes(routes!(controllers::handle_get_project_inspectors))
         .routes(routes!(controllers::handle_get_project))
         .routes(routes!(controllers::handle_get_project_schedule)) // todo: check relationship!
         .layer(AuthLayer::new(Role::Inspector | Role::Customer | Role::Foreman)).layer(axum::middleware::from_fn(token_extractor))
@@ -198,9 +199,12 @@ async fn main() -> anyhow::Result<()> {
             .merge(dev_router)
         )
         .split_for_parts();
+
+    let schema = serde_json::to_string(&api).expect("Can't serialize schema");
     
     let app = axum::Router::new()
         .merge(Scalar::with_url("/api/project/docs/scalar", api))
+        .route("/api/project/openapi.json", get(|| async move {schema}))
         .merge(metrics)
         .merge(api_router)
         .layer(shared::helpers::cors::cors_layer())
