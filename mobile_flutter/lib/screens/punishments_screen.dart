@@ -101,7 +101,7 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
 
   Future<List<PunishmentCard>> _loadCards() async {
     final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
-    final statuses = await provider.get_statuses();
+    final statuses = await NetworkUtils.wrapRequest<Map<int, String>>(() => provider.get_statuses(),context,widget.di);
 
     final punishments = await NetworkUtils.wrapRequest<List<Punishment>>(() => provider.get_punishments(widget.projectUuid),context,widget.di);
 
