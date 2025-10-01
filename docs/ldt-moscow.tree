@@ -3,7 +3,7 @@
         SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
 
 <instance-profile id="ldt-moscow"
-                 name="Help Instance"
+                 name="Leader of digital transformation"
                  start-page="Default-topic.md">
 
     <toc-element topic="Default-topic.md"/>
