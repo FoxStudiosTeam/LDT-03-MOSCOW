@@ -11,12 +11,12 @@ permissions:
   pages: write
 
 env:
-  INSTANCE: 'workspace/ldt-03-moscow'
+  INSTANCE: 'Writerside'
   DOCKER_VERSION: '2025.03.8312'
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       algolia_artifact: ${{ steps.define-ids.outputs.algolia_artifact }}
       artifact: ${{ steps.define-ids.outputs.artifact }}
@@ -64,7 +64,7 @@ jobs:
           retention-days: 7
   test:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -81,7 +81,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: [build, test]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
