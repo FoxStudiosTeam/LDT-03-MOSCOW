@@ -162,7 +162,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.file_open),
-              title: const Text('Отчет'),
+              title: const Text('Отчеты'),
               onTap: () {
                 Navigator.push(
                   ctx,
@@ -197,9 +197,9 @@ class _ObjectScreenState extends State<ObjectScreen> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (_) => ChecklistActivationScreen(
-                        di: widget.di, 
-                        address: widget.address, 
-                        projectUuid: widget.projectUuid,  
+                        di: widget.di,
+                        address: widget.address,
+                        projectUuid: widget.projectUuid,
                       )),
                     );
                   },

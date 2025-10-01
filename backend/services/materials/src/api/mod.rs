@@ -64,7 +64,7 @@ impl MaterialInsertRequest {
     tag = crate::MAIN_TAG,
     summary = "Insert a material",
     responses(
-        (status = 200, description = "Success", body = Uuid),
+        (status = 200, description = "Success", body = Materials),
         (status = 409, description = "Material already exists (unreachable?)"),
     )
 )]
@@ -75,7 +75,7 @@ pub async fn insert(
     let Some(r) = app.orm.materials().save(r.into_active(), Insert).await.into_app_err()? else {
         return Ok((StatusCode::CONFLICT).into_response());
     };
-    Ok((StatusCode::OK, Json(r.uuid)).into_response())    
+    Ok((StatusCode::OK, Json(r)).into_response())    
 }
 
 

@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -21,7 +19,7 @@ class ChecklistActivationScreen extends StatefulWidget {
   State<ChecklistActivationScreen> createState() => _ChecklistActivationScreenState();
 }
 
-class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> { 
+class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
   List<ChecklistItem> checklistItems = [
     ChecklistItem(
       number: "1",
@@ -129,6 +127,11 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
 
   List<String> attachments = [];
 
+  void leaveHandler() {
+    Navigator.pop(context);
+    Navigator.pop(context); //два чтобы менюшка закрывалась
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -214,7 +217,7 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
                     ],
                   ),
                   child: IconButton(
-                    onPressed: () => _openAddAttachmentMenu(context),
+                    onPressed: () => _openAddAttachmentMenu(context),//TODO ВЛОЖЕНИЯ
                     icon: const Icon(Icons.add, color: Colors.white, size: 24),
                   ),
                 ),
@@ -229,9 +232,9 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
 
 
   Widget _buildChecklistItem(ChecklistItem item, int index) {
-    
-    
-    return item.header != null ? 
+
+
+    return item.header != null ?
       Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(16),
@@ -458,44 +461,43 @@ class ChecklistItem {
   }
 }
 
-void _openAddAttachmentMenu(BuildContext context) {
-  showBlurBottomSheet(
-    context: context,
-    builder: (ctx) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 40,
-          height: 4,
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.grey[400],
-            borderRadius: BorderRadius.circular(2),
+  void _openAddAttachmentMenu(BuildContext context) {
+    showBlurBottomSheet(
+      context: context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        ListTile(
-          titleAlignment: ListTileTitleAlignment.center,
-          leading: const Icon(Icons.attach_file),
-          title: const Text('Добавить файл'),
-          onTap: () {
-            Navigator.pop(ctx);
-
-          },
-        ),
-        const Divider(height: 1),
-        ListTile(
-          titleAlignment: ListTileTitleAlignment.center,
-          leading: const Icon(Icons.photo),
-          title: const Text('Добавить фото'),
-          onTap: () {
-            Navigator.pop(ctx);
-
-          },
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 12),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.attach_file),
+            title: const Text('Добавить файл'),
+            onTap: () {
+              Navigator.pop(ctx);//TODO ДОБАВИТЬ ФАЙЛ
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.photo),
+            title: const Text('Добавить фото'),
+            onTap: () {
+              Navigator.pop(ctx);//TODO ДОБАВИТЬ ФОТО
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 enum ChecklistStatus {

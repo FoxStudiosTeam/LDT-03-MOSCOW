@@ -40,7 +40,7 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
     'Отклонен'
   ];
 
-  // Список нормативных документов для поискового селектора
+  // TODO: Список нормативных документов для поискового селектора
   final List<String> _regulationDocuments = [
     'ГОСТ 31937-2011 Здания и сооружения. Правила обследования и мониторинга технического состояния',
     'СП 20.13330.2016 Нагрузки и воздействия',
@@ -189,7 +189,7 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Нормативный документ (поисковый селектор)
+                      // TODO Нормативный документ (поисковый селектор)
                       _buildSectionTitle("Нормативный документ"),
                       const SizedBox(height: 8),
                       Autocomplete<String>(
@@ -366,7 +366,7 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
                     // Кнопка сохранения
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _savePunishment,
+                        onPressed: _savePunishment,// TODO: Реализовать сохранение нарушения
                         style: ElevatedButton.styleFrom(
                           backgroundColor: FoxThemeButtonActiveBackground,
                           foregroundColor: Colors.white,
