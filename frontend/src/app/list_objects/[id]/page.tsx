@@ -8,17 +8,29 @@ import Image from "next/image";
 import Link from "next/link";
 import { ProjectMap } from "@/app/components/map";
 import styles from "@/app/styles/variables.module.css";
-import {GetStatuses, uploadProjectFiles} from "@/app/Api/Api";
+import { AddIkoToProject, GetStatuses, uploadProjectFiles } from "@/app/Api/Api";
 import { Status } from "@/models";
+import { useUserStore } from "@/storage/userstore";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 export default function ObjectDetail() {
+    const isReady = useAuthRedirect();
     const params = useParams();
 
     const [statuses, setStatuses] = useState<Status[]>([]);
     const [isModalWindowOpen, setIsModalWindowOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+    const userData = useUserStore((state) => state.userData);
+    const [userRole, setUserRole] = useState<string | null>(null);
+
     useEffect(() => {
+        if (!userData) return;
+        setUserRole(userData?.role);
+    }, [userData])
+
+    useEffect(() => {
+        if (!isReady) return;
         const loadStatuses = async () => {
             const data = await GetStatuses();
             if (data.success) {
@@ -28,7 +40,7 @@ export default function ObjectDetail() {
             }
         };
         loadStatuses();
-    }, []);
+    }, [isReady]);
 
     const getStatusTitle = (statusId: number) => {
         const status = statuses.find((s) => s.id === statusId);
@@ -36,6 +48,7 @@ export default function ObjectDetail() {
     };
 
     const projectData = useProjectStore((state) => {
+        if (!isReady) return;
         if (!params?.id) return undefined;
         localStorage.setItem("projectUuid", params.id as string);
         return state.getProjectById(params.id as string);
@@ -60,6 +73,15 @@ export default function ObjectDetail() {
 
     if (!hydrated) {
         return <p>Загрузка данных...</p>;
+    }
+
+    const addIco = async () => {
+        if (!projectData) return;
+        const result = await AddIkoToProject(projectData.project.uuid);
+
+        if (!result?.success) {
+            console.error('Ошибка при запросе');
+        }
     }
 
     return (
@@ -212,14 +234,23 @@ export default function ObjectDetail() {
                         </Link>
 
                         <div className="w-full flex items-center gap-4">
-                            {projectData?.project.status === 0 && (
+                            {userRole === "customer" && projectData?.project.status === 0 ? (
                                 <Link
-                                    href={"/activation/"}
+                                    href={"/activation"}
                                     className={`min-w-[250px] ${styles.mainButton}`}
                                 >
-                                    Активация
+                                    Активировать
                                 </Link>
-                            )}
+                            ) : null}
+                            {userRole === "inspector" && projectData?.project.status === 0 ? (
+                                <button
+                                    onClick={() => addIco()}
+                                    className={`min-w-[250px] ${styles.mainButton}`}
+                                >
+                                    Отслеживать объект
+                                </button>
+                            ) : null}
+
 
                             <button
                                 onClick={() => fileInputRef.current?.click()}

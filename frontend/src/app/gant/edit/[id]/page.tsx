@@ -8,9 +8,11 @@ import Image from "next/image";
 import { Measurement, SubJob, WorkItem } from "@/models";
 import { GetMeasurement, UpdateWorksInSchedule } from "@/app/Api/Api";
 import Link from "next/link";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 
 export default function EditSubjobs() {
+    const isReady = useAuthRedirect();
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
     const { data } = useActionsStore();
@@ -39,6 +41,7 @@ export default function EditSubjobs() {
 
 
     useEffect(() => {
+        if (!isReady) return;
         const getData = async () => {
             const msgs: string[] = [];
 
@@ -52,7 +55,7 @@ export default function EditSubjobs() {
             setMessages(msgs);
         };
         getData();
-    }, []);
+    }, [isReady]);
 
     useEffect(() => {
         if (inputRef.current) {
@@ -82,7 +85,7 @@ export default function EditSubjobs() {
 
                 if (end && newStart > end) {
                     setMessages(["Дата начала не может быть позже даты окончания"]);
-                    return prev; // отмена
+                    return prev;
                 }
 
                 next[rowIdx] = { ...old, startDate: value };

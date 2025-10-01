@@ -3,6 +3,7 @@
 import { Header } from "@/app/components/header";
 import React from "react";
 import Image from "next/image";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 type Order = {
     id: number;
@@ -19,6 +20,7 @@ const ordersData: Order[] = [
 ];
 
 export default function Orders() {
+    useAuthRedirect();
     return (
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">
             <Header />
