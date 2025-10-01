@@ -17,7 +17,7 @@ class ObjectCard extends StatefulWidget {
   final FoxPolygon polygon;
   final String? customer;
   final String? foreman;
-  final String? inspector;
+  final List<InspectorInfo> inspector;
   final Color backgroundColor;
   final bool isStatic;
 
@@ -205,7 +205,7 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
       children: [
         Text("Заказчик: ${widget.customer}"),
         Text("Подрядчик: ${widget.foreman}"),
-        Text("Ответственный инспектор: ${widget.inspector}"),
+        Text("Ответственный инспектор: \n${widget.inspector.map((e) => e.fcs).join('\n')}"),
         // Анимированная карта
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),

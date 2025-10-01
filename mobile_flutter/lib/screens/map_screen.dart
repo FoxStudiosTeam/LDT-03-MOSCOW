@@ -30,12 +30,12 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   String? _token;
   Role? _role;
-  List<Project> projects = [];
+  List<ProjectAndInspectors> projects = [];
   bool _isLoading = true;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final MapController _mapController = MapController();
 
-  Project? currentProject; // ✅ Сделали nullable
+  ProjectAndInspectors? currentProject; // ✅ Сделали nullable
 
   @override
   void initState() {
@@ -78,24 +78,33 @@ class _MapScreenState extends State<MapScreen> {
       widget.di,
     );
 
+    final List<ProjectAndInspectors> result = [];
+    for (var project in response.items) {
+      final inspectors = await NetworkUtils.wrapRequest(() => objectsProvider.getObjectInspectors(project.uuid),context,widget.di);
+      result.add(ProjectAndInspectors(
+          project: project,
+          inspectors: inspectors
+      ));
+    };
+
     setState(() {
-      projects = response.items;
+      projects = result;
       _isLoading = false;
       if (projects.isNotEmpty) {
-        currentProject = projects.first; // ✅ Установка первого проекта по умолчанию
+        currentProject = result.first; // ✅ Установка первого проекта по умолчанию
       }
     });
   }
 
   void sortExited() {
     setState(() {
-      projects.sort((a, b) => b.status.index.compareTo(a.status.index));
+      projects.sort((a, b) => b.project.status.index.compareTo(a.project.status.index));
     });
   }
 
   void sortInAction() {
     setState(() {
-      projects.sort((a, b) => a.status.index.compareTo(b.status.index));
+      projects.sort((a, b) => a.project.status.index.compareTo(b.project.status.index));
     });
   }
 
@@ -123,8 +132,8 @@ class _MapScreenState extends State<MapScreen> {
 
   LatLng calcCameraPosition() {
     final points = projects
-        .where((p) => p.polygon != null)
-        .map((p) => p.polygon!.getCenter())
+        .where((p) => p.project.polygon != null)
+        .map((p) => p.project.polygon!.getCenter())
         .where((point) =>
     point.latitude.isFinite && point.longitude.isFinite)
         .toList();
@@ -139,7 +148,7 @@ class _MapScreenState extends State<MapScreen> {
     return LatLng(avgLat, avgLng);
   }
 
-  void onClickMapPin(Project p) {
+  void onClickMapPin(ProjectAndInspectors p) {
     setState(() {
       currentProject = p;
     });
@@ -202,10 +211,10 @@ class _MapScreenState extends State<MapScreen> {
                     PolygonLayer(
                       polygons: projects
                           .where((p) =>
-                      p.polygon != null &&
-                          p.polygon!.points.isNotEmpty)
+                      p.project.polygon != null &&
+                          p.project.polygon!.points.isNotEmpty)
                           .map((p) => Polygon(
-                        points: p.polygon!.points,
+                        points: p.project.polygon!.points,
                         color: Colors.blue.withOpacity(0.3),
                         borderColor: Colors.blue,
                         borderStrokeWidth: 2,
@@ -214,16 +223,16 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                     MarkerLayer(
                       markers: projects
-                          .where((p) => p.polygon != null)
+                          .where((p) => p.project.polygon != null)
                           .map(
                             (p) => Marker(
-                          point: p.polygon!.getCenter(),
+                          point: p.project.polygon!.getCenter(),
                           width: 42,
                           height: 42,
                           child: IconButton(
                             onPressed: () => onClickMapPin(p),
                             style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(p.status.getStatusColor()),
+                              backgroundColor: WidgetStateProperty.all(p.project.status.getStatusColor()),
                               shadowColor: WidgetStateProperty.all(Colors.black),
                             ),
                             // constraints: BoxConstraints(
@@ -290,15 +299,15 @@ class _MapScreenState extends State<MapScreen> {
           /// ✅ Показываем карточку только если выбран проект
           if (currentProject != null)
             ObjectCard(
-              projectUuid: currentProject!.uuid,
-              title: currentProject!.address,
-              status: currentProject!.status,
-              address: currentProject!.address,
+              projectUuid: currentProject!.project.uuid,
+              title: currentProject!.project.address,
+              status: currentProject!.project.status,
+              address: currentProject!.project.address,
               di: widget.di,
-              polygon: currentProject!.polygon!,
-              customer: currentProject!.created_by,
-              foreman: currentProject!.foreman,
-              inspector: currentProject!.ssk,
+              polygon: currentProject!.project.polygon!,
+              customer: currentProject!.project.created_by,
+              foreman: currentProject!.project.foreman,
+              inspector: currentProject!.inspectors,
               isStatic: true,
             ),
         ],
