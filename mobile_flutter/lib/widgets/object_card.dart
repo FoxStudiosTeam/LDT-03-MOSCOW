@@ -19,6 +19,7 @@ class ObjectCard extends StatefulWidget {
   final String? foreman;
   final String? inspector;
   final Color backgroundColor;
+  final bool isStatic;
 
   const ObjectCard({
     super.key,
@@ -31,6 +32,7 @@ class ObjectCard extends StatefulWidget {
     required this.customer,
     required this.foreman,
     required this.inspector,
+    required this.isStatic,
     this.backgroundColor = Colors.white,
   });
 
@@ -44,6 +46,7 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
   late AnimationController _animationController;
   late Animation<double> _heightAnimation;
   late Animation<double> _opacityAnimation;
+  late final MapController _mapController = MapController();
 
   @override
   void initState() {
@@ -68,6 +71,15 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
       parent: _animationController,
       curve: const Interval(0.3, 1.0, curve: Curves.easeIn),
     ));
+  }
+
+  @override
+  void didUpdateWidget(ObjectCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.polygon.getCenter() != widget.polygon.getCenter()) {
+      _mapController.move(widget.polygon.getCenter(), 15.0);
+    }
   }
 
   @override
@@ -201,9 +213,13 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: FlutterMap(
+              mapController: _mapController,
               options: MapOptions(
                 initialCenter: widget.polygon.getCenter(),
                 initialZoom: 15,
+                interactionOptions: widget.isStatic ? InteractionOptions(
+                  flags: InteractiveFlag.none,
+                ) : InteractionOptions(),
               ),
               children: [
                 TileLayer(
