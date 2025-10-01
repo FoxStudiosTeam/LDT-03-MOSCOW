@@ -1,8 +1,7 @@
-name: Build documentation
+name: Build, Test and Deploy Documentation
 
 on:
   push:
-    
   workflow_dispatch:
 
 permissions:
@@ -18,42 +17,34 @@ jobs:
   build:
     runs-on: self-hosted
     outputs:
-      algolia_artifact: ${{ steps.define-ids.outputs.algolia_artifact }}
       artifact: ${{ steps.define-ids.outputs.artifact }}
+      algolia_artifact: ${{ steps.define-ids.outputs.algolia_artifact }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: 'true'
+          lfs: true
 
       - name: Define instance id and artifacts
         id: define-ids
-        working-directory: docs
+        working-directory: ../docs
         run: |
-          INSTANCE=${INSTANCE#*/}
-          INSTANCE_ID_UPPER=$(echo "$INSTANCE" | tr '[:lower:]' '[:upper:]')
+          INSTANCE_ID_UPPER=$(echo "${{ env.INSTANCE }}" | tr '[:lower:]' '[:upper:]')
           ARTIFACT="webHelp${INSTANCE_ID_UPPER}2-all.zip"
           ALGOLIA_ARTIFACT="algolia-indexes-${INSTANCE_ID_UPPER}.zip"
 
-          # Print the values
-          echo "INSTANCE_ID_UPPER: $INSTANCE_ID_UPPER"
-          echo "ARTIFACT: $ARTIFACT"
-          echo "ALGOLIA_ARTIFACT: $ALGOLIA_ARTIFACT"
-
-          # Set the environment variables and outputs
           echo "INSTANCE_ID_UPPER=$INSTANCE_ID_UPPER" >> $GITHUB_ENV
           echo "ARTIFACT=$ARTIFACT" >> $GITHUB_ENV
           echo "ALGOLIA_ARTIFACT=$ALGOLIA_ARTIFACT" >> $GITHUB_ENV
           echo "artifact=$ARTIFACT" >> $GITHUB_OUTPUT
           echo "algolia_artifact=$ALGOLIA_ARTIFACT" >> $GITHUB_OUTPUT
 
-      - name: Build docs
+      - name: Build docs using Writerside Docker builder
         uses: JetBrains/writerside-github-action@v4
         with:
-            instance: ${{ env.INSTANCE }}
-            docker-version: ${{ env.DOCKER_VERSION }}
-
+          instance: ${{ env.INSTANCE }}
+          docker-version: ${{ env.DOCKER_VERSION }}
 
       - name: Save artifact with build results
         uses: actions/upload-artifact@v4
@@ -64,6 +55,7 @@ jobs:
             artifacts/report.json
             artifacts/${{ steps.define-ids.outputs.algolia_artifact }}
           retention-days: 7
+
   test:
     needs: build
     runs-on: self-hosted
@@ -78,12 +70,13 @@ jobs:
         uses: JetBrains/writerside-checker-action@v1
         with:
           instance: ${{ env.INSTANCE }}
+
   deploy:
+    needs: [build, test]
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: [build, test]
-    runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
