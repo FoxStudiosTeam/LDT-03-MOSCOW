@@ -11,7 +11,7 @@ permissions:
   pages: write
 
 env:
-  INSTANCE: 'Writerside'
+  INSTANCE: 'workspace/ldt-moscow'
   DOCKER_VERSION: '2025.03.8312'
 
 jobs:
@@ -81,7 +81,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: [build, test]
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
