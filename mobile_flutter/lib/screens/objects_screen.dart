@@ -6,6 +6,7 @@ import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/screens/ocr/camera.dart';
+import 'package:mobile_flutter/screens/ocr/ttn.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/fox_button.dart';
@@ -133,7 +134,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const OcrCameraScreen()),//КАМЕРА
+                MaterialPageRoute(builder: (_) => const TTNScanScreen()),//КАМЕРА
               );
             },
             child: const Text("OCR"),

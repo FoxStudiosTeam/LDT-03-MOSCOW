@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
 
@@ -11,12 +12,24 @@ class OcrBridge {
     );
 
     if (result == null) return null;
-
+    var m = Map<String, dynamic>.from(result);
+    for (var e in m.entries) {
+        log("OCR BRIDGE : ${e.key} : ${e.value}");
+    }
     return OcrPage.fromMap(Map<String, dynamic>.from(result));
   }
-}
 
-// ---------- OCR Models ----------
+  static Future<String?> getText(Uint8List imageBytes) async {
+    final result = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+      "getBoxes",
+      {"image": imageBytes},
+    );
+
+    if (result == null) return null;
+    var m = Map<String, dynamic>.from(result);
+    return m["text"];
+  }
+}
 
 class OcrSymbol {
   final String text;

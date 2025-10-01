@@ -24,26 +24,6 @@ final red = img.ColorRgb8(255, 0, 0);
 final green = img.ColorRgb8(0, 255, 0);
 final blue = img.ColorRgb8(0, 0, 255);
 
-// Future<Uint8List> drawBoxes(Uint8List imageBytes, List<OcrBox> boxes) async {
-//   var image = img.decodeImage(imageBytes)!;
-//   for (final box in boxes) {
-//     image = img.drawRect(
-//       image,
-//       x1: box.left,
-//       y1: box.top,
-//       x2: box.right,
-//       y2: box.bottom,
-//       color: blue,
-//       thickness: 1,
-//     );
-//   }
-//   return Uint8List.fromList(img.encodeJpg(image));
-// }
-
-
-
-      // img.drawLine(image, x1: a.centerX.toInt(), y1: a.centerY.toInt(), x2: b.centerX.toInt(), y2: b.centerY.toInt(), color: img.ColorRgb8(255, 0, 0));
-
 
 const String cameraSvg ='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="24" height="24" fill="none"/><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2"/><path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></g></svg>';
 
@@ -60,18 +40,57 @@ Future<Uint8List> rotateCounterClockwise(Uint8List bytes) async {
   return Uint8List.fromList(img.encodeJpg(rotated));
 }
 
+class NameAndNumber {
+  String name;
+  String number;
+  NameAndNumber(this.name, this.number);
+}
+
+NameAndNumber? extractNameAndNumber(String text) {
+  var reg = RegExp(r'Наименование\s*[—-]\s*(.+?)[,\.]\s*([^\s]+)');
+  var match = reg.firstMatch(text);
+  if (match == null) {return null;}
+  var name = match.group(1)?.trim();
+  var number = match.group(2)?.trim();
+  if (name == null || number == null) return null;
+  return NameAndNumber(name, number);
+}
+
+String? extractVolume(String text) {
+  var reg = RegExp(r'Объем\s*[—-]\s*([^\s]+)');
+  var match = reg.firstMatch(text);
+  if (match == null) {return null;}
+  var volume = match.group(1)?.trim();
+  return volume;
+}
+
+class MaybeTnn {
+  String? name;
+  String? number;
+  String? volume;
+  MaybeTnn(this.name, this.number, this.volume);
+  MaybeTnn.extract(String text) {
+    var nameAndNumber = extractNameAndNumber(text);
+    var volume = extractVolume(text);
+    name = nameAndNumber?.name;
+    number = nameAndNumber?.number;
+    this.volume = volume;
+  }
+}
+
 class _OcrCameraScreenState extends State<OcrCameraScreen> {
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
-  Uint8List? imageWithBoxes = null;
   bool _isCameraInitialized = false;
-  Uint8List? imageCache = null;
-  OcrPage? ocrPage = null;
+  bool _isProcessing = false;
+  MaybeTnn? _maybeTnn;
+
   @override
   void initState() {
     super.initState();
     _initCamera();
   }
+
   Future<bool> _requestCameraPermission() async {
     var status = await Permission.camera.status;
     if (!status.isGranted) {
@@ -108,41 +127,31 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
     super.dispose();
   }
 
+
   void _takePicture() async {
     if (_cameraController == null || !_cameraController!.value.isInitialized) return;
 
     try {
-      // final image3 = await _cameraController!.takePicture();
-      // log('OCR: Picture taken: ${image3.path}');
-      // imageCache = null;
-      // boxes = [];
-      if (imageCache == null) {
-        final file = File('/data/user/0/ru.foxstudios.mobile_flutter/cache/CAP4881106055615520049.jpg');
-        final Uint8List bytes = await file.readAsBytes();
-        imageCache = img.encodeJpg(img.decodeImage(bytes)!);
-      }
-      var image = imageCache!;
-
-      if (ocrPage == null) {
-        ocrPage = await OcrBridge.getPage(image);
-      }
-
-      // image = await drawBoxes(image, boxes);
-      // image = await processBoxes(image, boxes);
-
       setState(() {
-        imageWithBoxes = image;
+        _isProcessing = true;
       });
+      final image = await _cameraController!.takePicture();
+      log('OCR: Picture taken: ${image.path}');
 
-      // final ByteData data = await rootBundle.load('assets/4mo.png');
-      // Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-      // final Uint8List rotated = await rotateClockwise(bytes);
-      // final boxes = await OcrBridge.getBoxes(rotated);
-      // final boxed = await drawBoxes(rotated, boxes);
-      // final Uint8List rotatedBack = boxed;
-      // setState(() {
-      //   imageWithBoxes = rotatedBack;
-      // });
+      final file = File(image.path);
+      final Uint8List rawBytes = await file.readAsBytes();
+      await file.delete();
+      var bytes = img.encodeJpg(img.decodeImage(rawBytes)!);
+
+      var text = await OcrBridge.getText(bytes);
+      setState(() {
+        _isProcessing = false;
+      });
+      if (text == null) {
+        return;
+      }
+      _maybeTnn = MaybeTnn.extract(text);
+
     } catch (e) {
       log('Error taking picture: $e');
     }
@@ -182,7 +191,6 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
         title: "Распознать", 
         subtitle: "ТНН",
         onBack: () => Navigator.pop(context),
-        onMore: () => setState(()=>imageWithBoxes = null),
       ),
       backgroundColor: Colors.black,
       body: Stack(
@@ -190,10 +198,6 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
           Center(
             child: CameraPreview(_cameraController!)
           ),
-          imageWithBoxes != null ? Image.memory(
-            imageWithBoxes!,
-            fit: BoxFit.contain, // adjust how the image scales
-          ) : Container(),
           Positioned(
             // todo!: fix non-portrait btn
             top: isPortrait ? null : (size.height / 2 - 28),
@@ -202,7 +206,7 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
             right: isPortrait ? null : 48,
             child: FloatingActionButton(
               backgroundColor: Colors.grey.shade300,
-              onPressed: _takePicture,
+              onPressed: _isProcessing ? null : _takePicture,
               shape: const CircleBorder(),
               child: Iconify(
                 cameraSvg,
@@ -211,6 +215,9 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
               ),
             ),
           ),
+          _isProcessing ? const Center(
+            child: CircularProgressIndicator(),
+          ) : const SizedBox(),
         ],
       ),
     );

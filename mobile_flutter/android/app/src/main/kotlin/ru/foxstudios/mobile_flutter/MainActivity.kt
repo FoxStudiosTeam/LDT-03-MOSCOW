@@ -9,63 +9,73 @@ import android.util.Log
 import java.io.File
 import com.googlecode.tesseract.android.TessBaseAPI
 
+class MainActivity : FlutterActivity() {
+    private val CHANNEL = "ocr_channel"
+    private lateinit var ocrEngine: AndroidTesseractOcrEngine
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
 
-MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
-    .setMethodCallHandler { call, result ->
-        when (call.method) {
-            "getBoxes" -> {
-                val bytes = call.argument<ByteArray>("image")
-                if (bytes == null) {
-                    result.error("NO_IMAGE", "Image bytes are required", null)
-                    return@setMethodCallHandler
-                }
-                try {
-                    val page: OcrPage = ocrEngine.recognize(bytes)
+        ocrEngine = AndroidTesseractOcrEngine(this)
+        val initOk = ocrEngine.init()
+        Log.d("OCR", "Engine init result: $initOk")
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getBoxes" -> {
+                        val bytes = call.argument<ByteArray>("image")
+                        if (bytes == null) {
+                            result.error("NO_IMAGE", "Image bytes are required", null)
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            val page: OcrPage = ocrEngine.recognize(bytes)
 
-                    fun pageToMap(page: OcrPage): Map<String, Any> {
-                        return mapOf(
-                            "text" to page.text,
-                            "confidence" to page.confidence,
-                            "blocks" to page.blocks.map { block ->
-                                mapOf(
-                                    "text" to block.text,
-                                    "confidence" to block.confidence,
-                                    "left" to block.left,
-                                    "top" to block.top,
-                                    "right" to block.right,
-                                    "bottom" to block.bottom,
-                                    "paragraphs" to block.paragraphs.map { para ->
+                            fun pageToMap(page: OcrPage): Map<String, Any> {
+                                return mapOf(
+                                    "text" to page.text,
+                                    "confidence" to page.confidence,
+                                    "blocks" to page.blocks.map { block ->
                                         mapOf(
-                                            "text" to para.text,
-                                            "confidence" to para.confidence,
-                                            "left" to para.left,
-                                            "top" to para.top,
-                                            "right" to para.right,
-                                            "bottom" to para.bottom,
-                                            "lines" to para.lines.map { line ->
+                                            "text" to block.text,
+                                            "confidence" to block.confidence,
+                                            "left" to block.left,
+                                            "top" to block.top,
+                                            "right" to block.right,
+                                            "bottom" to block.bottom,
+                                            "paragraphs" to block.paragraphs.map { para ->
                                                 mapOf(
-                                                    "text" to line.text,
-                                                    "confidence" to line.confidence,
-                                                    "left" to line.left,
-                                                    "top" to line.top,
-                                                    "right" to line.right,
-                                                    "bottom" to line.bottom,
-                                                    "words" to line.words.map { word ->
+                                                    "text" to para.text,
+                                                    "confidence" to para.confidence,
+                                                    "left" to para.left,
+                                                    "top" to para.top,
+                                                    "right" to para.right,
+                                                    "bottom" to para.bottom,
+                                                    "lines" to para.lines.map { line ->
                                                         mapOf(
-                                                            "text" to word.text,
-                                                            "confidence" to word.confidence,
-                                                            "left" to word.left,
-                                                            "top" to word.top,
-                                                            "right" to word.right,
-                                                            "bottom" to word.bottom,
-                                                            "symbols" to word.symbols.map { sym ->
+                                                            "text" to line.text,
+                                                            "confidence" to line.confidence,
+                                                            "left" to line.left,
+                                                            "top" to line.top,
+                                                            "right" to line.right,
+                                                            "bottom" to line.bottom,
+                                                            "words" to line.words.map { word ->
                                                                 mapOf(
-                                                                    "text" to sym.text,
-                                                                    "confidence" to sym.confidence,
-                                                                    "left" to sym.left,
-                                                                    "top" to sym.top,
-                                                                    "right" to sym.right,
-                                                                    "bottom" to sym.bottom
+                                                                    "text" to word.text,
+                                                                    "confidence" to word.confidence,
+                                                                    "left" to word.left,
+                                                                    "top" to word.top,
+                                                                    "right" to word.right,
+                                                                    "bottom" to word.bottom,
+                                                                    "symbols" to word.symbols.map { sym ->
+                                                                        mapOf(
+                                                                            "text" to sym.text,
+                                                                            "confidence" to sym.confidence,
+                                                                            "left" to sym.left,
+                                                                            "top" to sym.top,
+                                                                            "right" to sym.right,
+                                                                            "bottom" to sym.bottom
+                                                                        )
+                                                                    }
                                                                 )
                                                             }
                                                         )
@@ -76,17 +86,18 @@ MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
                                     }
                                 )
                             }
-                        )
-                    }
 
-                    result.success(pageToMap(page))
-                } catch (e: Exception) {
-                    result.error("OCR_ERROR", e.message, null)
+                            result.success(pageToMap(page))
+                        } catch (e: Exception) {
+                            result.error("OCR_ERROR", e.message, null)
+                        }
+                    }
+                    else -> result.notImplemented()
                 }
             }
-            else -> result.notImplemented()
-        }
     }
+}
+
 
 
 
@@ -175,62 +186,52 @@ class AndroidTesseractOcrEngine(private val context: Context) {
         val pageConfidence = tess.meanConfidence()
 
         val blocks = mutableListOf<OcrBlock>()
-        val blockIter = tess.resultIterator
-        blockIter.begin()
+        val iter = tess.resultIterator
+        iter.begin()
         do {
-            val blockText = blockIter.getUTF8Text(TessBaseAPI.PageIteratorLevel.RIL_BLOCK) ?: ""
-            val blockConf = blockIter.confidence(TessBaseAPI.PageIteratorLevel.RIL_BLOCK)
-            val blockRect = blockIter.getBoundingBox(TessBaseAPI.PageIteratorLevel.RIL_BLOCK)!!
+            val blockText = iter.getUTF8Text(TessBaseAPI.PageIteratorLevel.RIL_BLOCK)
+            val blockRect = iter.getBoundingBox(TessBaseAPI.PageIteratorLevel.RIL_BLOCK)
 
-            // Extract paragraphs within block
-            val paragraphs = mutableListOf<OcrParagraph>()
-            blockIter.begin(TessBaseAPI.PageIteratorLevel.RIL_PARA)
             do {
-                val paraText = blockIter.getUTF8Text(TessBaseAPI.PageIteratorLevel.RIL_PARA) ?: ""
-                val paraConf = blockIter.confidence(TessBaseAPI.PageIteratorLevel.RIL_PARA)
-                val paraRect = blockIter.getBoundingBox(TessBaseAPI.PageIteratorLevel.RIL_PARA)!!
+                val paraText = iter.getUTF8Text(TessBaseAPI.PageIteratorLevel.RIL_PARA)
+                val paraRect = iter.getBoundingBox(TessBaseAPI.PageIteratorLevel.RIL_PARA)
 
-                // Extract lines within paragraph
-                val lines = mutableListOf<OcrLine>()
-                blockIter.begin(TessBaseAPI.PageIteratorLevel.RIL_TEXTLINE)
                 do {
-                    val lineText = blockIter.getUTF8Text(TessBaseAPI.PageIteratorLevel.RIL_TEXTLINE) ?: ""
-                    val lineConf = blockIter.confidence(TessBaseAPI.PageIteratorLevel.RIL_TEXTLINE)
-                    val lineRect = blockIter.getBoundingBox(TessBaseAPI.PageIteratorLevel.RIL_TEXTLINE)!!
+                    val lineText = iter.getUTF8Text(TessBaseAPI.PageIteratorLevel.RIL_TEXTLINE)
+                    val lineRect = iter.getBoundingBox(TessBaseAPI.PageIteratorLevel.RIL_TEXTLINE)
 
-                    // Extract words within line
-                    val words = mutableListOf<OcrWord>()
-                    blockIter.begin(TessBaseAPI.PageIteratorLevel.RIL_WORD)
                     do {
-                        val wordText = blockIter.getUTF8Text(TessBaseAPI.PageIteratorLevel.RIL_WORD) ?: ""
-                        val wordConf = blockIter.confidence(TessBaseAPI.PageIteratorLevel.RIL_WORD)
-                        val wordRect = blockIter.getBoundingBox(TessBaseAPI.PageIteratorLevel.RIL_WORD)!!
+                        val wordText = iter.getUTF8Text(TessBaseAPI.PageIteratorLevel.RIL_WORD)
+                        val wordRect = iter.getBoundingBox(TessBaseAPI.PageIteratorLevel.RIL_WORD)
 
-                        // Extract symbols within word
                         val symbols = mutableListOf<OcrSymbol>()
-                        blockIter.begin(TessBaseAPI.PageIteratorLevel.RIL_SYMBOL)
                         do {
-                            val symText = blockIter.getUTF8Text(TessBaseAPI.PageIteratorLevel.RIL_SYMBOL) ?: ""
-                            val symConf = blockIter.confidence(TessBaseAPI.PageIteratorLevel.RIL_SYMBOL)
-                            val symRect = blockIter.getBoundingBox(TessBaseAPI.PageIteratorLevel.RIL_SYMBOL)!!
-                            symbols.add(OcrSymbol(symText, symConf, symRect[0], symRect[1], symRect[2], symRect[3]))
-                        } while (blockIter.next(TessBaseAPI.PageIteratorLevel.RIL_SYMBOL))
+                            val symText = iter.getUTF8Text(TessBaseAPI.PageIteratorLevel.RIL_SYMBOL)
+                            val symRect =
+                                iter.getBoundingBox(TessBaseAPI.PageIteratorLevel.RIL_SYMBOL)
+                            if (symText != null && symRect != null) {
+                                symbols.add(
+                                    OcrSymbol(
+                                        text = symText,
+                                        confidence = iter.confidence(TessBaseAPI.PageIteratorLevel.RIL_SYMBOL),
+                                        left = symRect[0],
+                                        top = symRect[1],
+                                        right = symRect[2],
+                                        bottom = symRect[3]
+                                    )
+                                )
+                            }
+                        } while (iter.next(TessBaseAPI.PageIteratorLevel.RIL_SYMBOL))
 
-                        words.add(OcrWord(wordText, wordConf, wordRect[0], wordRect[1], wordRect[2], wordRect[3], symbols))
-                    } while (blockIter.next(TessBaseAPI.PageIteratorLevel.RIL_WORD))
+                    } while (iter.next(TessBaseAPI.PageIteratorLevel.RIL_WORD))
 
-                    lines.add(OcrLine(lineText, lineConf, lineRect[0], lineRect[1], lineRect[2], lineRect[3], words))
-                } while (blockIter.next(TessBaseAPI.PageIteratorLevel.RIL_TEXTLINE))
+                } while (iter.next(TessBaseAPI.PageIteratorLevel.RIL_TEXTLINE))
 
-                paragraphs.add(OcrParagraph(paraText, paraConf, paraRect[0], paraRect[1], paraRect[2], paraRect[3], lines))
-            } while (blockIter.next(TessBaseAPI.PageIteratorLevel.RIL_PARA))
+            } while (iter.next(TessBaseAPI.PageIteratorLevel.RIL_PARA))
 
-            blocks.add(OcrBlock(blockText, blockConf, blockRect[0], blockRect[1], blockRect[2], blockRect[3], paragraphs))
-        } while (blockIter.next(TessBaseAPI.PageIteratorLevel.RIL_BLOCK))
-
+        } while (iter.next(TessBaseAPI.PageIteratorLevel.RIL_BLOCK))
         return OcrPage(pageText ?: "", pageConfidence, blocks)
     }
- 
 }
 
 
@@ -285,7 +286,7 @@ data class OcrBlock(
 
 data class OcrPage(
     val text: String,
-    val confidence: Float,
+    val confidence: Int,
     val blocks: List<OcrBlock> = emptyList()
 )
 
