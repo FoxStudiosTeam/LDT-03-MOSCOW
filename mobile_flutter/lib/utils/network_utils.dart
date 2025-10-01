@@ -45,3 +45,43 @@ class NetworkUtils {
     }
   }
 }
+
+
+const INetworkProviderDIToken = "I-Network-Provider-Provider-DI-Token";
+
+
+abstract class INetworkProvider {
+  Future<bool> connectionExists();
+  ValueNotifier<bool> connectionNotifier = ValueNotifier<bool>(false);
+
+  /// Add request to queue, if no internet → waits until net is restored
+  Future<T> lazySend<T>(Future<T> Function() request);
+
+  void begin();
+  void dispose();
+}
+
+// class NetworkProvider extends INetworkProvider {
+//   var _updating = false;
+//   @override
+//   Future<bool> connectionExists() async => NetworkUtils.connectionExists();
+
+//   @override
+
+//   @override
+//   ValueNotifier<bool> connectionNotifier = ValueNotifier<bool>(false);
+
+//   @override
+//   void begin() {
+//     if (_updating) return;
+//     _updating = true;
+//     connectionNotifier.value = false;
+//     connectionNotifier.addListener(() => connectionNotifier.value = false);
+//     Connectivity().onConnectivityChanged.listen(
+//       (event) => connectionNotifier.value = event != ConnectivityResult.none
+//     );
+//   }
+
+//   @override
+//   void dispose() => connectionNotifier.dispose();
+// }

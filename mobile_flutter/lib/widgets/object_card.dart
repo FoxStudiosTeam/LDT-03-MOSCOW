@@ -3,7 +3,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
+import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
+import 'package:mobile_flutter/widgets/current_location_layer.dart';
 import '../domain/entities.dart';
 import '../screens/object_screen.dart';
 import '../di/dependency_container.dart';
@@ -47,10 +49,20 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
   late Animation<double> _heightAnimation;
   late Animation<double> _opacityAnimation;
   late final MapController _mapController = MapController();
+  LatLng? _currentLocation = null;
 
+  late final _locationListener;
+  late final _locationProvider;
   @override
   void initState() {
     super.initState();
+    _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
+
+    _locationListener = () => setState(() {
+      _currentLocation = _locationProvider.reactiveLocation.value;
+    });
+    _locationProvider.reactiveLocation.addListener(_locationListener);
+    
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -85,6 +97,7 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
   @override
   void dispose() {
     _animationController.dispose();
+    _locationProvider.reactiveLocation.removeListener(_locationListener);
     super.dispose();
   }
 
@@ -213,12 +226,20 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
   }
 
   Widget _buildExpandedContent(Color textAndIconColor) {
+
+    var isNear =_currentLocation == null ? false :
+      isNearOrInsidePolygon(widget.polygon, 100.0, _currentLocation!);
+    var col = isNear ? const Color.fromARGB(255, 46, 255, 53) : Colors.blue;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Заказчик: ${widget.customer}",)),
         Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Подрядчик: ${widget.foreman}",)),
         Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Ответственный инспектор: ${widget.inspector}",)),
+        Padding(padding: const EdgeInsets.only(left: 10.0), child: 
+          Text("${isNear ? 'Вы находитесь в зоне объекта' : 'Вы не находитесь в зоне объекта'}", style: TextStyle(color: isNear ? Colors.green : Colors.red),),
+        ),
+
         // Анимированная карта
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
@@ -247,12 +268,13 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
                   polygons: [
                     Polygon(
                       points: widget.polygon.points,
-                      color: Colors.blue.withOpacity(0.3),
-                      borderColor: Colors.blue,
+                      color: col.withOpacity(0.3),
+                      borderColor: col,
                       borderStrokeWidth: 2,
                     ),
                   ],
                 ),
+                CurrentLocationMarkerLayer(location: _currentLocation)
               ],
             ),
           ),

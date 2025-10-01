@@ -4,6 +4,7 @@ import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
+import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/fox_button.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
@@ -31,6 +32,8 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     super.initState();
     _loadAuth();
     _loadProjects();
+    var v = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
+    v.begin();
   }
 
   Future<void> _loadAuth() async {
