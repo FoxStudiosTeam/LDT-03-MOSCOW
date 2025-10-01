@@ -2,7 +2,7 @@
 <!DOCTYPE instance-profile
         SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
 
-<instance-profile id="hi"
+<instance-profile id="ldt-moscow"
                  name="Help Instance"
                  start-page="Default-topic.md">
 
