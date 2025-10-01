@@ -81,7 +81,7 @@ extension ProjectStatusExtension on ProjectStatus {
   Color getStatusColor() {
     switch (this) {
       case ProjectStatus.NEW:
-        return const Color.fromARGB(255, 0, 255, 8);
+        return const Color.fromARGB(255, 80, 171, 0);
       case ProjectStatus.NORMAL:
         return Colors.green;
       case ProjectStatus.PRE_ACTIVE:

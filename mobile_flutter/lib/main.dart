@@ -15,6 +15,7 @@ import 'package:mobile_flutter/reports/reports_storage_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/screens/objects_screen.dart';
 import 'package:mobile_flutter/screens/punishments_screen.dart';
+import 'package:mobile_flutter/utils/geo_utils.dart';
 
 import 'object/object_provider.dart';
 
@@ -30,6 +31,8 @@ void main() async {
   var builder = DependencyBuilder();
   builder.registerDependency(IAuthStorageProviderDIToken, AuthStorageProvider());
   builder.registerDependency(IAPIRootURI, Uri.parse("https://test.foxstudios.ru:32460"));
+
+  builder.registerDependency(ILocationProviderDIToken, LocationProvider());
 
   // Object provider
 

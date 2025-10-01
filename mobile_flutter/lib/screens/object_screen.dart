@@ -8,13 +8,16 @@ import 'package:mobile_flutter/domain/entities.dart'
     show ProjectStatus, FoxPolygon, ProjectStatusExtension, Role, roleFromString, InspectorInfo;
 import 'package:mobile_flutter/screens/activation_screen.dart';
 import 'package:mobile_flutter/screens/punishments_screen.dart';
+import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/screens/report_screen.dart';
 import 'package:mobile_flutter/screens/material_screen.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
+import 'package:mobile_flutter/widgets/current_location_layer.dart';
 
 class ObjectScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -47,6 +50,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
   String? _token;
   Role? _role;
 
+
   void leaveHandler() {
     Navigator.pop(context);
   }
@@ -71,9 +75,33 @@ class _ObjectScreenState extends State<ObjectScreen> {
   }
 
   @override
+  void dispose() {
+    _locationProvider.reactiveLocation.removeListener(_locationListener);
+    super.dispose();
+  }
+
+  late final _locationProvider;
+  late final _locationListener;
+  LatLng? _location = null;
+  @override
+  void initState() {
+    super.initState();
+    _loadAuth();
+    _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
+
+    _locationListener = () => setState(() {
+      _location = _locationProvider.reactiveLocation.value;
+    });
+    _locationProvider.reactiveLocation.addListener(_locationListener);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final Color textColor = Colors.black;
     final Color pointBlockColor = Colors.grey.shade200;
+
+    var isNear = _location == null ? false :
+      isNearOrInsidePolygon(widget.polygon, 100.0, _location!);
 
     void leaveHandler() {
       Navigator.pop(context);
@@ -158,25 +186,30 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 Navigator.pop(ctx);
               },
             ),
-            const Divider(height: 1),
-            if (_role == Role.INSPECTOR || _role == Role.ADMIN)
-              const Divider(height: 1),
-              ListTile(
-                titleAlignment: ListTileTitleAlignment.center,
-                leading: const Icon(Icons.file_upload),
-                title: const Text('Подтвердить активацию'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => ChecklistActivationScreen(di: widget.di, address: widget.address)),
-                  );
-                },
-              )
+            if ((_role == Role.INSPECTOR || _role == Role.ADMIN) && widget.status == ProjectStatus.PRE_ACTIVE && isNear)
+              ...[
+                const Divider(height: 1),
+                ListTile(
+                  titleAlignment: ListTileTitleAlignment.center,
+                  leading: const Icon(Icons.file_upload),
+                  title: const Text('Подтвердить активацию'),
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => ChecklistActivationScreen(
+                        di: widget.di,
+                        address: widget.address,
+                        projectUuid: widget.projectUuid,
+                      )),
+                    );
+                  },
+                )
+              ]
           ],
         ),
       );
     }
-
+    var col = isNear ? const Color.fromARGB(255, 46, 255, 53) : Colors.blue;
     return Scaffold(
       appBar:
         BaseHeader(
@@ -236,12 +269,13 @@ class _ObjectScreenState extends State<ObjectScreen> {
                         polygons: [
                           Polygon(
                             points: widget.polygon.points,
-                            color: Colors.blue.withOpacity(0.3),
-                            borderColor: Colors.blue,
+                            color: col.withOpacity(0.3),
+                            borderColor: col,
                             borderStrokeWidth: 2,
                           ),
                         ],
                       ),
+                      CurrentLocationMarkerLayer(location: _location)
                     ],
                   ),
                 ),
