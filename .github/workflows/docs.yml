@@ -11,7 +11,7 @@ permissions:
   pages: write
 
 env:
-  INSTANCE: 'workspace/ldc-moscow'
+  INSTANCE: 'docs/ldc-moscow'
   DOCKER_VERSION: '2025.03.8312'
 
 jobs:
@@ -48,11 +48,12 @@ jobs:
           echo "artifact=$ARTIFACT" >> $GITHUB_OUTPUT
           echo "algolia_artifact=$ALGOLIA_ARTIFACT" >> $GITHUB_OUTPUT
 
-      - name: Build docs using Writerside Docker builder
+      - name: Build docs
         uses: JetBrains/writerside-github-action@v4
         with:
-          instance: ${{ env.INSTANCE }}
-          docker-version: ${{ env.DOCKER_VERSION }}
+            instance: ${{ env.INSTANCE }}
+            docker-version: ${{ env.DOCKER_VERSION }}
+
 
       - name: Save artifact with build results
         uses: actions/upload-artifact@v4
