@@ -42,15 +42,13 @@ struct ProjectService {
 impl IProjectService for ProjectService {
     async fn get_inspector_projects(&self, r: GetProjectRequest, t: AccessTokenPayload) -> Result<Response, AppErr> {
         let (offset, limit) = r.pagination.map(|p| (p.offset, p.limit)).unwrap_or((0, 0));
-        
-        let total: i64 = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM project.project p 
-        inner join project.iko_relationship ir on ir.project = p.uuid 
-        WHERE ir.user_uuid = $3
-        ORDER BY p.created_at DESC
-        OFFSET $1 LIMIT $2
+        let total: i64 = sqlx::query_as::<_, (i64,)>("
+            SELECT COUNT(*) FROM project.project p 
+            inner join project.iko_relationship ir on ir.project = p.uuid 
+            WHERE ir.user_uuid = $1
+            GROUP by p.created_at
+            ORDER BY p.created_at DESC
         ")
-            .bind(&offset)
-            .bind(&limit)
             .bind(&t.uuid)
             .fetch_one(self.state.orm().get_executor())
             .await
@@ -81,6 +79,10 @@ impl IProjectService for ProjectService {
             LEFT JOIN attachment.attachments a 
                 ON a.base_entity_uuid = pp.uuid;
         ")
+            .bind(&offset)
+            .bind(&limit)
+            .bind(&t.uuid)
+            .bind(format!("%{}%", r.address.unwrap_or_default()))
             .fetch_all(self.state.orm().get_executor())
             .await
             .into_app_err()?;
