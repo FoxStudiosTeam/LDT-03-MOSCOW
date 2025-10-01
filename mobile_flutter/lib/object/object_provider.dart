@@ -100,4 +100,39 @@ class SmartObjectsProvider implements IObjectsProvider {
       return offline.getObjects(address, offset);
     }
   }
+
+  Future<Project?> activate_object(String project_uuid) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final _accessToken = await remote.authStorageProvider.getAccessToken();
+
+      final uri = remote.apiRoot.resolve('/api/project/activate-project');
+
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $_accessToken',
+        },
+        body: jsonEncode({'project_uuid': project_uuid}),
+      ).timeout(Duration(seconds: 20), onTimeout: () {
+        throw TimeoutException(
+            'Request timed out after ${Duration(seconds: 20)} ms');
+      });
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return Project.fromJson(json);
+      } else {
+        if (response.statusCode == 401) {
+          throw HttpException('Unauthorized 401');
+        }
+        throw HttpException('Failed to activate object');
+      }
+    } else {
+      // TODO оффлайн функции
+    }
+  }
 }
