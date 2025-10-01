@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,12 @@ import 'package:http/http.dart' as http;
 import 'package:mobile_flutter/auth/auth_provider.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
+import 'package:mobile_flutter/main.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class NetworkUtils {
   static Future<T> wrapRequest<T>(
@@ -164,6 +170,7 @@ class _QueuedRequest<T> {
 }
 
 
+
 enum AttachmentVariant {
   project,
   materials,
@@ -197,16 +204,33 @@ class QueuedRequestModel {
   final String method;
   final Map<String, dynamic> body;
   final Map<String, String> headers;
+
   final List<AttachmentModel> attachments;
 
   QueuedRequestModel({
-    required this.timestamp,
+    required this.timestamp, // DateTime.now().millisecondsSinceEpoch
     required this.url,
     required this.method,
     required this.body,
     required this.headers,
     this.attachments = const [],
   });
+
+  QueuedRequestModel createNew(
+    String url,
+    String method,
+    Map<String, dynamic> body,
+    Map<String, String> headers,
+  ) {
+    return QueuedRequestModel(
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+      url: url,
+      method: method,
+      body: body,
+      headers: headers,
+    );
+  }
+
 
   Map<String, dynamic> toJson() => {
         "timestamp": timestamp,
@@ -229,7 +253,7 @@ class QueuedRequestModel {
             .toList(),
       );
 
-  Future<http.StreamedResponse> execute(accessToken) async {
+  Future<bool> execute(accessToken) async {
     if (attachments.isEmpty) {
       final request = http.Request(method, Uri.parse(url));
       request.headers.addAll({
@@ -239,7 +263,7 @@ class QueuedRequestModel {
       request.headers["Authorization"] = "Bearer $accessToken";
       request.body = jsonEncode(body);
 
-      return await request.send();
+      return (await http.Response.fromStream(await request.send())).statusCode == 200;
     } else {
       final request = http.Request(method, Uri.parse(url));
       request.headers.addAll({
@@ -249,24 +273,111 @@ class QueuedRequestModel {
       request.headers["Authorization"] = "Bearer $accessToken";
       request.body = jsonEncode(body);
       var v = await http.Response.fromStream(await request.send());
+      var decoded = jsonDecode(v.body);
+      var original = decoded["uuid"];
+      if (original == null) {
+        log("Error uploading attachment: [${v.statusCode}] ${v.body}");
+        return false;
+      }
+
+      final base = Uri.parse(APIRootURI);
       
-
-
-
-
-      // final request = http.MultipartRequest(method, Uri.parse(url));
-      // request.headers.addAll(headers);
-      // request.headers["Authorization"] = "Bearer $accessToken";
-      // request.fields.addAll(body.map((k, v) => MapEntry(k, v.toString())));
-
-      // for (final attachment in attachments) {
-      //   request.files.add(await http.MultipartFile.fromPath(
-      //     attachment.type.toString().split(".").last,
-      //     attachment.path,
-      //   ));
-      // }
-
-      return await request.send();
+      for (final attachment in attachments) {
+        final attachmentUri = base.resolve('/api/attach/${attachment.type.toString()}').replace(queryParameters: {"id": original});
+        final attachmentRequest = http.MultipartRequest('POST', attachmentUri);
+        attachmentRequest.headers['Authorization'] = 'Bearer $accessToken';
+        attachmentRequest.files.add(
+          await http.MultipartFile.fromPath('file', attachment.path),
+        );
+        var resp = await http.Response.fromStream(await attachmentRequest.send());
+        if (resp.statusCode != 200) {
+          log("Error uploading attachment: [${resp.statusCode}] ${resp.body}");
+        } else {
+          log("Attachment uploaded");
+        }
+      }
+      return true;
     }
+  }
+}
+
+
+abstract class IQueuedRequests {
+  Future<bool> queuedSend(QueuedRequestModel request, String token);
+  void init(IAuthStorageProvider provider);
+}
+
+const IQueuedRequestsDIToken = "IQueuedRequestsDIToken";
+
+class QueuedRequests implements IQueuedRequests {
+  final List<QueuedRequestModel> _queuedRequests = [];
+  Timer? _flushTimer;
+
+  static const _storageKey = "queued_requests";
+  late final IAuthStorageProvider _provider;
+
+  QueuedRequests();
+
+  @override
+  Future<void> init(provider) async {
+    _provider = provider;
+    _queuedRequests.clear();
+
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getStringList(_storageKey) ?? [];
+    _queuedRequests.addAll(
+      stored.map((e) => QueuedRequestModel.fromJson(jsonDecode(e))),
+    );
+
+    _flushTimer?.cancel();
+    _flushTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (_) async => await _tryFlush(),
+    );
+  }
+
+  @override
+  Future<bool> queuedSend(QueuedRequestModel request, String token) async {
+    if (!await NetworkUtils.connectionExists()) {
+      _queuedRequests.add(request);
+      await _saveToDisk();
+      return true;
+    }
+    return await _executeWithHandling(request, token);
+  }
+
+  Future<void> _tryFlush() async {
+    if (_queuedRequests.isEmpty) return;
+    if (!await NetworkUtils.connectionExists()) return;
+    // wait 10s to ensure token was got
+    await Future.delayed(const Duration(seconds: 10));
+    if (!await NetworkUtils.connectionExists()) return;
+
+    final token = await _provider.getAccessToken();
+
+    final copy = List<QueuedRequestModel>.from(_queuedRequests);
+    for (final req in copy) {
+      final ok = await _executeWithHandling(req, "");
+      if (ok) {
+        _queuedRequests.remove(req);
+        await _saveToDisk();
+      } else {
+        break;
+      }
+    }
+  }
+
+  Future<bool> _executeWithHandling(QueuedRequestModel request, String token) async {
+      return await request.execute(token);
+  }
+
+  Future<void> _saveToDisk() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = _queuedRequests.map((e) => jsonEncode(e.toJson())).toList();
+    await prefs.setStringList(_storageKey, list);
+  }
+
+  void dispose() {
+    _flushTimer?.cancel();
   }
 }

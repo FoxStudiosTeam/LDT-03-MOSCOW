@@ -250,7 +250,7 @@ class _MapScreenState extends State<MapScreen> {
                           child: IconButton(
                             onPressed: () => onClickMapPin(p),
                             style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(p.project.status.getStatusColor()),
+                              backgroundColor: WidgetStateProperty.all(p.project.status.getStatusColor().withAlpha(200)),
                               shadowColor: WidgetStateProperty.all(Colors.black),
                             ),
                             // constraints: BoxConstraints(
