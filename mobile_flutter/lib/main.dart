@@ -28,6 +28,8 @@ void main() async {
   builder.registerDependency(IAuthStorageProviderDIToken, AuthStorageProvider());
   builder.registerDependency(IAPIRootURI, Uri.parse("https://test.foxstudios.ru:32460"));
 
+  // Object provider
+
   var onlineObjectProvider = ObjectsProvider(
       apiRoot: builder.getDependency<Uri>(IAPIRootURI),
       authStorageProvider: builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken)
@@ -36,29 +38,46 @@ void main() async {
   var objectStorageProvider = ObjectStorageProvider();
 
   var offlineObjectProvider = OfflineObjectsProvider(objectStorageProvider: objectStorageProvider);
-  
+
+  builder.registerDependency(IObjectsProviderDIToken, SmartObjectsProvider(remote: onlineObjectProvider, offline: offlineObjectProvider, storage: objectStorageProvider));
+
+  // Punishment provider
+
+  var onlinePunishmentProvider = PunishmentProvider(
+      apiRoot: builder.getDependency<Uri>(IAPIRootURI),
+      authStorageProvider: builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken)
+  );
+
+  var punishmentStorageProvider = PunishmentStorageProvider();
+
+  var offlinePunishmentProvider = OfflinePunishmentProvider(storageProvider: punishmentStorageProvider);
+
+  builder.registerDependency(IPunishmentProviderDIToken, SmartPunishmentProvider(
+      remote: onlinePunishmentProvider,
+      offline: offlinePunishmentProvider,
+      storage: punishmentStorageProvider)
+  );
+
+  // Material provider
+
   builder.registerDependency(IMaterialsProviderDIToken, MaterialsProvider(
     apiRoot: builder.getDependency(IAPIRootURI),
     authStorageProvider: builder.getDependency(IAuthStorageProviderDIToken)
   ));
+
+  // Report provider
 
   builder.registerDependency(IReportsProviderDIToken, ReportsProvider(
       apiRoot: builder.getDependency(IAPIRootURI),
       authStorageProvider: builder.getDependency(IAuthStorageProviderDIToken)
   ));
 
-  builder.registerDependency(IObjectsProviderDIToken, SmartObjectsProvider(remote: onlineObjectProvider, offline: offlineObjectProvider, storage: objectStorageProvider));
+  // Attachment provider
 
   var storage = builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
   var au = AuthProvider(Uri.parse('https://sso.foxstudios.ru:32460'), storage);
   builder.registerDependency(IAuthProviderDIToken, au);
 
-  builder.registerDependency(IPunishmentStorageProviderDIToken, PunishmentStorageProvider());
-  builder.registerDependency(IPunishmentProviderDIToken, PunishmentProvider(
-    authStorageProvider: builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken),
-    storageProvider: builder.getDependency<IPunishmentStorageProvider>(IPunishmentStorageProviderDIToken),
-    apiRoot: builder.getDependency(IAPIRootURI)
-  ));
   var di = builder.build();
 
   runApp(MaterialApp(

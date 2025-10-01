@@ -9,6 +9,8 @@ import 'dart:convert';
 
 import 'package:mobile_flutter/punishment/punishment_storage_provider.dart';
 
+import 'package:mobile_flutter/utils/network_utils.dart';
+
 abstract class IPunishmentProvider {
   Future<Map<int, String>> get_statuses();
   Future<Map<String, String>> get_documents();
@@ -21,13 +23,11 @@ const IPunishmentProviderDIToken = "I-Punishment-Provider-DI-Token";
 class PunishmentProvider implements IPunishmentProvider {
   final Uri apiRoot;
   final IAuthStorageProvider authStorageProvider;
-  final IPunishmentStorageProvider storageProvider;
   String? _accessToken;
 
   PunishmentProvider({
     required this.apiRoot,
-    required this.authStorageProvider,
-    required this.storageProvider
+    required this.authStorageProvider
   });
 
   @override
@@ -53,7 +53,6 @@ class PunishmentProvider implements IPunishmentProvider {
       for (var status in jsonList) {
         statuses[status['id']] = status['title'];
       };
-      await storageProvider.saveStatuses(statuses);
 
       return statuses;
     } else {
@@ -86,7 +85,6 @@ class PunishmentProvider implements IPunishmentProvider {
       for (var doc in jsonList) {
         documents[doc['uuid']] = doc['title'];
       };
-      await storageProvider.saveDocuments(documents);
 
       return documents;
     } else {
@@ -156,6 +154,112 @@ class PunishmentProvider implements IPunishmentProvider {
       } catch (e) {
         throw Exception("Error ${response.statusCode}: ${response.body}");
       }
+    }
+  }
+}
+
+class OfflinePunishmentProvider implements IPunishmentProvider {
+  final IPunishmentStorageProvider storageProvider;
+
+  OfflinePunishmentProvider({required this.storageProvider});
+
+  @override
+  Future<Map<int, String>> get_statuses() async{
+    var data = await storageProvider.getStatuses();
+    return data;
+  }
+
+  @override
+  Future<Map<String, String>> get_documents() async{
+    var data = await storageProvider.getRegulationDocs();
+    return data;
+  }
+
+  @override
+  Future<List<Punishment>> get_punishments(String project) async{
+    var data = await storageProvider.getPunishments(project);
+    return data;
+  }
+
+  @override
+  Future<List<PunishmentItemAndAttachments>> get_punishment_items(String punishment) async{
+    var data = await storageProvider.getPunishmentItems(punishment);
+    return data;
+  }
+}
+
+class SmartPunishmentProvider implements IPunishmentProvider {
+  final PunishmentProvider remote;
+  final OfflinePunishmentProvider offline;
+  final IPunishmentStorageProvider storage;
+
+  SmartPunishmentProvider({
+    required this.remote,
+    required this.offline,
+    required this.storage,
+  });
+
+  @override
+  Future<Map<int, String>> get_statuses() async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final result = await remote.get_statuses();
+
+      await storage.saveStatuses(result);
+
+      return result;
+    } else {
+      return offline.get_statuses();
+    }
+  }
+
+  @override
+  Future<Map<String, String>> get_documents() async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final result = await remote.get_documents();
+
+      await storage.saveDocuments(result);
+
+      return result;
+    } else {
+      return offline.get_documents();
+    }
+  }
+
+  @override
+  Future<List<Punishment>> get_punishments(String project) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final result = await remote.get_punishments(project);
+
+      await storage.savePunishments(result);
+
+      return result;
+    } else {
+      return offline.get_punishments(project);
+    }
+  }
+
+  @override
+  Future<List<PunishmentItemAndAttachments>> get_punishment_items(String punishment) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final result = await remote.get_punishment_items(punishment);
+
+      await storage.savePunishmentItems(result);
+
+      return result;
+    } else {
+      return offline.get_punishment_items(punishment);
     }
   }
 }

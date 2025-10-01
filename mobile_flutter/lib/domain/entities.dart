@@ -268,7 +268,7 @@ class Punishment {
       uuid: json['uuid'],
       project: json['project'],
       punishDatetime: DateTime.parse(json['punish_datetime']),
-      punishmentStatus: json['punishment_status'],
+      punishmentStatus: json['punishment_status'] as int,
       customNumber: json['custom_number'] as String?,
     );
   }
@@ -417,6 +417,13 @@ class PunishmentItemAndAttachments {
           .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
           .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "punishment_item": punishment_item.toJson(),
+      "attachments" : attachments.map((e) => e.toJson()).toList()
+    };
   }
 }
 
