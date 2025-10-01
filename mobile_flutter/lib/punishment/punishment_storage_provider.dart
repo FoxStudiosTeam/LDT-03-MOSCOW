@@ -62,18 +62,19 @@ class PunishmentStorageProvider implements IPunishmentStorageProvider {
   Future<void> saveDocuments(Map<String, String> documents) async {
     await init();
 
-    await prefs?.setString(STATUSES_KEY, jsonEncode(documents));
+    await prefs?.setString(DOCUMENTS_KEY, jsonEncode(documents));
   }
 
   @override
   Future<void> savePunishments(List<Punishment> punishments) async {
     final existing = await getPunishments(punishments.first.project);
 
+
     final combined = {
       for (var p in [...existing, ...punishments]) p.uuid: p
     }.values.toList();
 
-    final encoded = jsonEncode(combined.map((e) => {"punishment": e.toJson()}).toList());
+    final encoded = jsonEncode(combined.map((e) => e.toJson()).toList());
     await prefs?.setString(PUNISHMENTS_KEY, encoded);
   }
 
@@ -85,8 +86,8 @@ class PunishmentStorageProvider implements IPunishmentStorageProvider {
       for (var p in [...existing, ...punishmentItems]) p.punishment_item.uuid: p
     }.values.toList();
 
-    final encoded = jsonEncode(combined.map((e) => {"punishment_item_and_attachments": e.toJson()}).toList());
-    await prefs?.setString(PUNISHMENTS_KEY, encoded);
+    final encoded = jsonEncode(combined.map((e) => e.toJson()).toList());
+    await prefs?.setString(PUNISHMENT_ITEMS_KEY, encoded);
   }
 
   @override
@@ -140,8 +141,9 @@ class PunishmentStorageProvider implements IPunishmentStorageProvider {
     if (json == null || json.isEmpty) {
       return {};
     }
+    final Map<String, dynamic> jsonDynamic = jsonDecode(json);
 
-    final Map<String, String> documents = jsonDecode(json);
+    final Map<String, String> documents = jsonDynamic.map((key, value) => MapEntry(key, value.toString()));
 
     return documents;
   }

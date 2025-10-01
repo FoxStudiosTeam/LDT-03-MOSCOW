@@ -268,7 +268,7 @@ class Punishment {
       uuid: json['uuid'],
       project: json['project'],
       punishDatetime: DateTime.parse(json['punish_datetime']),
-      punishmentStatus: json['punishment_status'],
+      punishmentStatus: json['punishment_status'] as int,
       customNumber: json['custom_number'] as String?,
     );
   }
