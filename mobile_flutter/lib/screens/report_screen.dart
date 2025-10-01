@@ -79,7 +79,7 @@ class _ReportScreenState extends State<ReportScreen> {
   Future<List<ReportCard>> _loadCards() async {
     final provider = widget.di.getDependency<IReportsProvider>(IReportsProviderDIToken);
     final statuses = await provider.get_statuses();
-    final reports = await NetworkUtils.wrapRequest<List<ReportAndAttachments>>(() => provider.get_reports(widget.projectUuid), context, widget.di);
+    final reports = await NetworkUtils.wrapRequest(() => provider.get_reports(widget.projectUuid), context, widget.di);
 
     return reports.map((rep) => ReportCard(
       di: widget.di,
@@ -149,7 +149,7 @@ class _ReportScreenState extends State<ReportScreen> {
         child: reports.isEmpty
           ? const Center(
             child: Text(
-              "Предписаний не обнаружено",
+              "Отчетов не обнаружено",
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey,

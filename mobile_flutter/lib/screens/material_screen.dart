@@ -55,8 +55,8 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
 
   Future<List<MaterialCard>> _loadCards() async {
     final provider = widget.di.getDependency<IMaterialsProvider>(IMaterialsProviderDIToken);
-    final measurements = await provider.get_measurments();
-    final materials = await NetworkUtils.wrapRequest<List<MaterialsAndAttachments>>(() => provider.get_materials(widget.projectUuid), context, widget.di);
+    final measurements = await provider.get_measurements();
+    final materials = await NetworkUtils.wrapRequest(() => provider.get_materials(widget.projectUuid), context, widget.di);
 
     return materials.map((mat) => MaterialCard(
       di: widget.di,

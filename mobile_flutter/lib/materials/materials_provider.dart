@@ -7,8 +7,12 @@ import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'dart:convert';
 
+import 'package:mobile_flutter/materials/materials_storage_provider.dart';
+
+import 'package:mobile_flutter/utils/network_utils.dart';
+
 abstract class IMaterialsProvider {
-  Future<Map<int, String>> get_measurments();
+  Future<Map<int, String>> get_measurements();
   Future<List<MaterialsAndAttachments>> get_materials(String project);
 }
 
@@ -25,7 +29,7 @@ class MaterialsProvider implements IMaterialsProvider {
   });
 
   @override
-  Future<Map<int, String>> get_measurments() async {
+  Future<Map<int, String>> get_measurements() async {
     final uri = apiRoot.resolve('/api/project/get-measurements');
     _accessToken = await authStorageProvider.getAccessToken();
 
@@ -86,6 +90,68 @@ class MaterialsProvider implements IMaterialsProvider {
       } catch (e) {
         throw Exception("Error ${response.statusCode}: ${response.body}");
       }
+    }
+  }
+}
+
+class OfflineMaterialsProvider implements IMaterialsProvider {
+  final IMaterialsStorageProvider storageProvider;
+
+  OfflineMaterialsProvider({required this.storageProvider});
+
+  @override
+  Future<Map<int, String>> get_measurements() async{
+    var data = await storageProvider.getMeasurements();
+    return data;
+  }
+
+  @override
+  Future<List<MaterialsAndAttachments>> get_materials(String project) async{
+    var data = await storageProvider.getMaterials(project);
+    return data;
+  }
+}
+
+class SmartMaterialsProvider implements IMaterialsProvider {
+  final MaterialsProvider remote;
+  final OfflineMaterialsProvider offline;
+  final IMaterialsStorageProvider storage;
+
+  SmartMaterialsProvider({
+    required this.remote,
+    required this.offline,
+    required this.storage,
+  });
+
+  @override
+  Future<Map<int, String>> get_measurements() async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final result = await remote.get_measurements();
+
+      await storage.saveMeasurements(result);
+
+      return result;
+    } else {
+      return offline.get_measurements();
+    }
+  }
+
+  @override
+  Future<List<MaterialsAndAttachments>> get_materials(String project) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final result = await remote.get_materials(project);
+
+      await storage.saveMaterials(result);
+
+      return result;
+    } else {
+      return offline.get_materials(project);
     }
   }
 }

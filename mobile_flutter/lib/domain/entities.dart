@@ -517,6 +517,13 @@ class MaterialsAndAttachments {
           .toList(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "material": material.toJson(),
+      "attachments" : attachments.map((e) => e.toJson()).toList()
+    };
+  }
 }
 
 class Report {
@@ -526,6 +533,7 @@ class Report {
   final String title;
   final String uuid;
   final DateTime reportDate;
+  final String project;
 
   Report({
     required this.title,
@@ -534,9 +542,10 @@ class Report {
     required this.projectScheduleItem,
     required this.status,
     required this.uuid,
+    required this.project,
   });
 
-  factory Report.fromJson(Map<String, dynamic> json) {
+  factory Report.fromJson(Map<String, dynamic> json, String project) {
     return Report(
       checkDate: json['check_date'] != null
           ? DateTime.parse(json['check_date'])
@@ -546,7 +555,23 @@ class Report {
       title: json['title'],
       uuid: json['uuid'],
       reportDate: DateTime.parse(json['report_date']),
+      project: project
     );
+  }
+
+  Map<String, dynamic> toStorageJson() {
+    return {
+      'check_date': checkDate,
+      'status': status,
+      'check_date': checkDate?.toIso8601String()
+          .split('T').first,
+      'report_date' : reportDate.toIso8601String()
+          .split('T').first,
+      'project_schedule_item': projectScheduleItem,
+      'uuid': uuid,
+      'title': title,
+      'project': project,
+    };
   }
 
   Map<String, dynamic> toJson() {
@@ -573,14 +598,28 @@ class ReportAndAttachments {
     required this.attachments
   });
 
-  factory ReportAndAttachments.fromJson(Map<String, dynamic> json) {
+  factory ReportAndAttachments.fromJson(Map<String, dynamic> json, String project) {
     return ReportAndAttachments(
       report: Report.fromJson(
-        json['report'] as Map<String, dynamic>,
+        json['report'] as Map<String, dynamic>, project
       ),
       attachments: (json['attachments'] as List<dynamic>? ?? [])
           .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
           .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "report": report.toJson(),
+      "attachments" : attachments.map((e) => e.toJson()).toList()
+    };
+  }
+
+  Map<String, dynamic> toStorageJson() {
+    return {
+      "report": report.toStorageJson(),
+      "attachments" : attachments.map((e) => e.toJson()).toList()
+    };
   }
 }
