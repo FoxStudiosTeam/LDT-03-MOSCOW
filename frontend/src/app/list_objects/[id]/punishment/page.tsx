@@ -4,13 +4,14 @@ import { GetPunishmentsById } from "@/app/Api/Api";
 import { Header } from "@/app/components/header";
 import { PunishmentItem, Punishments } from "@/models";
 import { useProjectStore } from "@/storage/projectStorage";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 
 export default function PunishmentPage() {
+    const isReady = useAuthRedirect();
     const router = useRouter();
     const params = useParams();
     const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -19,6 +20,7 @@ export default function PunishmentPage() {
     const setPunishmentItem = useProjectStore((state) => state.setPunishmentItem)
 
     useEffect(() => {
+        if (!isReady) return;
         const getPunishments = async () => {
             if (!id) return;
             const result = await GetPunishmentsById(id);
@@ -29,7 +31,7 @@ export default function PunishmentPage() {
 
         }
         getPunishments()
-    }, [id])
+    }, [id, isReady])
     
     const punishSelectedHandle = (punishment: PunishmentItem) => {
         setPunishmentItem(punishment);

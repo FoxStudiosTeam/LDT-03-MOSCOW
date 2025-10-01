@@ -8,6 +8,8 @@ import { GetProjectSchedule } from "@/app/Api/Api";
 import styles from "@/app/styles/variables.module.css";
 import Link from "next/link";
 import Image from "next/image";
+import { useUserStore } from "@/storage/userstore";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 type GanttRow = [
     string,              // Task ID
@@ -42,6 +44,7 @@ const chartHeader = [
 
 
 export default function GanttPage() {
+    const isReady = useAuthRedirect();
     const dataBlocks = useActionsStore((s) => s.data);
     const addDataBlock = useActionsStore((s) => s.addDataBlock);
     const clearData = useActionsStore((s) => s.clearData);
@@ -51,7 +54,16 @@ export default function GanttPage() {
 
     const uuid = localStorage.getItem("projectUuid");
 
+    const userData = useUserStore((state) => state.userData);
+    const [userRole, setUserRole] = useState<string | null>(null);
+
     useEffect(() => {
+        if (!userData) return;
+        setUserRole(userData?.role);
+    }, [userData])
+
+    useEffect(() => {
+        if (!isReady) return;
         async function loadData() {
             try {
                 if (!uuid) {
@@ -91,7 +103,7 @@ export default function GanttPage() {
         }
 
         loadData();
-    }, [addDataBlock, clearData]);
+    }, [addDataBlock, clearData, isReady, uuid]);
 
     const chartRows: GanttRow[] = useMemo(() => {
         const rows: GanttRow[] = [];
@@ -201,14 +213,12 @@ export default function GanttPage() {
                 </div>
 
                 <div className="w-full flex justify-end gap-4">
-                    <Link href={"/gant/edit"} className={`text-center self-end min-w-[250px] ${styles.mainButton}`}>
-                        Изменить
-                    </Link>
-                    <button className={`self-end min-w-[250px] ${styles.mainButton}`}>
-                        Входящие изменения
-                    </button>
+                    {userRole === 'customer' ? (
+                        <Link href={"/gant/edit"} className={`text-center self-end min-w-[250px] ${styles.mainButton}`}>
+                            Изменить
+                        </Link>
+                    ) : null}
                 </div>
-
 
                 {message && <p className="w-full text-center text-red-600 pt-2">{message}</p>}
             </main>

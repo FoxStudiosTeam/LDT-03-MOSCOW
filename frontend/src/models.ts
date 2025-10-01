@@ -56,6 +56,27 @@ export interface WorkItem {
   uuid: string | null;
 }
 
+export interface Project {
+    uuid: string;
+    address: string;
+    created_by: string | null;
+    end_date: string | null;
+    foreman: string | null;
+    polygon: string | null;
+    ssk: string | null;
+    start_date: string | null;
+    status: number;
+    customer?: string;
+    contractor?: string;
+    inspector?: string;
+}
+
+export interface ProjectWithAttachments {
+    attachments: Attachment[];
+    project: Project;
+}
+
+
 export interface SubJob {
   title: string;
   volume: number;

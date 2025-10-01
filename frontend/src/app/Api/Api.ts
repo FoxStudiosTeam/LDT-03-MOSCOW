@@ -3,10 +3,9 @@
 import {jwtDecode} from "jwt-decode";
 import {WorkItem} from "@/models";
 
-const baseURL = "https://test.foxstudios.ru:32460/Vadim/api";
+const baseURL = "https://test.foxstudios.ru:32460/api";
 
 const authBaseURL = 'https://sso.foxstudios.ru:32460/api'
-
 
 interface TokenPayload {
     exp: number;
@@ -339,6 +338,49 @@ export async function GetProjects(offset: number, limit: number) {
     }
 }
 
+export async function GetInspectorProjects(offset: number, limit: number) {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        return {
+            success: false,
+            message: "Нет access_token в localStorage",
+            result: [],
+        };
+    }
+
+    const response = await fetch(`${baseURL}/project/get-inspector-projects`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            address: null,
+            pagination: {limit, offset},
+        }),
+    });
+
+    const data = await response.json();
+
+
+    if (response.ok && Array.isArray(data.result)) {
+        return {
+            success: true,
+            message: null,
+            result: data.result,
+            total: data.total || 0,
+        };
+    } else {
+        return {
+            success: false,
+            message: data.message || "Ошибка при получении проектов",
+            result: [],
+        };
+    }
+}
+
 export async function GetStatuses() {
     const response = await fetch(`${baseURL}/project/get-statuses`, {
         method: "GET",
@@ -630,5 +672,27 @@ export async function GetPunishmetStatuses() {
         console.error("Ошибка при запросе статусов:", error);
         return { successPunishment: false, messagePunishment: String(error) };
     }
+}
 
+
+export async function AddIkoToProject(project_uuid: string) {
+    try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(`${baseURL}/project/add-iko-to-project`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ project_uuid }) 
+        });
+    
+        if (response.ok) {
+            return {success: true, message: null};
+        }
+    } catch (error) {
+        console.error("Ошибка при запросе:", error);
+        return { successPunishment: false, messagePunishment: String(error) };
+    }
 }

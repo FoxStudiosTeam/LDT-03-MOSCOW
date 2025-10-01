@@ -7,9 +7,12 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Measurement, SubJob, WorkItem } from "@/models";
 import { GetMeasurement, UpdateWorksInSchedule } from "@/app/Api/Api";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 
 export default function EditSubjobs() {
+    useAuthRedirect();
+    
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
     const { data } = useActionsStore();
