@@ -134,7 +134,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const TTNScanScreen()),//КАМЕРА
+                MaterialPageRoute(builder: (_) => const TTNScanScreen()),
               );
             },
             child: const Text("OCR"),
