@@ -420,7 +420,6 @@ class PunishmentItemAndAttachments {
   }
 }
 
-
 enum Role {
   INSPECTOR,
   FOREMAN,
@@ -440,5 +439,75 @@ Role roleFromString(String? role) {
     case 'nOBEJlNTEJlb MNPA':
       return Role.ADMIN;
     default: return Role.UNKNOWN;
+  }
+}
+
+class Materials {
+  final DateTime createdAt;
+  final int measurement;
+  final bool onResearch;
+  final String project;
+  final String title;
+  final String uuid;
+  final double volume;
+  final DateTime deliveryDate;
+
+  Materials({
+    required this.title,
+    required this.volume,
+    required this.deliveryDate,
+    required this.createdAt,
+    required this.project,
+    required this.uuid,
+    required this.measurement,
+    required this.onResearch
+  });
+
+  factory Materials.fromJson(Map<String, dynamic> json) {
+    return Materials(
+        title: json['title'],
+        volume: json['volume'] as double,
+        deliveryDate: DateTime.parse(json['delivery_date']),
+        createdAt: DateTime.parse(json['created_at']),
+        project: json['project'],
+        uuid: json['uuid'],
+        measurement: json['measurement'] as int,
+        onResearch: json['on_research'] as bool
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'volume': volume,
+      'delivery_date': deliveryDate.toIso8601String()
+      .split('T').first,
+      'created_at' : createdAt.toIso8601String(),
+      'project': project,
+      'uuid': uuid,
+      'measurement': measurement,
+      'on_research': onResearch
+    };
+  }
+}
+
+class MaterialsAndAttachments {
+  final Materials material;
+  final List<Attachment> attachments;
+
+  MaterialsAndAttachments({
+    required this.material,
+    required this.attachments
+  });
+
+  factory MaterialsAndAttachments.fromJson(Map<String, dynamic> json) {
+    return MaterialsAndAttachments(
+      material: Materials.fromJson(
+        json['material'] as Map<String, dynamic>,
+      ),
+      attachments: (json['attachments'] as List<dynamic>? ?? [])
+          .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
+          .toList(),
+    );
   }
 }

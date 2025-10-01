@@ -9,7 +9,6 @@ import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 
 import '../domain/entities.dart';
-import '../utils/NetworkUtils.dart';
 import '../widgets/base_header.dart';
 import '../widgets/blur_menu.dart';
 import '../widgets/punishment_item_card.dart';
@@ -159,7 +158,6 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
           onBack: leaveHandler,
           onMore: ((_role == Role.INSPECTOR || _role == Role.CUSTOMER || _role == Role.ADMIN) && widget.is_new) ? _openPunishmentMenu : null,
         ),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: data.isEmpty

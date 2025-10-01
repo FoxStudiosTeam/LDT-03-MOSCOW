@@ -51,7 +51,6 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         _role = Role.UNKNOWN;
       });
     }
-    print(_role);
   }
 
   Future<void> _loadProjects() async {

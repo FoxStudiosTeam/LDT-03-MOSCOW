@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/utils/StyleUtils.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/attachment_card.dart';
 
 import 'package:mobile_flutter/widgets/base_header.dart';
+
+import '../utils/style_utils.dart';
 
 class PunishmentItemScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -183,29 +184,6 @@ class _PunishmentItemScreenState extends State<PunishmentItemScreen> {
               fontWeight: FontWeight.w600,
               color: Colors.grey,
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            "Добавьте первое вложение",
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _handleAddAttachment,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: FoxThemeButtonActiveBackground,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            icon: const Icon(Icons.add),
-            label: const Text('Добавить вложение'),
           ),
         ],
       ),
