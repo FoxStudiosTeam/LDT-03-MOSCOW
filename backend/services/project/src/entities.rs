@@ -271,7 +271,7 @@ pub struct TitledSchedule {
 }
 
 
-#[derive(Deserialize, FromRow, ToSchema)]
+#[derive(Deserialize, FromRow, ToSchema, IntoParams)]
 pub struct GetProjectInspectorsRequest {
     pub project_uuid : Uuid
 }
