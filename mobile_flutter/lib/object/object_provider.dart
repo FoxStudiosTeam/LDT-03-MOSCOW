@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -26,7 +27,7 @@ class ObjectsProvider implements IObjectsProvider {
 
   @override
   Future<PaginationResponseWrapper<Project>> getObjects(String address, int offset) async {
-    _accessToken ??= await authStorageProvider.getAccessToken();
+    _accessToken = await authStorageProvider.getAccessToken();
 
     final uri = apiRoot.resolve('/api/project/get-project');
 
@@ -40,7 +41,9 @@ class ObjectsProvider implements IObjectsProvider {
         'address': address,
         'pagination': Pagination(10, offset).toJson(),
       }),
-    );
+    ).timeout(Duration(seconds: 20), onTimeout: () {
+      throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
+    });
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);

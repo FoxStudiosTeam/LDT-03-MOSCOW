@@ -22,6 +22,8 @@ class ObjectsScreen extends StatefulWidget {
 }
 
 class _ObjectsScreenState extends State<ObjectsScreen> {
+  String? _token;
+  Role? _role;
   List<Project> projects = [];
   bool _isLoading = true; // флаг загрузки
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -31,9 +33,28 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   @override
   void initState() {
     super.initState();
+    _loadAuth();
     _loadProjects();
   }
 
+  Future<void> _loadAuth() async {
+    try {
+      var authStorageProvider = widget.di.getDependency<IAuthStorageProvider>(
+        IAuthStorageProviderDIToken,
+      );
+      var role = await authStorageProvider.getRole();
+      var token = await authStorageProvider.getAccessToken();
+      setState(() {
+        _token = token;
+        _role = roleFromString(role);
+      });
+    } catch (e) {
+      setState(() {
+        _token = "NO TOKEN";
+        _role = Role.UNKNOWN;
+      });
+    }
+  }
   Future<void> _loadProjects() async {
     setState(() {
       _isLoading = true; // начинаем загрузку
