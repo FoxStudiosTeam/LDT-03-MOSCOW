@@ -28,12 +28,11 @@ jobs:
 
       - name: Define instance id and artifacts
         id: define-ids
-        working-directory: ../docs
         run: |
           INSTANCE_ID_UPPER=$(echo "${{ env.INSTANCE }}" | tr '[:lower:]' '[:upper:]')
           ARTIFACT="webHelp${INSTANCE_ID_UPPER}2-all.zip"
           ALGOLIA_ARTIFACT="algolia-indexes-${INSTANCE_ID_UPPER}.zip"
-
+          echo ls
           echo "INSTANCE_ID_UPPER=$INSTANCE_ID_UPPER" >> $GITHUB_ENV
           echo "ARTIFACT=$ARTIFACT" >> $GITHUB_ENV
           echo "ALGOLIA_ARTIFACT=$ALGOLIA_ARTIFACT" >> $GITHUB_ENV
