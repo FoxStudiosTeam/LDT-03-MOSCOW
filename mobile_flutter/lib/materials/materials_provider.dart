@@ -27,7 +27,7 @@ class MaterialsProvider implements IMaterialsProvider {
   @override
   Future<Map<int, String>> get_measurments() async {
     final uri = apiRoot.resolve('/api/project/get-measurements');
-    _accessToken ??= await authStorageProvider.getAccessToken();
+    _accessToken = await authStorageProvider.getAccessToken();
 
     final response = await http.get(
       uri,
@@ -58,7 +58,7 @@ class MaterialsProvider implements IMaterialsProvider {
   @override
   Future<List<MaterialsAndAttachments>> get_materials(String project) async {
     final uri = apiRoot.resolve('/api/materials/by_project/$project');
-    _accessToken ??= await authStorageProvider.getAccessToken();
+    _accessToken = await authStorageProvider.getAccessToken();
 
     final response = await http.get(
       uri,

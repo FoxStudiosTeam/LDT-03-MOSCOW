@@ -33,7 +33,7 @@ class PunishmentProvider implements IPunishmentProvider {
   @override
   Future<Map<int, String>> get_statuses() async {
     final uri = apiRoot.resolve('/api/punishment/get_statuses');
-    _accessToken ??= await authStorageProvider.getAccessToken();
+    _accessToken = await authStorageProvider.getAccessToken();
 
     final response = await http.get(
       uri,
@@ -66,7 +66,7 @@ class PunishmentProvider implements IPunishmentProvider {
   Future<Map<String, String>> get_documents() async {
     final uri = apiRoot.resolve('/api/punishment/get_regulation_docs')
     .replace(queryParameters: null);
-    _accessToken ??= await authStorageProvider.getAccessToken();
+    _accessToken = await authStorageProvider.getAccessToken();
 
     final response = await http.get(
       uri,
@@ -100,7 +100,7 @@ class PunishmentProvider implements IPunishmentProvider {
     final uri = apiRoot.resolve('/api/punishment/get_punishments').replace(
       queryParameters: {'project': project},
     );
-    _accessToken ??= await authStorageProvider.getAccessToken();
+    _accessToken = await authStorageProvider.getAccessToken();
 
     final response = await http.get(
       uri,
@@ -132,7 +132,7 @@ class PunishmentProvider implements IPunishmentProvider {
     final uri = apiRoot.resolve('/api/punishment/get_punishment_items').replace(
       queryParameters: {'punishment_id': punishment},
     );
-    _accessToken ??= await authStorageProvider.getAccessToken();
+    _accessToken = await authStorageProvider.getAccessToken();
 
     final response = await http.get(
       uri,

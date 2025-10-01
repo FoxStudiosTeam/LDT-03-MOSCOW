@@ -27,7 +27,7 @@ class ReportsProvider implements IReportsProvider {
   @override
   Future<Map<int, String>> get_statuses() async {
     final uri = apiRoot.resolve('/api/report/get_statuses');
-    _accessToken ??= await authStorageProvider.getAccessToken();
+    _accessToken = await authStorageProvider.getAccessToken();
 
     final response = await http.get(
       uri,
@@ -59,7 +59,7 @@ class ReportsProvider implements IReportsProvider {
   Future<List<ReportAndAttachments>> get_reports(String project) async {
     final uri = apiRoot.resolve('/api/report/get_reports_by_uuid')
     .replace(queryParameters: {"project_uuid":project});
-    _accessToken ??= await authStorageProvider.getAccessToken();
+    _accessToken = await authStorageProvider.getAccessToken();
 
     final response = await http.get(
       uri,

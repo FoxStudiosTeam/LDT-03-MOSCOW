@@ -26,7 +26,7 @@ class ObjectsProvider implements IObjectsProvider {
 
   @override
   Future<PaginationResponseWrapper<Project>> getObjects(String address, int offset) async {
-    _accessToken ??= await authStorageProvider.getAccessToken();
+    _accessToken = await authStorageProvider.getAccessToken();
 
     final uri = apiRoot.resolve('/api/project/get-project');
 
