@@ -40,7 +40,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         IAuthStorageProviderDIToken,
       );
       var role = await authStorageProvider.getRole();
-      var token = await authStorageProvider.getRefreshToken();
+      var token = await authStorageProvider.getAccessToken();
       setState(() {
         _token = token;
         _role = roleFromString(role);
