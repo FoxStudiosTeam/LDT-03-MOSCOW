@@ -73,8 +73,6 @@ void main() async {
   );
 }
 
-
-
 class MainPage extends StatelessWidget {
   final IDependencyContainer di;
 
