@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/tabler.dart';
@@ -19,36 +20,30 @@ class OcrCameraScreen extends StatefulWidget {
   State<OcrCameraScreen> createState() => _OcrCameraScreenState();
 }
 
-Future<Uint8List> drawBoxes(Uint8List imageBytes, List<OcrBox> boxes) async {
-  var image = img.decodeImage(imageBytes)!;
-  final font = img.arial48;
-  final col = img.ColorInt16.fromList([255, 0, 0, 255]);
-  var i = 0;
-  // image = img.drawString(image, "ABOBA", x: 100, y: 100, font: font, color: col);
-  // image = img.drawRect(
-  //       image,
-  //       x1: box.left,
-  //       y1: box.top,
-  //       x2: box.right,
-  //       y2: box.bottom,
-  //       color: col,
-  //       thickness: 20,
-  //     );
-  for (final box in boxes) {
-    log("OCR: ${box.text} (${box.left}, ${box.top}) - (${box.right}, ${box.bottom})");
-    image = img.drawRect(
-      image,
-      x1: box.left,
-      y1: box.top,
-      x2: box.right,
-      y2: box.bottom,
-      color: col,
-      thickness: 20,
-    );
-    image = img.drawString(image, box.text, x: box.left, y: box.top - font.lineHeight, font: font, color: col);
-  }
-  return Uint8List.fromList(img.encodeJpg(image));
-}
+final red = img.ColorRgb8(255, 0, 0);
+final green = img.ColorRgb8(0, 255, 0);
+final blue = img.ColorRgb8(0, 0, 255);
+
+// Future<Uint8List> drawBoxes(Uint8List imageBytes, List<OcrBox> boxes) async {
+//   var image = img.decodeImage(imageBytes)!;
+//   for (final box in boxes) {
+//     image = img.drawRect(
+//       image,
+//       x1: box.left,
+//       y1: box.top,
+//       x2: box.right,
+//       y2: box.bottom,
+//       color: blue,
+//       thickness: 1,
+//     );
+//   }
+//   return Uint8List.fromList(img.encodeJpg(image));
+// }
+
+
+
+      // img.drawLine(image, x1: a.centerX.toInt(), y1: a.centerY.toInt(), x2: b.centerX.toInt(), y2: b.centerY.toInt(), color: img.ColorRgb8(255, 0, 0));
+
 
 const String cameraSvg ='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="24" height="24" fill="none"/><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2"/><path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></g></svg>';
 
@@ -70,6 +65,8 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
   List<CameraDescription>? _cameras;
   Uint8List? imageWithBoxes = null;
   bool _isCameraInitialized = false;
+  Uint8List? imageCache = null;
+  OcrPage? ocrPage = null;
   @override
   void initState() {
     super.initState();
@@ -82,7 +79,6 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
     }
     return status.isGranted;
   }
-
 
   Future<void> _initCamera() async {
     var granted = await _requestCameraPermission();
@@ -116,24 +112,37 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
     if (_cameraController == null || !_cameraController!.value.isInitialized) return;
 
     try {
-      final image = await _cameraController!.takePicture();
-      log('OCR: Picture taken: ${image.path}');
+      // final image3 = await _cameraController!.takePicture();
+      // log('OCR: Picture taken: ${image3.path}');
+      // imageCache = null;
+      // boxes = [];
+      if (imageCache == null) {
+        final file = File('/data/user/0/ru.foxstudios.mobile_flutter/cache/CAP4881106055615520049.jpg');
+        final Uint8List bytes = await file.readAsBytes();
+        imageCache = img.encodeJpg(img.decodeImage(bytes)!);
+      }
+      var image = imageCache!;
 
-      final file = File(image.path);
+      if (ocrPage == null) {
+        ocrPage = await OcrBridge.getPage(image);
+      }
 
-      final Uint8List bytes = await file.readAsBytes();
-      final Uint8List rotated = bytes;
-      // final Uint8List rotated = await rotateClockwise(bytes);
-      final boxes = await OcrBridge.getBoxes(rotated);
+      // image = await drawBoxes(image, boxes);
+      // image = await processBoxes(image, boxes);
 
-      final boxed = await drawBoxes(rotated, boxes);
-
-      final Uint8List rotatedBack = await rotateCounterClockwise(boxed);
       setState(() {
-        imageWithBoxes = rotatedBack;
+        imageWithBoxes = image;
       });
 
-      log("OCR: Got ${boxes.length} boxes");
+      // final ByteData data = await rootBundle.load('assets/4mo.png');
+      // Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      // final Uint8List rotated = await rotateClockwise(bytes);
+      // final boxes = await OcrBridge.getBoxes(rotated);
+      // final boxed = await drawBoxes(rotated, boxes);
+      // final Uint8List rotatedBack = boxed;
+      // setState(() {
+      //   imageWithBoxes = rotatedBack;
+      // });
     } catch (e) {
       log('Error taking picture: $e');
     }
