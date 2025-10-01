@@ -4,6 +4,7 @@ import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/screens/about_screen.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
+import 'package:mobile_flutter/screens/map_screen.dart';
 import 'package:mobile_flutter/screens/objects_screen.dart';
 
 class DrawerMenu extends StatefulWidget {
@@ -103,6 +104,17 @@ class _DrawerMenuState extends State<DrawerMenu> {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: SvgPicture.asset("assets/icons/map.svg"),
+                  title: const Text("Карта объектов"),
+                  onTap: (){
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => MapScreen(di: widget.di)),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: SvgPicture.asset("assets/icons/logout.svg"),
                   title: const Text("Выход"),
                   onTap: (){
@@ -112,7 +124,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
                       MaterialPageRoute(builder: (_) => AuthScreen(di: widget.di)),
                     );
                   },
-                )
+                ),
               ],
             ),
           ),
