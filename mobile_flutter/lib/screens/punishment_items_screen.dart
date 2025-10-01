@@ -8,10 +8,9 @@ import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 
-import '../domain/entities.dart';
-import '../widgets/base_header.dart';
-import '../widgets/blur_menu.dart';
-import '../widgets/punishment_item_card.dart';
+import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/widgets/base_header.dart';
+import 'package:mobile_flutter/widgets/punishment_item_card.dart';
 class PunishmentItemsScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String punishmentUuid;
@@ -89,11 +88,6 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
         ),
       ),
     );
-  }
-
-  void _handleFilterPunishments() {
-    // TODO: Реализовать фильтрацию по статусу
-    print("Фильтровать нарушения по статусу");
   }
 
   void _handleExportPDF() {
