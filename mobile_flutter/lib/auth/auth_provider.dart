@@ -45,6 +45,16 @@ class AuthProvider implements IAuthProvider {
       data.accessTokenValue = rawData['access_token'] ?? "";
       data.ext = rawData['exp'] ?? 0;
 
+      final parts = data.accessTokenValue.split('.');
+      if (parts.length != 3) {
+        throw Exception('invalid token');
+      }
+
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final role = jsonDecode(payload)['role'];
+
+      await authStorageProvider.saveRole(role);
+
       var refresh = parseHeaders(response.headers);
       if (refresh != null) {
         await authStorageProvider.saveRefreshToken(refresh.refreshTokenValue, refresh.ext, now);
@@ -105,6 +115,16 @@ class AuthProvider implements IAuthProvider {
       final rawData = jsonDecode(response.body);
       data.accessTokenValue = rawData['access_token'] ?? "";
       data.ext = rawData['exp'] ?? 0;
+
+      final parts = data.accessTokenValue.split('.');
+      if (parts.length != 3) {
+        throw Exception('invalid token');
+      }
+
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final role = jsonDecode(payload)['role'];
+
+      await authStorageProvider.saveRole(role);
 
       var refresh = parseHeaders(response.headers);
       if (refresh != null) {

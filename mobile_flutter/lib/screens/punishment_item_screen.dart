@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/utils/style_utils.dart';
-import 'package:mobile_flutter/widgets/blur_menu.dart';
+import 'package:mobile_flutter/utils/StyleUtils.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
-import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/attachment_card.dart';
+
+import 'package:mobile_flutter/widgets/base_header.dart';
 
 class PunishmentItemScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -27,60 +26,11 @@ class PunishmentItemScreen extends StatefulWidget {
 
 class _PunishmentItemScreenState extends State<PunishmentItemScreen> {
   String? _token;
+  Role? _role;
   List<PunishmentItemAttachmentCard> data = [];
 
   void leaveHandler() {
     Navigator.pop(context);
-  }
-
-  void _openAttachmentsMenu(BuildContext context) {
-    showBlurBottomSheet(
-      context: context,
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey[400],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.add),
-            title: const Text('Добавить вложение'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleAddAttachment();
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.filter_list),
-            title: const Text('Фильтровать по типу'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleFilterAttachments();
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.download),
-            title: const Text('Скачать все'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleDownloadAll();
-            },
-          ),
-        ],
-      ),
-    );
   }
 
   void _handleAddAttachment() {
@@ -101,7 +51,7 @@ class _PunishmentItemScreenState extends State<PunishmentItemScreen> {
   @override
   void initState() {
     super.initState();
-    _loadToken();
+    _loadAuth();
     _loadCards().then((cards) {
       setState(() {
         data = cards;
@@ -109,18 +59,21 @@ class _PunishmentItemScreenState extends State<PunishmentItemScreen> {
     });
   }
 
-  Future<void> _loadToken() async {
+  Future<void> _loadAuth() async {
     try {
       var authStorageProvider = widget.di.getDependency<IAuthStorageProvider>(
         IAuthStorageProviderDIToken,
       );
+      var role = await authStorageProvider.getRole();
       var token = await authStorageProvider.getAccessToken();
       setState(() {
         _token = token;
+        _role = roleFromString(role);
       });
     } catch (e) {
       setState(() {
         _token = "NO TOKEN";
+        _role = Role.UNKNOWN;
       });
     }
   }
@@ -135,25 +88,10 @@ class _PunishmentItemScreenState extends State<PunishmentItemScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FoxHeader(
-        leftIcon: IconButton(
-          onPressed: leaveHandler,
-          icon: SvgPicture.asset(
-            'assets/icons/arrow-left.svg',
-            width: 32,
-            height: 32,
-          ),
-        ),
+      appBar: BaseHeader(
         title: "Вложения нарушения",
         subtitle: widget.addr,
-        rightIcon: IconButton(
-          onPressed: () => _openAttachmentsMenu(context),
-          icon: SvgPicture.asset(
-            'assets/icons/menu-kebab.svg',
-            width: 32,
-            height: 32,
-          ),
-        ),
+        onBack: leaveHandler,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

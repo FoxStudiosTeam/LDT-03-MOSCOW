@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
-import 'package:mobile_flutter/domain/entities.dart' show ProjectStatus, FoxPolygon, ProjectStatusExtension;
+import 'package:mobile_flutter/domain/entities.dart'
+    show ProjectStatus, FoxPolygon, ProjectStatusExtension;
 import 'package:mobile_flutter/screens/punishments_screen.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
+import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
-import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/screens/report_screen.dart';
 import 'package:mobile_flutter/screens/material_screen.dart';
 
@@ -133,26 +134,13 @@ class _ObjectScreenState extends State<ObjectScreen> {
     }
 
     return Scaffold(
-      appBar: FoxHeader(
-        leftIcon: IconButton(
-          onPressed: leaveHandler,
-          icon: SvgPicture.asset(
-            'assets/icons/arrow-left.svg',
-            width: 32,
-            height: 32,
-          ),
+      appBar:
+        BaseHeader(
+          title: "Объект",
+          subtitle: widget.address,
+          onBack: leaveHandler,
+          onMore: openBottomBlurMenu,
         ),
-        title: "Объект",
-        subtitle: widget.address,
-        rightIcon: IconButton(
-          onPressed: openBottomBlurMenu,
-          icon: SvgPicture.asset(
-            'assets/icons/menu-kebab.svg',
-            width: 32,
-            height: 32,
-          ),
-        ),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: SingleChildScrollView(

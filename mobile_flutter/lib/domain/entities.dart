@@ -99,7 +99,10 @@ extension ProjectStatusExtension on ProjectStatus {
   Text toRenderingString() {
     return Text(
       "Статус: ${toReadableString()}",
-      style: TextStyle(color: getStatusColor(), fontWeight: FontWeight.w600),
+      style: TextStyle(
+        color: getStatusColor(),
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 }
@@ -414,5 +417,28 @@ class PunishmentItemAndAttachments {
           .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
           .toList(),
     );
+  }
+}
+
+
+enum Role {
+  INSPECTOR,
+  FOREMAN,
+  CUSTOMER,
+  ADMIN,
+  UNKNOWN
+}
+
+Role roleFromString(String? role) {
+  switch (role) {
+    case 'inspector':
+      return Role.INSPECTOR;
+    case 'customer':
+      return Role.CUSTOMER;
+    case 'foreman':
+      return Role.FOREMAN;
+    case 'nOBEJlNTEJlb MNPA':
+      return Role.ADMIN;
+    default: return Role.UNKNOWN;
   }
 }

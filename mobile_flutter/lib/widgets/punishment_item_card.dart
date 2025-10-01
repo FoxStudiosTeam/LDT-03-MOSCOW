@@ -11,6 +11,7 @@ class PunishmentItemCard extends StatelessWidget {
   final Map<int, String> statuses;
   final IDependencyContainer di;
   final Map<String, String> docs;
+  final Role? role;
 
   const PunishmentItemCard({
     super.key,
@@ -19,6 +20,7 @@ class PunishmentItemCard extends StatelessWidget {
     required this.data,
     required this.statuses,
     required this.docs,
+    this.role
   });
 
   void _openPunishmentItemMenu(BuildContext context) {
@@ -37,16 +39,17 @@ class PunishmentItemCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.edit),
-            title: const Text('Редактировать'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleEditItem();
-            },
-          ),
-          const Divider(height: 1),
+          if (role == Role.ADMIN || role == Role.CUSTOMER || role == Role.INSPECTOR)
+            ListTile(
+              titleAlignment: ListTileTitleAlignment.center,
+              leading: const Icon(Icons.edit),
+              title: const Text('Редактировать'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _handleEditItem();
+              },
+            ),
+            const Divider(height: 1),
           ListTile(
             titleAlignment: ListTileTitleAlignment.center,
             leading: const Icon(Icons.attach_file),
@@ -59,11 +62,6 @@ class PunishmentItemCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void _handleViewDetails(BuildContext context) {
-    // TODO: Реализовать просмотр деталей
-    print("Просмотреть детали нарушения: ${data.title}");
   }
 
   void _handleEditItem() {
@@ -102,11 +100,15 @@ class PunishmentItemCard extends StatelessWidget {
 
   Color _getStatusColor(int status) {
     switch (status) {
-      case 1: // Активный
-        return Colors.orange;
-      case 2: // Устранен
+      case 0:
         return Colors.green;
-      case 3: // Просрочен
+      case 1:
+        return Colors.orange;
+      case 2:
+        return Colors.orange;
+      case 3:
+        return Colors.red;
+      case 4:
         return Colors.red;
       default:
         return Colors.grey;
@@ -126,7 +128,7 @@ class PunishmentItemCard extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade300),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.only(bottom: 16, top: 10, left: 20, right: 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -150,8 +152,8 @@ class PunishmentItemCard extends StatelessWidget {
                   onPressed: () => _openPunishmentItemMenu(context),
                   icon: SvgPicture.asset(
                     'assets/icons/menu-kebab.svg',
-                    width: 24,
-                    height: 24,
+                    width: 20,
+                    height: 20,
                   ),
                 ),
               ],
