@@ -7,7 +7,6 @@ const baseURL = "https://test.foxstudios.ru:32460/Vadim/api";
 
 const authBaseURL = 'https://sso.foxstudios.ru:32460/api'
 
-
 interface TokenPayload {
     exp: number;
     uuid: string;
@@ -630,5 +629,29 @@ export async function GetPunishmetStatuses() {
         console.error("Ошибка при запросе статусов:", error);
         return { successPunishment: false, messagePunishment: String(error) };
     }
+}
 
+
+export async function AddIkoToProject(uuid: string) {
+    try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(`${baseURL}/project/add-iko-to-project`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(uuid)
+        });
+    
+        const data = await response.json();
+    
+        if (response.ok) {
+            return {success: true, message: null, result: data};
+        }
+    } catch (error) {
+        console.error("Ошибка при запросе статусов:", error);
+        return { successPunishment: false, messagePunishment: String(error) };
+    }
 }
