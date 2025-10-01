@@ -11,7 +11,7 @@ use crate::entities::*;
 #[utoipa::path(
     post,
     path = "/get-inspector-projects",
-    tag = crate::ANY_TAG,
+    tag = crate::INSPECTOR_TAG,
     summary = "Get projects related to inspector",
     security(("bearer_access" = [])),
     responses(
