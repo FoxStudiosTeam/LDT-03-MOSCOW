@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
+import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
-import 'package:mobile_flutter/utils/style_utils.dart';
 
 class ChecklistActivationScreen extends StatefulWidget {
   final IDependencyContainer di;
+  final String objectTitle;
 
-  const ChecklistActivationScreen({super.key, required this.di});
+  const ChecklistActivationScreen({
+    super.key,
+    required this.di,
+    required this.objectTitle,
+  });
 
   @override
   State<ChecklistActivationScreen> createState() => _ChecklistActivationScreenState();
 }
-
+//TODO Убрать заглушку
 class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
   List<ChecklistItem> checklistItems = [
     ChecklistItem(
@@ -33,76 +37,29 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
 
   List<String> attachments = [];
 
+  void leaveHandler() {
+    Navigator.pop(context);
+    Navigator.pop(context); //два чтобы менюшка закрывалась
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: FoxHeader(
-        backgroundColor: Colors.white,
-        leftIcon: SvgPicture.asset(
-          'assets/icons/logo.svg',
-          width: 40,
-          height: 40,
-          color: Colors.black,
-        ),
-        title: "ЭСЖ",
-        rightIcon: IconButton(
-          onPressed: () {
-            // Обработка меню
-          },
+        leftIcon: IconButton(
+          onPressed: leaveHandler,
           icon: SvgPicture.asset(
-            'assets/icons/menu.svg',
-            width: 40,
-            height: 40,
-            color: Colors.black,
+            'assets/icons/arrow-left.svg',
+            width: 32,
+            height: 32,
           ),
         ),
+        title: "Чек-лист форма 1",
+        subtitle: widget.objectTitle,
       ),
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Шапка с кнопкой назад и информацией
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Чек-лист форма 1",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "ул. Флотская д, 54, 58к1",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 48), // Для балансировки с кнопкой назад
-              ],
-            ),
-          ),
-
-          const Divider(height: 1, color: Colors.grey),
-
           // Список пунктов чек-листа
           Expanded(
             child: ListView.builder(
@@ -117,15 +74,18 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
           // Раздел вложений
           if (attachments.isNotEmpty) _buildAttachmentsSection(),
 
-          // Нижняя панель с кнопками
+          // Сохранить и добавить вложения
           Container(
-            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             child: Row(
               children: [
                 // Кнопка сохранения
                 Expanded(
                   child: ElevatedButton(
-                    onPressed:() {},
+                    onPressed: (){
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: FoxThemeButtonActiveBackground,
                       foregroundColor: Colors.white,
@@ -161,7 +121,7 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
                     ],
                   ),
                   child: IconButton(
-                    onPressed: () => _openAddAttachmentMenu(context),
+                    onPressed: () => _openAddAttachmentMenu(context),//TODO ВЛОЖЕНИЯ
                     icon: const Icon(Icons.add, color: Colors.white, size: 24),
                   ),
                 ),
@@ -337,6 +297,44 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
       ),
     );
   }
+
+  void _openAddAttachmentMenu(BuildContext context) {
+    showBlurBottomSheet(
+      context: context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.attach_file),
+            title: const Text('Добавить файл'),
+            onTap: () {
+              Navigator.pop(ctx);//TODO ДОБАВИТЬ ФАЙЛ
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.photo),
+            title: const Text('Добавить фото'),
+            onTap: () {
+              Navigator.pop(ctx);//TODO ДОБАВИТЬ ФОТО
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class ChecklistItem {
@@ -365,46 +363,6 @@ class ChecklistItem {
       comment: comment ?? this.comment,
     );
   }
-}
-
-void _openAddAttachmentMenu(BuildContext context) {
-  showBlurBottomSheet(
-    context: context,
-    builder: (ctx) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 40,
-          height: 4,
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.grey[400],
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(height: 12),
-        ListTile(
-          titleAlignment: ListTileTitleAlignment.center,
-          leading: const Icon(Icons.attach_file),
-          title: const Text('Добавить файл'),
-          onTap: () {
-            Navigator.pop(ctx);
-
-          },
-        ),
-        const Divider(height: 1),
-        ListTile(
-          titleAlignment: ListTileTitleAlignment.center,
-          leading: const Icon(Icons.photo),
-          title: const Text('Добавить фото'),
-          onTap: () {
-            Navigator.pop(ctx);
-
-          },
-        ),
-      ],
-    ),
-  );
 }
 
 enum ChecklistStatus {

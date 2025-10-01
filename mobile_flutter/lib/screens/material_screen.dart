@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/materials/materials_provider.dart';
+import 'package:mobile_flutter/screens/create_material_screen.dart';
+import 'package:mobile_flutter/screens/ocr/ttn.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 
@@ -98,8 +100,11 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
             leading: const Icon(Icons.download),
             title: const Text('Зарегистрировать новый материал'),
             onTap: () {
-              Navigator.pop(ctx);
-              () => ();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => TTNScanScreen()),
+                //MaterialCreationScreen(di: widget.di, address: widget.projectTitle)),
+              );
             },
           ),
         ],

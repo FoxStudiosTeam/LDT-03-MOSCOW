@@ -32,6 +32,10 @@
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+        <string>Приложению требуется доступ к фото для добавления вложений к отчетам</string>
+        <key>NSPhotoLibraryAddUsageDescription</key>
+        <string>Приложению требуется доступ к фото для сохранения изображений</string>
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
