@@ -166,8 +166,9 @@ class _QueuedRequest<T> {
 
 enum AttachmentVariant {
   project,
-  material,
-  report
+  materials,
+  reports,
+  punishment_item
 }
 
 class AttachmentModel {
@@ -235,20 +236,35 @@ class QueuedRequestModel {
         "Content-Type": "application/json",
         ...headers,
       });
+      request.headers["Authorization"] = "Bearer $accessToken";
       request.body = jsonEncode(body);
 
       return await request.send();
     } else {
-      final request = http.MultipartRequest(method, Uri.parse(url));
-      request.headers.addAll(headers);
-      request.fields.addAll(body.map((k, v) => MapEntry(k, v.toString())));
+      final request = http.Request(method, Uri.parse(url));
+      request.headers.addAll({
+        "Content-Type": "application/json",
+        ...headers,
+      });
+      request.headers["Authorization"] = "Bearer $accessToken";
+      request.body = jsonEncode(body);
+      var v = await http.Response.fromStream(await request.send());
+      
 
-      for (final attachment in attachments) {
-        request.files.add(await http.MultipartFile.fromPath(
-          attachment.type.toString().split(".").last,
-          attachment.path,
-        ));
-      }
+
+
+
+      // final request = http.MultipartRequest(method, Uri.parse(url));
+      // request.headers.addAll(headers);
+      // request.headers["Authorization"] = "Bearer $accessToken";
+      // request.fields.addAll(body.map((k, v) => MapEntry(k, v.toString())));
+
+      // for (final attachment in attachments) {
+      //   request.files.add(await http.MultipartFile.fromPath(
+      //     attachment.type.toString().split(".").last,
+      //     attachment.path,
+      //   ));
+      // }
 
       return await request.send();
     }
