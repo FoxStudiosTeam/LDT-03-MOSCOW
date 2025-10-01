@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/icons/cib.dart';
 import 'package:latlong2/latlong.dart';
 
 class Pagination {
@@ -776,4 +777,104 @@ class PunishmentItemUpdRequest {
     'comment': comment,
     'regulation_doc': regulationDoc,
   };
+}
+
+class AddReportRequest {
+  final String projectScheduleItem;
+  final DateTime reportDate;
+  final int status;
+  final DateTime? checkDate;
+
+  AddReportRequest({
+    required this.projectScheduleItem,
+    required this.reportDate,
+    required this.status,
+    this.checkDate,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'project_schedule_item': projectScheduleItem,
+    'report_date': reportDate.toIso8601String()
+        .split('T').first,
+    'status': status,
+    'check_date': checkDate?.toIso8601String()
+        .split('T').first,
+  };
+}
+
+class UpdateReportRequest {
+  final String uuid;
+  final String? projectScheduleItem;
+  final DateTime? reportDate;
+  final int? status;
+  final DateTime? checkDate;
+
+  UpdateReportRequest({
+    required this.uuid,
+    this.projectScheduleItem,
+    this.reportDate,
+    this.status,
+    this.checkDate,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'uuid': uuid,
+    'project_schedule_item': projectScheduleItem,
+    'report_date': reportDate?.toIso8601String().split('T').first,
+    'status': status,
+    'check_date': checkDate?.toIso8601String().split('T').first,
+  };
+}
+
+class InspectorInfo {
+  final String fcs;
+  final String uuid;
+  final String projectUuid;
+
+  InspectorInfo({
+    required this.fcs,
+    required this.uuid,
+    required this.projectUuid,
+  });
+
+  factory InspectorInfo.fromJson(Map<String, dynamic> json, String projectUuid) {
+    return InspectorInfo (
+      fcs: json['fcs'],
+      uuid: json['uuid'],
+      projectUuid: projectUuid,
+    );
+  }
+
+  factory InspectorInfo.fromStorageJson(Map<String, dynamic> json) {
+    return InspectorInfo (
+      fcs: json['fcs'],
+      uuid: json['uuid'],
+      projectUuid: json['project_uuid'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'fcs' : fcs,
+      'uuid' : uuid,
+    };
+  }
+
+  Map<String, dynamic> toStorageJson() {
+    return {
+      'fcs' : fcs,
+      'uuid' : uuid,
+      'project_uuid': projectUuid,
+    };
+  }
+}
+
+class ProjectAndInspectors {
+  final Project project;
+  final List<InspectorInfo> inspectors;
+
+  ProjectAndInspectors({
+    required this.project,
+    required this.inspectors,
+  });
 }

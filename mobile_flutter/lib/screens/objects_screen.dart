@@ -23,7 +23,7 @@ class ObjectsScreen extends StatefulWidget {
 class _ObjectsScreenState extends State<ObjectsScreen> {
   String? _token;
   Role? _role;
-  List<Project> projects = [];
+  List<ProjectAndInspectors> projects = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -60,6 +60,14 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     print("Start Request");
 
     var response = await NetworkUtils.wrapRequest(() => objectsProvider.getObjects("", 0), context, widget.di);
+    final List<ProjectAndInspectors> result = [];
+    for (var project in response.items) {
+      final inspectors = await NetworkUtils.wrapRequest(() => objectsProvider.getObjectInspectors(project.uuid),context,widget.di);
+      result.add(ProjectAndInspectors(
+          project: project,
+          inspectors: inspectors
+      ));
+    };
 
     print("END Request");
     for (var elem in response.items) {
@@ -67,19 +75,19 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     }
 
     setState(() {
-      projects = response.items;
+      projects = result;
     });
   }
 
   void sortExited() {
     setState(() {
-      projects.sort((a, b) => b.status.index.compareTo(a.status.index));
+      projects.sort((a, b) => b.project.status.index.compareTo(a.project.status.index));
     });
   }
 
   void sortInAction() {
     setState(() {
-      projects.sort((a, b) => a.status.index.compareTo(b.status.index));
+      projects.sort((a, b) => a.project.status.index.compareTo(b.project.status.index));
     });
   }
 
@@ -153,15 +161,15 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12.0),
                     child: ObjectCard(
-                      projectUuid: project.uuid,
-                      title: project.address,
-                      status: project.status,
-                      address: project.address,
+                      projectUuid: project.project.uuid,
+                      title: project.project.address,
+                      status: project.project.status,
+                      address: project.project.address,
                       di: widget.di,
-                      polygon: project.polygon!,
-                      customer: project.created_by,
-                      foreman: project.foreman,
-                      inspector: project.ssk,
+                      polygon: project.project.polygon!,
+                      customer: project.project.created_by,
+                      foreman: project.project.foreman,
+                      inspector: project.inspectors,
                       isStatic: false,
                     ),
                   );
