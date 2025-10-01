@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/screens/punishment_items_screen.dart';
+import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 
 class PunishmentCard extends StatelessWidget {
@@ -10,6 +11,7 @@ class PunishmentCard extends StatelessWidget {
   final Map<int, String> statuses;
   final String addr;
   final IDependencyContainer di;
+  final bool is_new;
 
   const PunishmentCard({
     super.key,
@@ -17,6 +19,7 @@ class PunishmentCard extends StatelessWidget {
     required this.di,
     required this.data,
     required this.addr,
+    required this.is_new
   });
 
   void _openPunishmentCardMenu(BuildContext context) {
@@ -37,11 +40,11 @@ class PunishmentCard extends StatelessWidget {
           const SizedBox(height: 12),
           ListTile(
             titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.visibility),
-            title: const Text('Просмотреть детали'),
+            leading: const Icon(Icons.download),
+            title: const Text('Скачать документ'),
             onTap: () {
               Navigator.pop(ctx);
-              _handleViewDetails(context);
+              _handleDownloadDocument();
             },
           ),
         ],
@@ -49,26 +52,27 @@ class PunishmentCard extends StatelessWidget {
     );
   }
 
-  void _handleViewDetails(BuildContext context) {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (_) => PunishmentItemsScreen(
-                di: di,
-                punishmentUuid: data.uuid,
-                addr: addr
-            )
-        )
-    );
+  void _handleEditPunishment() {
+    // TODO: Реализовать редактирование предписания
+    print("Редактировать предписание: ${data.customNumber}");
+  }
+
+  void _handleDownloadDocument() {
+    // TODO: Реализовать скачивание документа
+    print("Скачать документ предписания: ${data.customNumber}");
   }
 
   Color _getStatusColor(int status) {
     switch (status) {
-      case 1: // Активный
-        return Colors.orange;
-      case 2: // Выполнен
+      case 0:
         return Colors.green;
-      case 3: // Отменен
+      case 1:
+        return Colors.orange;
+      case 2:
+        return Colors.orange;
+      case 3:
+        return Colors.red;
+      case 4:
         return Colors.red;
       default:
         return Colors.grey;
@@ -100,16 +104,16 @@ class PunishmentCard extends StatelessWidget {
                 di: di,
                 punishmentUuid: data.uuid,
                 addr: addr,
+                is_new: is_new,
               ),
             ),
           );
         },
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.only(bottom: 16, top: 10, left: 20, right: 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Заголовок и кнопка меню
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -129,8 +133,8 @@ class PunishmentCard extends StatelessWidget {
                     onPressed: () => _openPunishmentCardMenu(context),
                     icon: SvgPicture.asset(
                       'assets/icons/menu-kebab.svg',
-                      width: 24,
-                      height: 24,
+                      width: 20,
+                      height: 20,
                     ),
                   ),
                 ],

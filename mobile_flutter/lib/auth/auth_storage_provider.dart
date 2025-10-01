@@ -11,12 +11,16 @@ abstract class IAuthStorageProvider {
   Future<int> getRefreshTokenTTL();
   Future<int> getAccessTokenTTL();
   Future<int> getRefreshTokenTTLStart();
+  Future<void> saveRole(String role);
+  Future<String> getRole();
 }
 
 const IAuthStorageProviderDIToken = "I-Auth-Storage-Provider-DI-Token";
 
 // AuthProvider - default implementation for IAuthStorageProvider
 class AuthStorageProvider implements IAuthStorageProvider {
+  String ROLE_KEY = "role-key";
+
   String REFRESH_TOKEN_KEY = "refresh-token-key";
   String REFRESH_TOKEN_TTL_KEY = "refresh-token-ttl-key";
   String REFRESH_TOKEN_TTL_START_KEY = "refresh-token-ttl-start-key";
@@ -40,6 +44,17 @@ class AuthStorageProvider implements IAuthStorageProvider {
     await prefs?.remove(REFRESH_TOKEN_TTL_START_KEY);
     await prefs?.remove(ACCESS_TOKEN_KEY);
     await prefs?.remove(ACCESS_TOKEN_TTL_KEY);
+    await prefs?.remove(ROLE_KEY);
+  }
+
+  @override
+  Future<String> getRole() async {
+    if (prefs == null) {
+      await init();
+    }
+
+    String? role = prefs?.getString(ROLE_KEY);
+    return role ?? "";
   }
 
   @override
@@ -121,6 +136,15 @@ class AuthStorageProvider implements IAuthStorageProvider {
     await prefs?.setString(REFRESH_TOKEN_KEY, refreshToken);
     await prefs?.setInt(REFRESH_TOKEN_TTL_KEY, exp);
     await prefs?.setInt(REFRESH_TOKEN_TTL_START_KEY, currentTime);
+  }
+
+  @override
+  Future<void> saveRole(String role) async {
+    if (prefs == null) {
+      await init();
+    }
+
+    await prefs?.setString(ROLE_KEY, role);
   }
   
 }
