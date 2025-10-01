@@ -5,10 +5,12 @@ import 'package:mobile_flutter/auth/auth_provider.dart';
 import 'package:mobile_flutter/di/dependency_builder.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/materials/materials_provider.dart';
+import 'package:mobile_flutter/materials/materials_storage_provider.dart';
 import 'package:mobile_flutter/object/object_storage_provider.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
 import 'package:mobile_flutter/punishment/punishment_storage_provider.dart';
 import 'package:mobile_flutter/reports/reports_provider.dart';
+import 'package:mobile_flutter/reports/reports_storage_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/screens/objects_screen.dart';
 import 'package:mobile_flutter/screens/punishments_screen.dart';
@@ -60,16 +62,36 @@ void main() async {
 
   // Material provider
 
-  builder.registerDependency(IMaterialsProviderDIToken, MaterialsProvider(
-    apiRoot: builder.getDependency(IAPIRootURI),
-    authStorageProvider: builder.getDependency(IAuthStorageProviderDIToken)
+  var onlineMaterialsProvider = MaterialsProvider(
+      apiRoot: builder.getDependency<Uri>(IAPIRootURI),
+      authStorageProvider: builder.getDependency<AuthStorageProvider>(IAuthStorageProviderDIToken)
+  );
+
+  var materialsStorageProvider = MaterialsStorageProvider();
+
+  var offlineMaterialsProvider = OfflineMaterialsProvider(storageProvider: materialsStorageProvider);
+
+  builder.registerDependency(IMaterialsProviderDIToken, SmartMaterialsProvider(
+    offline: offlineMaterialsProvider,
+    remote: onlineMaterialsProvider,
+    storage: materialsStorageProvider
   ));
 
   // Report provider
 
-  builder.registerDependency(IReportsProviderDIToken, ReportsProvider(
-      apiRoot: builder.getDependency(IAPIRootURI),
-      authStorageProvider: builder.getDependency(IAuthStorageProviderDIToken)
+  var onlineReportsProvider = ReportsProvider(
+      apiRoot: builder.getDependency<Uri>(IAPIRootURI),
+      authStorageProvider: builder.getDependency<AuthStorageProvider>(IAuthStorageProviderDIToken)
+  );
+
+  var reportsStorageProvider = ReportsStorageProvider();
+
+  var offlineReportsProvider = OfflineReportsProvider(storageProvider: reportsStorageProvider);
+
+  builder.registerDependency(IReportsProviderDIToken, SmartReportsProvider(
+      offline: offlineReportsProvider,
+      remote: onlineReportsProvider,
+      storage: reportsStorageProvider
   ));
 
   // Attachment provider

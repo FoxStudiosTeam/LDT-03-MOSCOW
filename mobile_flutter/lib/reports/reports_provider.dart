@@ -7,6 +7,10 @@ import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'dart:convert';
 
+import 'package:mobile_flutter/reports/reports_storage_provider.dart';
+
+import 'package:mobile_flutter/utils/network_utils.dart';
+
 abstract class IReportsProvider {
   Future<Map<int, String>> get_statuses();
   Future<List<ReportAndAttachments>> get_reports(String project);
@@ -75,7 +79,7 @@ class ReportsProvider implements IReportsProvider {
       final List<dynamic> jsonList = jsonDecode(response.body);
       if (jsonList.isEmpty) return [];
 
-      final repAatt = jsonList.map((json) => ReportAndAttachments.fromJson(json)).toList();
+      final repAatt = jsonList.map((json) => ReportAndAttachments.fromJson(json, project)).toList();
       return repAatt;
     } else {
       try {
@@ -85,6 +89,68 @@ class ReportsProvider implements IReportsProvider {
       } catch (e) {
         throw Exception("Error ${response.statusCode}: ${response.body}");
       }
+    }
+  }
+}
+
+class OfflineReportsProvider implements IReportsProvider {
+  final IReportsStorageProvider storageProvider;
+
+  OfflineReportsProvider({required this.storageProvider});
+
+  @override
+  Future<Map<int, String>> get_statuses() async{
+    var data = await storageProvider.getStatuses();
+    return data;
+  }
+
+  @override
+  Future<List<ReportAndAttachments>> get_reports(String project) async{
+    var data = await storageProvider.getReports(project);
+    return data;
+  }
+}
+
+class SmartReportsProvider implements IReportsProvider {
+  final ReportsProvider remote;
+  final OfflineReportsProvider offline;
+  final IReportsStorageProvider storage;
+
+  SmartReportsProvider({
+    required this.remote,
+    required this.offline,
+    required this.storage,
+  });
+
+  @override
+  Future<Map<int, String>> get_statuses() async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final result = await remote.get_statuses();
+
+      await storage.saveStatuses(result);
+
+      return result;
+    } else {
+      return offline.get_statuses();
+    }
+  }
+
+  @override
+  Future<List<ReportAndAttachments>> get_reports(String project) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final result = await remote.get_reports(project);
+
+      await storage.saveReports(result);
+
+      return result;
+    } else {
+      return offline.get_reports(project);
     }
   }
 }
