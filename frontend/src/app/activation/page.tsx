@@ -72,87 +72,89 @@ export default function ActivationPage() {
     };
 
     return (
-        <div className="relative flex justify-center bg-[#D0D0D0] min-h-screen">
+        <div className="relative flex justify-center bg-[#D0D0D0]">
             <Header />
-            <main className="w-full max-w-[1000px] bg-white mt-[50px] rounded-lg shadow-md px-8 py-10">
-                <h1 className="text-xl font-semibold mb-8">Активация объекта</h1>
+            <main className=" w-full max-w-[900px] bg-transparent mt-[50px]">
+                <div className="bg-white px-8 py-10 rounded-2xl">
+                    <h1 className="text-xl font-semibold mb-8">Активация объекта</h1>
 
-                <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                    <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
-                        <label className="text-gray-700">Фамилия</label>
-                        <input
-                            type="text"
-                            value={form.lastName}
-                            onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                            className="border border-gray-300 rounded px-3 py-2 w-full"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
-                        <label className="text-gray-700">Имя</label>
-                        <input
-                            type="text"
-                            value={form.firstName}
-                            onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                            className="border border-gray-300 rounded px-3 py-2 w-full"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
-                        <label className="text-gray-700">Отчество</label>
-                        <input
-                            type="text"
-                            value={form.middleName}
-                            onChange={(e) => setForm({ ...form, middleName: e.target.value })}
-                            className="border border-gray-300 rounded px-3 py-2 w-full"
-                        />
-                    </div>
-                    <div className="flex justify-between items-center mt-8">
-                        <div className="flex items-center gap-4">
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className={`${styles.mainButton}`}
-                            >
-                                Прикрепить файл
-                            </button>
+                    <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                        <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
+                            <label className="text-gray-700">Фамилия</label>
                             <input
-                                ref={fileInputRef}
-                                type="file"
-                                multiple
-                                accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx"
-                                className="hidden"
-                                onChange={handleFileChange}
+                                type="text"
+                                value={form.lastName}
+                                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                                className="border border-gray-300 rounded px-3 py-2 w-full"
                             />
-                            <span className="text-sm text-gray-600">
-                {selectedFiles.length > 0
-                    ? `Выбрано файлов: ${selectedFiles.length}`
-                    : "Файлы не выбраны"}
-              </span>
                         </div>
 
-                        <button
-                            type="button"
-                            disabled={loading}
-                            onClick={handleSubmit}
-                            className={`${styles.mainButton}`}
-                        >
-                            {loading ? "Отправка..." : "Отправить на активацию"}
-                        </button>
-                    </div>
+                        <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
+                            <label className="text-gray-700">Имя</label>
+                            <input
+                                type="text"
+                                value={form.firstName}
+                                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                                className="border border-gray-300 rounded px-3 py-2 w-full"
+                            />
+                        </div>
 
-                    {selectedFiles.length > 0 && (
-                        <ul className="mt-4 list-disc list-inside text-sm text-gray-700">
-                            {selectedFiles.map((file, idx) => (
-                                <li key={idx}>{file.name}</li>
-                            ))}
-                        </ul>
-                    )}
+                        <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
+                            <label className="text-gray-700">Отчество</label>
+                            <input
+                                type="text"
+                                value={form.middleName}
+                                onChange={(e) => setForm({ ...form, middleName: e.target.value })}
+                                className="border border-gray-300 rounded px-3 py-2 w-full"
+                            />
+                        </div>
+                        <div className="flex justify-between items-center mt-8">
+                            <div className="flex items-center gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={`${styles.mainButton}`}
+                                >
+                                    Прикрепить файл
+                                </button>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    multiple
+                                    accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx"
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                />
+                                <span className="text-sm text-gray-600">
+                                    {selectedFiles.length > 0
+                                        ? `Выбрано файлов: ${selectedFiles.length}`
+                                        : "Файлы не выбраны"}
+                                </span>
+                            </div>
 
-                    {message && (
-                        <p className="w-full text-center text-red-600 pt-2">{message}</p>
-                    )}
-                </form>
+                            <button
+                                type="button"
+                                disabled={loading}
+                                onClick={handleSubmit}
+                                className={`${styles.mainButton}`}
+                            >
+                                {loading ? "Отправка..." : "Отправить на активацию"}
+                            </button>
+                        </div>
+
+                        {selectedFiles.length > 0 && (
+                            <ul className="mt-4 list-disc list-inside text-sm text-gray-700">
+                                {selectedFiles.map((file, idx) => (
+                                    <li key={idx}>{file.name}</li>
+                                ))}
+                            </ul>
+                        )}
+
+                        {message && (
+                            <p className="w-full text-center text-red-600 pt-2">{message}</p>
+                        )}
+                    </form>
+                </div>
             </main>
         </div>
     );

@@ -9,8 +9,10 @@ import { useEffect, useState } from "react";
 import styles from "@/app/styles/variables.module.css"
 import { Attachment, Status } from "@/models";
 import { GetPunishmetStatuses } from "@/app/Api/Api";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 export default function PunishmentPage() {
+    const isReady = useAuthRedirect();
     const params = useParams();
     const id = Array.isArray(params.id) ? params.id[0] : params.id;
     const PunishmentItem = useProjectStore((state) => state.getPunishments());
@@ -21,6 +23,7 @@ export default function PunishmentPage() {
     const [statuses, setStatuses] = useState<Status[]>([]);
 
     useEffect(() => {
+        if (!isReady) return;
         const getStatuses = async () => {
             const response = await GetPunishmetStatuses();
             console.log('res', response)
@@ -30,7 +33,7 @@ export default function PunishmentPage() {
         }
 
         getStatuses();
-    }, [])
+    }, [isReady])
 
     const getStatusTitle = (id: number) => {
         const status = statuses.find((s) => s.id === id);

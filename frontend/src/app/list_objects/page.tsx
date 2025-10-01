@@ -1,12 +1,14 @@
 "use client";
 
-import {useState, useEffect} from "react";
-import {Header} from "@/app/components/header";
+import { useState, useEffect } from "react";
+import { Header } from "@/app/components/header";
 import Link from "next/link";
-import {GetProjects, GetStatuses} from "@/app/Api/Api";
-import {useProjectStore} from "@/storage/projectStorage";
-import {ProjectMap} from "@/app/components/map";
-import {Status} from "@/models";
+import { GetInspectorProjects, GetProjects, GetStatuses } from "@/app/Api/Api";
+import { useProjectStore } from "@/storage/projectStorage";
+import { ProjectMap } from "@/app/components/map";
+import { ProjectWithAttachments, Status } from "@/models";
+import { useUserStore } from "@/storage/userstore";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 interface Attachment {
     base_entity_uuid: string;
@@ -29,32 +31,38 @@ interface ProjectData {
     attachments: Attachment[];
 }
 
-
-
 export default function ProjectsPage() {
+    const isReady = useAuthRedirect();
+
     const [statuses, setStatuses] = useState<Status[]>([]);
     const [openProject, setOpenProject] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [isMyObjects, setIsMyObjects] = useState(false);
+
+    const [inspectorProjectsData, setInspectorProjectsData] = useState<ProjectWithAttachments[]>([]);
+    const userData = useUserStore((state) => state.userData);
+    const [userRole, setUserRole] = useState<string | null>(null);
 
     const limit = 5;
 
-    const {projects, total, setProjects, clearProjects} = useProjectStore();
+    const { projects, total, setProjects, clearProjects } = useProjectStore();
 
     const [totalPages, setTotalPages] = useState<number>(0);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [currentPageContent, setCurrentPageContent] = useState<ProjectData[]>([]);
 
     const toggleProject = (uuid: string) => {
+        console.log("toggleProject got:", uuid);
         setOpenProject(openProject === uuid ? null : uuid);
     };
 
     useEffect(() => {
+        if (!isReady) return;
         const loadProjects = async () => {
             setLoading(true);
             clearProjects();
 
             const data = await GetProjects((currentPage - 1) * limit, limit);
-            console.log(data)
 
             if (data.success && Array.isArray(data.result) && data.result.length > 0) {
                 setProjects(data.result, data.total);
@@ -76,7 +84,25 @@ export default function ProjectsPage() {
 
         loadProjects();
         loadStatuses();
-    }, [currentPage, clearProjects, setProjects]);
+    }, [currentPage, clearProjects, setProjects, isReady]);
+
+    useEffect(() => {
+        if (!isReady) return;
+        if (!userData) return;
+        setUserRole(userData?.role);
+
+        const getData = async () => {
+            if (userData.role === "inspector") {
+                const res = await GetInspectorProjects((currentPage - 1) * limit, limit);
+                if (res.success) {
+                    setInspectorProjectsData(res.result)
+                }
+            }
+        }
+
+        getData();
+    }, [userData, currentPage, isReady])
+    console.log(inspectorProjectsData)
 
     useEffect(() => {
         const totalPages = Math.ceil(total / limit);
@@ -107,69 +133,145 @@ export default function ProjectsPage() {
 
     return (
         <div className="min-h-screen flex flex-col bg-[#D0D0D0]">
-            <Header/>
-            <main className="flex-1 w-full max-w-[1200px] max-w-6xl mx-auto bg-white px-6 sm:px-8 py-6 sm:py-10">
+            <Header />
+            <main className="flex-1 w-full max-w-6xl mx-auto bg-white px-6 sm:px-8 py-6 sm:py-10">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl sm:text-3xl font-semibold">Ваши объекты</h1>
                 </div>
 
+                {/* <Link
+                    className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
+                    href={"#"}
+                >
+                    Сделать запрос
+                </Link> */}
+
                 <div className="flex flex-wrap gap-3 mb-6">
-                    <Link
-                        className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
-                        href={"/list_objects/create_object/first_step/"}
-                    >
-                        Создать новый
-                    </Link>
+                    {userRole === 'customer' ? (
+                        <Link
+                            className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
+                            href={"/list_objects/create_object/first_step/"}
+                        >
+                            Создать новый
+                        </Link>
+
+                    ) : null}
+
+                    {userRole === 'inspector' ? (
+                        <div className="w-full flex flex-row justify-center gap-19">
+                            <button
+                                onClick={() => setIsMyObjects(true)}
+                                className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
+                            >
+                                Мои объекты
+                            </button>
+
+                            <button
+                                onClick={() => setIsMyObjects(false)}
+                                className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
+                            >
+                                Все объекты
+                            </button>
+                        </div>
+                    ) : null}
                 </div>
 
                 {loading && <p className="text-center text-gray-600">Загрузка проектов...</p>}
 
                 <div className="space-y-4">
-                    {currentPageContent &&
-                        currentPageContent.map((project) => (
-                            <div
-                                key={project.uuid}
-                                className="border rounded-md p-4 bg-white shadow-md hover:shadow-lg transition border-[#D0D0D0]"
-                            >
-                                <div
-                                    className="flex justify-between items-center cursor-pointer"
-                                    onClick={() => toggleProject(project.uuid)}
-                                >
-                                    <div>
-                                        <Link
-                                            href={`/list_objects/${project.uuid}`}
-                                            className="font-medium text-blue-500 hover:text-blue-700 hover:underline decoration-1 underline-offset-2 transition-colors duration-200"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                            }}
+                    {!isMyObjects ? (
+                        <>
+                            {currentPageContent &&
+                                currentPageContent.map((project) => (
+                                    <div
+                                        key={project.uuid}
+                                        className="border rounded-md p-4 bg-white shadow-md hover:shadow-lg transition border-[#D0D0D0]"
+                                    >
+                                        <div
+                                            className="flex justify-between items-center cursor-pointer"
+                                            onClick={() => toggleProject(project.uuid)}
                                         >
-                                            {project.address || "Адрес не указан"}
-                                        </Link>
+                                            <div>
+                                                <Link
+                                                    href={`/list_objects/${project.uuid}`}
+                                                    className="font-medium text-blue-500 hover:text-blue-700 hover:underline decoration-1 underline-offset-2 transition-colors duration-200"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                    }}
+                                                >
+                                                    {project.address || "Адрес не указан"}
+                                                </Link>
 
+                                                <p className="text-sm text-gray-600">
+                                                    Статус: {getStatusTitle(project.status)}
+                                                </p>
+                                            </div>
+                                            <span className="text-xl">
+                                                {openProject === project.uuid ? "▲" : "▼"}
+                                            </span>
+                                        </div>
 
-                                        <p className="text-sm text-gray-600">
-                                            Статус: {getStatusTitle(project.status)}
-                                        </p>
-                                    </div>
-                                    <span className="text-xl">
-                                        {openProject === project.uuid ? "▲" : "▼"}
-                                    </span>
-                                </div>
+                                        {openProject === project.uuid && (
+                                            <div className="mt-4 space-y-2 text-sm text-gray-700">
+                                                <p>Подрядчик: {project.foreman || "не указан"}</p>
 
-                                {openProject === project.uuid && (
-                                    <div className="mt-4 space-y-2 text-sm text-gray-700">
-                                        <p>Подрядчик: {project.foreman || "не указан"}</p>
-
-                                        {project.polygon ? (
-                                            <ProjectMap polygon={project.polygon} />
-                                        ) : (
-                                            <p>Карта: нет данных</p>
+                                                {project.polygon ? (
+                                                    <ProjectMap polygon={project.polygon} />
+                                                ) : (
+                                                    <p>Карта: нет данных</p>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
-                                )}
+                                ))}
+                        </>
+                    ) : (
+                        <>
+                            {inspectorProjectsData &&
+                                inspectorProjectsData.map((project) => (
+                                    <div
+                                        key={project.project.uuid}
+                                        className="border rounded-md p-4 bg-white shadow-md hover:shadow-lg transition border-[#D0D0D0]"
+                                    >
+                                        <div
+                                            className="flex justify-between items-center cursor-pointer"
+                                            onClick={() => toggleProject(project.project.uuid)}
+                                        >
+                                            <div>
+                                                <Link
+                                                    href={`/list_objects/${project.project.uuid}`}
+                                                    className="font-medium text-blue-500 hover:text-blue-700 hover:underline decoration-1 underline-offset-2 transition-colors duration-200"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                    }}
+                                                >
+                                                    {project.project.address || "Адрес не указан"}
+                                                </Link>
 
-                            </div>
-                        ))}
+                                                <p className="text-sm text-gray-600">
+                                                    Статус: {getStatusTitle(project.project.status)}
+                                                </p>
+                                            </div>
+                                            <span className="text-xl">
+                                                {openProject === project.project.uuid ? "▲" : "▼"}
+                                            </span>
+                                        </div>
+
+                                        {openProject === project.project.uuid && (
+                                            <div className="mt-4 space-y-2 text-sm text-gray-700">
+                                                <p>Подрядчик: {project.project.foreman || "не указан"}</p>
+
+                                                {project.project.polygon ? (
+                                                    <ProjectMap polygon={project.project.polygon} />
+                                                ) : (
+                                                    <p>Карта: нет данных</p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                        </>
+                    )}
                 </div>
 
                 <div className="flex justify-center mt-6 gap-2">

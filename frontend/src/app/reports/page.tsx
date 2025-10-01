@@ -8,8 +8,10 @@ import Image from "next/image";
 import styles from "@/app/styles/variables.module.css";
 import { GetReports } from "@/app/Api/Api";
 import { ReportItem } from "@/models";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 export default function Orders() {
+    const isReady = useAuthRedirect();
     const [isModalWindowOpen, setIsModalWindowOpen] = useState(false);
     const [reports, setReports] = useState<ReportItem[]>([]);
     const [projectId, setProjectId] = useState<string | null>(null);
@@ -23,6 +25,7 @@ export default function Orders() {
     }, []);
 
     useEffect(() => {
+        if (!isReady) return;
         const loadStatuses = async () => {
             if (!projectId) return;
             const data = await GetReports(projectId);
@@ -34,7 +37,7 @@ export default function Orders() {
             }
         };
         loadStatuses();
-    }, [projectId]);
+    }, [isReady, projectId]);
 
     return (
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">

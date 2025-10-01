@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {GetMaterialsById, GetMeasurement, RequestResearch} from "../Api/Api";
 import {Attachment, MaterialResponse, Measurement} from "@/models";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 type Material = {
     uuid: string;
@@ -18,6 +19,8 @@ type Material = {
 };
 
 export default function Materials() {
+    const isReady = useAuthRedirect();
+    
     const [materials, setMaterials] = useState<Material[]>([]);
     const [isModalWindowOpen, setIsModalWindowOpen] = useState(false);
     const [selectedAttachments, setSelectedAttachments] = useState<Attachment[]>([]);
@@ -29,6 +32,7 @@ export default function Materials() {
     const uuid = typeof window !== "undefined" ? localStorage.getItem("projectUuid") : null;
 
     useEffect(() => {
+        if (!isReady) return;
         const loadData = async () => {
             if (!uuid) return;
 
@@ -61,7 +65,7 @@ export default function Materials() {
         };
 
         loadData();
-    }, [uuid]);
+    }, [isReady, uuid]);
 
 
     const handleResearchRequest = async (id: string) => {
