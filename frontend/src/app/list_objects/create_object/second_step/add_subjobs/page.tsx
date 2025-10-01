@@ -6,10 +6,13 @@ import { useRouter } from "next/navigation";
 import { CreateProjectSchedule, Getkpgz, GetMeasurement, GetWorkCategories, UpdateWorksInSchedule } from "@/app/Api/Api";
 import { Kpgz, Measurement, SubJob, WorkItem, Works } from "@/models";
 import Image from "next/image";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 
 
 export default function AddSubjobs() {
+    useAuthRedirect();
+
     const [tableData, setTableData] = useState<SubJob[]>([{
         title: '',
         volume: 0,

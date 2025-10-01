@@ -35,7 +35,6 @@ class PaginationResponseWrapper<T> {
   }
 }
 
-
 enum ProjectStatus {
   NEW,
   PRE_ACTIVE,
@@ -65,13 +64,13 @@ extension ProjectStatusExtension on ProjectStatus {
       case ProjectStatus.LOW_PUNISHMENT:
         // yellow_warning_medium
         return "Есть незначительные разрушения";
-        // red_error_low
+      // red_error_low
       case ProjectStatus.NORMAL_PUNISHMENT:
         return "Есть нарушения";
-        // red_error_normal
+      // red_error_normal
       case ProjectStatus.HIGH_PUNISHMENT:
         return "Есть грубые нарушения";
-        // red_error_high
+      // red_error_high
       case ProjectStatus.SUSPEND:
         // gray_disabled_color
         return "Приостановлен";
@@ -114,89 +113,79 @@ ProjectStatus projectStatusFromInt(int value) {
 
 class FoxPolygon {
   final String type;
-  final List<List<List<double>>> coordinates;
+  final dynamic coordinates; // оставляем dynamic, потому что структура разная
   final List<LatLng> points;
 
-  FoxPolygon({required this.type, required this.coordinates})
-    : points = _extractPoints(coordinates);
+  FoxPolygon({
+    required this.type,
+    required this.coordinates,
+  }) : points = _extractPoints(type, coordinates);
 
-  /// Фабричный метод из JSON
   factory FoxPolygon.fromJson(Map<String, dynamic> json) {
     final type = json['type'] as String? ?? '';
 
-    if (type == 'Polygon') {
-      final coordinates = (json['coordinates'] as List)
-          .map<List<List<double>>>((ring) {
-        return (ring as List)
-            .map<List<double>>((point) {
-          return (point as List)
-              .map<double>((value) => (value as num).toDouble())
-              .toList();
-        })
-            .toList();
-      })
-          .toList();
+    final coordinates = json['coordinates'];
 
-      return FoxPolygon(
-        type: type,
-        coordinates: coordinates,
-      );
-    } else if (type == 'MultiPolygon') {
-      // Flatten MultiPolygon into one list of rings
-      final coordinates = (json['coordinates'] as List)
-          .expand<List<List<double>>>((polygon) {
-        return (polygon as List)
-            .map<List<List<double>>>((ring) {
-          return (ring as List)
-              .map<List<double>>((point) {
-            return (point as List)
-                .map<double>((value) => (value as num).toDouble())
-                .toList();
-          })
-              .toList();
-        });
-      })
-          .toList();
-
-      return FoxPolygon(
-        type: type,
-        coordinates: coordinates,
-      );
+    if (type == 'Polygon' || type == 'MultiPolygon') {
+      return FoxPolygon(type: type, coordinates: coordinates);
     } else {
       throw FormatException("Unsupported geometry type: $type");
     }
   }
 
+  Map<String, dynamic> toJson() {
+    return {'type': type, 'coordinates': coordinates};
+  }
 
-  /// Вычисление центра полигона
+  String toJsonString() {
+    return jsonEncode(toJson());
+  }
+
   LatLng getCenter() {
     if (points.isEmpty) return const LatLng(0, 0);
 
     final sum = points.reduce(
-      (a, b) => LatLng(a.latitude + b.latitude, a.longitude + b.longitude),
+          (a, b) => LatLng(a.latitude + b.latitude, a.longitude + b.longitude),
     );
-    final avgLat = sum.latitude / points.length;
-    final avgLng = sum.longitude / points.length;
 
-    return LatLng(avgLat, avgLng);
+    return LatLng(sum.latitude / points.length, sum.longitude / points.length);
   }
 
-  /// Преобразование координат в LatLng
-  static List<LatLng> _extractPoints(List<List<List<double>>> coords) {
+  static List<LatLng> _extractPoints(String type, dynamic coords) {
     final List<LatLng> result = [];
 
-    for (final ring in coords) {
-      for (final point in ring) {
-        if (point.length >= 2) {
-          result.add(
-            LatLng(point[1], point[0]),
-          ); // [lon, lat] → LatLng(lat, lon)
+    bool isValidPoint(dynamic point) =>
+        point is List && point.length >= 2 && point[0] is num && point[1] is num;
+
+    if (type == 'Polygon') {
+      for (final ring in coords as List) {
+        if (ring is List) {
+          for (final point in ring) {
+            if (isValidPoint(point)) {
+              result.add(LatLng(point[1].toDouble(), point[0].toDouble()));
+            }
+          }
+        }
+      }
+    } else if (type == 'MultiPolygon') {
+      for (final polygon in coords as List) {
+        if (polygon is List) {
+          for (final ring in polygon) {
+            if (ring is List) {
+              for (final point in ring) {
+                if (isValidPoint(point)) {
+                  result.add(LatLng(point[1].toDouble(), point[0].toDouble()));
+                }
+              }
+            }
+          }
         }
       }
     }
 
     return result;
   }
+
 }
 
 class Project {
@@ -243,6 +232,20 @@ class Project {
       uuid: projectJson['uuid'] ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'address': address,
+      'created_by': created_by,
+      'end_date': end_date?.toIso8601String(),
+      'foreman': foreman,
+      'polygon': polygon != null ? polygon!.toJsonString() : null,
+      'ssk': ssk,
+      'start_date': start_date?.toIso8601String(),
+      'status': status.index,
+      'uuid': uuid,
+    };
+  }
 }
 
 class Punishment {
@@ -285,14 +288,10 @@ class ErrorMessage {
   ErrorMessage({required this.message});
 
   factory ErrorMessage.fromJson(Map<String, dynamic> json) {
-    return ErrorMessage(
-      message: json['message'] ?? 'Unknown error',
-    );
+    return ErrorMessage(message: json['message'] ?? 'Unknown error');
   }
 
-  Map<String, dynamic> toJson() => {
-    'message': message,
-  };
+  Map<String, dynamic> toJson() => {'message': message};
 
   @override
   String toString() => message;
@@ -324,7 +323,7 @@ class PunishmentItem {
     this.comment,
     this.correction_date_fact,
     this.correction_date_info,
-    this.regulation_doc
+    this.regulation_doc,
   });
 
   factory PunishmentItem.fromJson(Map<String, dynamic> json) {
@@ -339,8 +338,8 @@ class PunishmentItem {
       regulation_doc: json['regulation_doc'] as String?,
       correction_date_plan: DateTime.parse(json['correction_date_plan']),
       correction_date_fact: json['correction_date_fact'] != null
-        ? DateTime.parse(json['correction_date_fact'])
-        : null,
+          ? DateTime.parse(json['correction_date_fact'])
+          : null,
       punish_datetime: DateTime.parse(json['punish_datetime']),
       punish_item_status: json['punishment_item_status'],
     );
@@ -351,14 +350,20 @@ class PunishmentItem {
     'title': title,
     'punishment': punishment,
     'punishment_item_status': punish_item_status,
-    'correction_date_plan': correction_date_plan.toIso8601String().split("T").first,
+    'correction_date_plan': correction_date_plan
+        .toIso8601String()
+        .split("T")
+        .first,
     'is_suspend': is_suspend,
     'place': place,
     'punish_datetime': punish_datetime.toIso8601String(),
     'comment': comment,
-    'correction_date_fact': correction_date_fact?.toIso8601String().split("T").first,
+    'correction_date_fact': correction_date_fact
+        ?.toIso8601String()
+        .split("T")
+        .first,
     'correction_date_info': correction_date_info,
-    'regulation_doc': regulation_doc
+    'regulation_doc': regulation_doc,
   };
 }
 
@@ -400,15 +405,175 @@ class PunishmentItemAndAttachments {
 
   PunishmentItemAndAttachments({
     required this.punishment_item,
-    required this.attachments
+    required this.attachments,
   });
-  
+
   factory PunishmentItemAndAttachments.fromJson(Map<String, dynamic> json) {
     return PunishmentItemAndAttachments(
-      punishment_item: PunishmentItem.fromJson(json['punishment_item'] as Map<String, dynamic>),
+      punishment_item: PunishmentItem.fromJson(
+        json['punishment_item'] as Map<String, dynamic>,
+      ),
       attachments: (json['attachments'] as List<dynamic>? ?? [])
-        .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
-        .toList()
+          .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+enum Role {
+  INSPECTOR,
+  FOREMAN,
+  CUSTOMER,
+  ADMIN,
+  UNKNOWN
+}
+
+Role roleFromString(String? role) {
+  switch (role) {
+    case 'inspector':
+      return Role.INSPECTOR;
+    case 'customer':
+      return Role.CUSTOMER;
+    case 'foreman':
+      return Role.FOREMAN;
+    case 'nOBEJlNTEJlb MNPA':
+      return Role.ADMIN;
+    default: return Role.UNKNOWN;
+  }
+}
+
+class Materials {
+  final DateTime createdAt;
+  final int measurement;
+  final bool onResearch;
+  final String project;
+  final String title;
+  final String uuid;
+  final double volume;
+  final DateTime deliveryDate;
+
+  Materials({
+    required this.title,
+    required this.volume,
+    required this.deliveryDate,
+    required this.createdAt,
+    required this.project,
+    required this.uuid,
+    required this.measurement,
+    required this.onResearch
+  });
+
+  factory Materials.fromJson(Map<String, dynamic> json) {
+    return Materials(
+        title: json['title'],
+        volume: json['volume'] as double,
+        deliveryDate: DateTime.parse(json['delivery_date']),
+        createdAt: DateTime.parse(json['created_at']),
+        project: json['project'],
+        uuid: json['uuid'],
+        measurement: json['measurement'] as int,
+        onResearch: json['on_research'] as bool
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'volume': volume,
+      'delivery_date': deliveryDate.toIso8601String()
+      .split('T').first,
+      'created_at' : createdAt.toIso8601String(),
+      'project': project,
+      'uuid': uuid,
+      'measurement': measurement,
+      'on_research': onResearch
+    };
+  }
+}
+
+class MaterialsAndAttachments {
+  final Materials material;
+  final List<Attachment> attachments;
+
+  MaterialsAndAttachments({
+    required this.material,
+    required this.attachments
+  });
+
+  factory MaterialsAndAttachments.fromJson(Map<String, dynamic> json) {
+    return MaterialsAndAttachments(
+      material: Materials.fromJson(
+        json['material'] as Map<String, dynamic>,
+      ),
+      attachments: (json['attachments'] as List<dynamic>? ?? [])
+          .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+class Report {
+  final DateTime? checkDate;
+  final int status;
+  final String projectScheduleItem;
+  final String title;
+  final String uuid;
+  final DateTime reportDate;
+
+  Report({
+    required this.title,
+    required this.reportDate,
+    required this.checkDate,
+    required this.projectScheduleItem,
+    required this.status,
+    required this.uuid,
+  });
+
+  factory Report.fromJson(Map<String, dynamic> json) {
+    return Report(
+      checkDate: json['check_date'] != null
+          ? DateTime.parse(json['check_date'])
+          : null,
+      status: json['status'] as int,
+      projectScheduleItem: json['project_schedule_item'],
+      title: json['title'],
+      uuid: json['uuid'],
+      reportDate: DateTime.parse(json['report_date']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'check_date': checkDate,
+      'status': status,
+      'check_date': checkDate?.toIso8601String()
+        .split('T').first,
+      'report_date' : reportDate.toIso8601String()
+        .split('T').first,
+      'project_schedule_item': projectScheduleItem,
+      'uuid': uuid,
+      'title': title
+    };
+  }
+}
+
+class ReportAndAttachments {
+  final Report report;
+  final List<Attachment> attachments;
+
+  ReportAndAttachments({
+    required this.report,
+    required this.attachments
+  });
+
+  factory ReportAndAttachments.fromJson(Map<String, dynamic> json) {
+    return ReportAndAttachments(
+      report: Report.fromJson(
+        json['report'] as Map<String, dynamic>,
+      ),
+      attachments: (json['attachments'] as List<dynamic>? ?? [])
+          .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

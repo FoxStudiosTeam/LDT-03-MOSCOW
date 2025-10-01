@@ -4,7 +4,6 @@ import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
-import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/screens/ocr/camera.dart';
 import 'package:mobile_flutter/screens/ocr/ttn.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
@@ -12,6 +11,8 @@ import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/fox_button.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/object_card.dart';
+
+import '../utils/network_utils.dart';
 
 class ObjectsScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -24,28 +25,32 @@ class ObjectsScreen extends StatefulWidget {
 
 class _ObjectsScreenState extends State<ObjectsScreen> {
   String? _token;
+  Role? _role;
   List<Project> projects = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
-    _loadToken();
+    _loadAuth();
     _loadProjects();
   }
 
-  Future<void> _loadToken() async {
+  Future<void> _loadAuth() async {
     try {
       var authStorageProvider = widget.di.getDependency<IAuthStorageProvider>(
         IAuthStorageProviderDIToken,
       );
-      var token = await authStorageProvider.getRefreshToken();
+      var role = await authStorageProvider.getRole();
+      var token = await authStorageProvider.getAccessToken();
       setState(() {
         _token = token;
+        _role = roleFromString(role);
       });
     } catch (e) {
       setState(() {
         _token = "NO TOKEN";
+        _role = Role.UNKNOWN;
       });
     }
   }
@@ -54,7 +59,16 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     var objectsProvider = widget.di.getDependency<IObjectsProvider>(
       IObjectsProviderDIToken,
     );
-    var response = await objectsProvider.getObjects("", 0);
+
+    print("Start Request");
+
+    var response = await NetworkUtils.wrapRequest(() => objectsProvider.getObjects("", 0), context, widget.di);
+
+    print("END Request");
+    for (var elem in response.items) {
+      print("${elem.address} ${elem.polygon}");
+    }
+
     setState(() {
       projects = response.items;
     });

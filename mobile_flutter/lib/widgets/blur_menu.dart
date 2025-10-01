@@ -13,39 +13,42 @@ Future<void> showBlurBottomSheet({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    barrierColor: Colors.transparent,
+    barrierColor: Colors.black.withOpacity(backgroundOpacity),
     isDismissible: isDismissible,
     builder: (ctx) {
-      return Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () {
-                if (isDismissible) Navigator.pop(context);
-              },
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-                child: Container(
-                  color: Colors.black.withOpacity(backgroundOpacity),
+      return BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+        child: Container(
+          color: Colors.transparent,
+          child: Stack(
+            children: [
+              //закрытия по тапу
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () {
+                    if (isDismissible) Navigator.pop(context);
+                  },
+                  behavior: HitTestBehavior.translucent,
                 ),
               ),
-            ),
-          ),
 
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              child: Material( // Добавляем Material, чтобы Ripple работал
-                color: Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                  child: builder(context),
+              //меню
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  child: Material(
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                      child: builder(context),
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       );
     },
   );

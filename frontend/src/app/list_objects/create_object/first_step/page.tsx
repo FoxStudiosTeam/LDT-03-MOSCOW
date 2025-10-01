@@ -9,10 +9,12 @@ import { FirstStepForm } from "@/models";
 import { useUserStore } from "@/storage/userstore";
 import { CreateObject } from "@/app/Api/Api";
 import { useRouter } from "next/navigation";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 type PolygonGeoJSON = GeoJSON.Polygon | GeoJSON.MultiPolygon;
 
 export default function FirstStep() {
+    useAuthRedirect();
     const mapContainer = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<maplibregl.Map | null>(null);
 
@@ -24,7 +26,6 @@ export default function FirstStep() {
 
     const { register, handleSubmit, setValue } = useForm<FirstStepForm>();
 
-    // инициализация карты
     useEffect(() => {
         if (mapRef.current || !mapContainer.current) return;
 

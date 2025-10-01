@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/auth/auth_provider.dart';
 import 'package:mobile_flutter/di/dependency_builder.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
+import 'package:mobile_flutter/materials/materials_provider.dart';
+import 'package:mobile_flutter/object/object_storage_provider.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
 import 'package:mobile_flutter/punishment/punishment_storage_provider.dart';
+import 'package:mobile_flutter/reports/reports_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/screens/objects_screen.dart';
 import 'package:mobile_flutter/screens/punishments_screen.dart';
@@ -16,14 +20,34 @@ const IAPIRootURI = "I-API-Root-URI";
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   var builder = DependencyBuilder();
   builder.registerDependency(IAuthStorageProviderDIToken, AuthStorageProvider());
   builder.registerDependency(IAPIRootURI, Uri.parse("https://test.foxstudios.ru:32460"));
 
-  builder.registerDependency(IObjectsProviderDIToken, ObjectsProvider(
+  var onlineObjectProvider = ObjectsProvider(
       apiRoot: builder.getDependency<Uri>(IAPIRootURI),
       authStorageProvider: builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken)
+  );
+
+  var objectStorageProvider = ObjectStorageProvider();
+
+  var offlineObjectProvider = OfflineObjectsProvider(objectStorageProvider: objectStorageProvider);
+  
+  builder.registerDependency(IMaterialsProviderDIToken, MaterialsProvider(
+    apiRoot: builder.getDependency(IAPIRootURI),
+    authStorageProvider: builder.getDependency(IAuthStorageProviderDIToken)
   ));
+
+  builder.registerDependency(IReportsProviderDIToken, ReportsProvider(
+      apiRoot: builder.getDependency(IAPIRootURI),
+      authStorageProvider: builder.getDependency(IAuthStorageProviderDIToken)
+  ));
+
+  builder.registerDependency(IObjectsProviderDIToken, SmartObjectsProvider(remote: onlineObjectProvider, offline: offlineObjectProvider, storage: objectStorageProvider));
 
   var storage = builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
   var au = AuthProvider(Uri.parse('https://sso.foxstudios.ru:32460'), storage);

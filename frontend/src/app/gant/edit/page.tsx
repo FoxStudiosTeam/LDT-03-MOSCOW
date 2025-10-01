@@ -7,8 +7,10 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { GetProjectSchedule } from "@/app/Api/Api";
 import { DataBlock } from "@/models";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 export default function EditSchedule() {
+    const isReady = useAuthRedirect();
     const data = useActionsStore((state) => state.data);
     const addDataBlock = useActionsStore((state) => state.addDataBlock);
     const clearData = useActionsStore((state) => state.clearData)
@@ -17,6 +19,7 @@ export default function EditSchedule() {
     const [isEmpty, setIsEmpty] = useState(false);
 
     useEffect(() => {
+        if (!isReady) return;
         async function loadData() {
             try {
                 if (uuid) {
@@ -51,7 +54,7 @@ export default function EditSchedule() {
         }
 
         loadData();
-    }, [addDataBlock, clearData, uuid]);
+    }, [addDataBlock, clearData, isReady, uuid]);
 
     return (
         <div className="flex justify-center bg-[#D0D0D0] mt-[50px]">

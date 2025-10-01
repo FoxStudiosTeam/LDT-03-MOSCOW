@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
-import 'package:mobile_flutter/utils/StyleUtils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
-import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/punishment_card.dart';
-import 'package:mobile_flutter/utils/NetworkUtils.dart';
+import 'package:mobile_flutter/utils/network_utils.dart';
 
-import '../auth/auth_provider.dart';
 import '../widgets/base_header.dart';
 class PunishmentsScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -31,13 +27,14 @@ class PunishmentsScreen extends StatefulWidget {
 
 class _PunishmentsScreenState extends State<PunishmentsScreen> {
   String? _token;
+  Role? _role;
   List<PunishmentCard> data = [];
 
   void leaveHandler() {
     Navigator.pop(context);
   }
 
-  void _openPunishmentMenu(BuildContext context) {
+  void _openPunishmentMenu() {
     showBlurBottomSheet(
       context: context,
       builder: (ctx) => Column(
@@ -62,26 +59,6 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
               _handleCreatePunishment();
             },
           ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.filter_list),
-            title: const Text('Фильтровать по статусу'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleFilterPunishments();
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.download),
-            title: const Text('Экспорт в PDF'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleExportPDF();
-            },
-          ),
         ],
       ),
     );
@@ -92,20 +69,10 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
     print("Создать новое предписание");
   }
 
-  void _handleFilterPunishments() {
-    // TODO: Реализовать фильтрацию по статусу
-    print("Фильтровать предписания");
-  }
-
-  void _handleExportPDF() {
-    // TODO: Реализовать экспорт в PDF
-    print("Экспорт предписаний в PDF");
-  }
-
   @override
   void initState() {
     super.initState();
-    _loadToken();
+    _loadAuth();
     _loadCards().then((cards) {
       setState(() {
         data = cards;
@@ -113,18 +80,21 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
     });
   }
 
-  Future<void> _loadToken() async {
+  Future<void> _loadAuth() async {
     try {
       var authStorageProvider = widget.di.getDependency<IAuthStorageProvider>(
         IAuthStorageProviderDIToken,
       );
+      var role = await authStorageProvider.getRole();
       var token = await authStorageProvider.getAccessToken();
       setState(() {
         _token = token;
+        _role = roleFromString(role);
       });
     } catch (e) {
       setState(() {
         _token = "NO TOKEN";
+        _role = Role.UNKNOWN;
       });
     }
   }
@@ -135,36 +105,25 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
 
     final punishments = await NetworkUtils.wrapRequest<List<Punishment>>(() => provider.get_punishments(widget.projectUuid),context,widget.di);
 
+    punishments.sort((a, b) => b.punishmentStatus.compareTo(a.punishmentStatus));
+
     return punishments.map((punishment) => PunishmentCard(
       data: punishment,
       statuses: statuses,
       di: widget.di,
       addr: widget.addr,
+      is_new: false,
     )).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FoxHeader(
-        leftIcon: IconButton(
-          onPressed: leaveHandler,
-          icon: SvgPicture.asset(
-            'assets/icons/arrow-left.svg',
-            width: 32,
-            height: 32,
-          ),
-        ),
+      appBar: BaseHeader(
         title: "Предписания",
         subtitle: widget.addr,
-        rightIcon: IconButton(
-          onPressed: () => _openPunishmentMenu(context),
-          icon: SvgPicture.asset(
-            'assets/icons/menu-kebab.svg',
-            width: 32,
-            height: 32,
-          ),
-        ),
+        onBack: leaveHandler,
+        onMore: (_role == Role.INSPECTOR || _role == Role.CUSTOMER || _role == Role.ADMIN) ? _openPunishmentMenu : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

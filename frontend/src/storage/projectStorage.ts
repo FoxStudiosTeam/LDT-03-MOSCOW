@@ -30,21 +30,6 @@ export interface ProjectWithAttachments {
     project: Project;
 }
 
-// interface PunishmentItem {
-//     uuid: string;
-//     title: string;
-//     punishment: string;
-//     punishment_item_status: number;
-//     regulation_doc: string | null;
-//     punish_datetime: string;
-//     correction_date_plan: string | null;
-//     correction_date_info: string | null;
-//     correction_date_fact: string | null;
-//     is_suspend: boolean;
-//     place: string;
-//     comment: string | null;
-// }
-
 interface PunishmentWithAttachments {
     punishment_item: PunishmentItem;
     attachments: Attachment[];
@@ -62,7 +47,13 @@ interface ProjectState {
     getProjectById: (uuid: string) => ProjectWithAttachments | undefined;
     clearProjects: () => void;
 
-    setPunishmentItem: (item: PunishmentItem | PunishmentItem[]) => void;
+    setPunishmentItem: (
+            input:
+                | PunishmentWithAttachments
+                | PunishmentWithAttachments[]
+                | PunishmentItem
+                | PunishmentItem[]
+            ) => void
     getPunishments: () => PunishmentWithAttachments[];
     clearPunishments: () => void;
 }
@@ -85,25 +76,39 @@ export const useProjectStore = create<ProjectState>()(
 
             clearProjects: () => set({ projects: [], total: 0 }),
 
-            setPunishmentItem: (input: PunishmentWithAttachments | PunishmentWithAttachments[]) =>
-                set((state) => {
-                    console.log('incoming input', input);
-                    const items = Array.isArray(input) ? input : [input];
-                    let newPunishments = [...state.punishments];
+           setPunishmentItem: (
+            input:
+                | PunishmentWithAttachments
+                | PunishmentWithAttachments[]
+                | PunishmentItem
+                | PunishmentItem[]
+            ) =>
+            set((state) => {
+                const items = Array.isArray(input) ? input : [input];
 
-                    items.forEach((item) => {
-                        const exists = newPunishments.find(p => p.punishment_item.uuid === item.punishment_item.uuid);
-                        if (exists) {
-                            newPunishments = newPunishments.map(p =>
-                                p.punishment_item.uuid === item.punishment_item.uuid ? item : p
-                            );
-                        } else {
-                            newPunishments.push(item);
-                        }
-                    });
+                const normalized: PunishmentWithAttachments[] = items.map((item) =>
+                "attachments" in item
+                    ? (item as PunishmentWithAttachments)
+                    : { punishment_item: item as PunishmentItem, attachments: [] }
+                );
 
-                    return { punishments: newPunishments };
-                }),
+                let newPunishments = [...state.punishments];
+
+                normalized.forEach((item) => {
+                const exists = newPunishments.find(
+                    (p) => p.punishment_item.uuid === item.punishment_item.uuid
+                );
+                if (exists) {
+                    newPunishments = newPunishments.map((p) =>
+                    p.punishment_item.uuid === item.punishment_item.uuid ? item : p
+                    );
+                } else {
+                    newPunishments.push(item);
+                }
+                });
+
+                return { punishments: newPunishments };
+            }),
 
             getPunishments: () => get().punishments,
 

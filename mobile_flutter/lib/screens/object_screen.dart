@@ -5,14 +5,16 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart'
-    show ProjectStatus, FoxPolygon, ProjectStatusExtension;
-import 'package:mobile_flutter/screens/punishment_item_screen.dart';
+    show ProjectStatus, FoxPolygon, ProjectStatusExtension, Role, roleFromString;
+import 'package:mobile_flutter/screens/activation_screen.dart';
 import 'package:mobile_flutter/screens/punishments_screen.dart';
-import 'package:mobile_flutter/utils/StyleUtils.dart';
+import 'package:mobile_flutter/utils/style_utils.dart';
+import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
-import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/screens/report_screen.dart';
 import 'package:mobile_flutter/screens/material_screen.dart';
+
+import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 
 class ObjectScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -42,6 +44,31 @@ class ObjectScreen extends StatefulWidget {
 
 class _ObjectScreenState extends State<ObjectScreen> {
   bool _showPoints = false;
+  String? _token;
+  Role? _role;
+
+  void leaveHandler() {
+    Navigator.pop(context);
+  }
+
+  Future<void> _loadAuth() async {
+    try {
+      var authStorageProvider = widget.di.getDependency<IAuthStorageProvider>(
+        IAuthStorageProviderDIToken,
+      );
+      var role = await authStorageProvider.getRole();
+      var token = await authStorageProvider.getAccessToken();
+      setState(() {
+        _token = token;
+        _role = roleFromString(role);
+      });
+    } catch (e) {
+      setState(() {
+        _token = "NO TOKEN";
+        _role = Role.UNKNOWN;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +123,8 @@ class _ObjectScreenState extends State<ObjectScreen> {
                   MaterialPageRoute(
                     builder: (_) => MaterialsScreen(
                       di: widget.di,
-                      objectTitle: widget.address,
+                      projectTitle: widget.address,
+                      projectUuid: widget.projectUuid,
                     ),
                   ),
                 );
@@ -113,8 +141,9 @@ class _ObjectScreenState extends State<ObjectScreen> {
                   MaterialPageRoute(
                     builder: (_) =>
                         ReportScreen(
-                            di: widget.di,
-                            objectTitle: widget.address
+                          di: widget.di,
+                          projectUuid: widget.projectUuid,
+                          projectTitle: widget.address,
                         ),
                   ),
                 );
@@ -129,32 +158,32 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 Navigator.pop(ctx);
               },
             ),
+            if (_role == Role.INSPECTOR || _role == Role.ADMIN)
+              const Divider(height: 1),
+              ListTile(
+                titleAlignment: ListTileTitleAlignment.center,
+                leading: const Icon(Icons.file_upload),
+                title: const Text('Подтвердить активацию'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ChecklistActivationScreen(di: widget.di)),
+                  );
+                },
+              )
           ],
         ),
       );
     }
 
     return Scaffold(
-      appBar: FoxHeader(
-        leftIcon: IconButton(
-          onPressed: leaveHandler,
-          icon: SvgPicture.asset(
-            'assets/icons/arrow-left.svg',
-            width: 32,
-            height: 32,
-          ),
+      appBar:
+        BaseHeader(
+          title: "Объект",
+          subtitle: widget.address,
+          onBack: leaveHandler,
+          onMore: openBottomBlurMenu,
         ),
-        title: "Объект",
-        subtitle: widget.address,
-        rightIcon: IconButton(
-          onPressed: openBottomBlurMenu,
-          icon: SvgPicture.asset(
-            'assets/icons/menu-kebab.svg',
-            width: 32,
-            height: 32,
-          ),
-        ),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: SingleChildScrollView(
@@ -170,6 +199,9 @@ class _ObjectScreenState extends State<ObjectScreen> {
               widget.status.toRenderingString(),
               const SizedBox(height: 16),
 
+              // Информация о участниках
+              _buildInfoCard(),
+              const SizedBox(height: 16),
               // Карта с полигоном
               Container(
                 width: double.infinity,
@@ -214,12 +246,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
 
-              // Информация о участниках
-              _buildInfoCard(),
-
-              const SizedBox(height: 16),
 
               const SizedBox(height: 24),
               const Divider(height: 1),

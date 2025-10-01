@@ -7,8 +7,11 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { DeleteProjectSchedule, GetProjectSchedule } from "@/app/Api/Api";
 import { DataBlock } from "@/models";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 export default function SecondStep() {
+    useAuthRedirect();
+    
     const data = useActionsStore((state) => state.data);
     const deleteDataBlock = useActionsStore((state) => state.deleteDataBlock);
     const addDataBlock = useActionsStore((state) => state.addDataBlock);

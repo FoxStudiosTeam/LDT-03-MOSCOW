@@ -19,8 +19,8 @@ values
 
 insert into norm.report_statuses (title, id)
 values
-    ('Завершен', 0),
-    ('Проверяется', 1),
+    ('Принят', 0),
+    ('На рассмотрении', 1),
     ('Отклонен', 2);
 
 insert into norm.kpgz (code, title, id)
