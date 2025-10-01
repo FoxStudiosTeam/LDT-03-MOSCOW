@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
+import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 
 class ChecklistActivationScreen extends StatefulWidget {
   final IDependencyContainer di;
+  final String address;
 
-  const ChecklistActivationScreen({super.key, required this.di});
+  const ChecklistActivationScreen({super.key, required this.di, required this.address});
 
   @override
   State<ChecklistActivationScreen> createState() => _ChecklistActivationScreenState();
@@ -36,26 +39,10 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FoxHeader(
-        backgroundColor: Colors.white,
-        leftIcon: SvgPicture.asset(
-          'assets/icons/logo.svg',
-          width: 40,
-          height: 40,
-          color: Colors.black,
-        ),
-        title: "ЭСЖ",
-        rightIcon: IconButton(
-          onPressed: () {
-            // Обработка меню
-          },
-          icon: SvgPicture.asset(
-            'assets/icons/menu.svg',
-            width: 40,
-            height: 40,
-            color: Colors.black,
-          ),
-        ),
+      appBar: BaseHeader(
+        title: "Чек-лист форма 1",
+        subtitle: widget.address,
+        onBack: () => Navigator.pop(context),
       ),
       backgroundColor: Colors.white,
       body: Column(
