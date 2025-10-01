@@ -128,6 +128,19 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 Navigator.pop(ctx);
               },
             ),
+            //АКТИВАЦИЯ
+            const Divider(height: 1),
+            ListTile(
+              titleAlignment: ListTileTitleAlignment.center,
+              leading: const Icon(Icons.file_upload),
+              title: const Text('Подтвердить активацию'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ChecklistActivationScreen(di: widget.di)),
+                );
+              },
+            )
           ],
         ),
       );
@@ -171,30 +184,6 @@ class _ObjectScreenState extends State<ObjectScreen> {
 
               // Информация о участниках
               _buildInfoCard(),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => ChecklistActivationScreen(di: widget.di)),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: FoxThemeButtonActiveBackground,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                child: const Text(
-                  'Активация',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
               const SizedBox(height: 16),
               // Карта с полигоном
               Container(
