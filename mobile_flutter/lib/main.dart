@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile_flutter/attachment/attachments_provider.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/auth/auth_provider.dart';
 import 'package:mobile_flutter/di/dependency_builder.dart';
@@ -95,6 +96,11 @@ void main() async {
   ));
 
   // Attachment provider
+
+  builder.registerDependency(IAttachmentsProviderDIToken, AttachmentsProvider(
+      apiRoot: builder.getDependency<Uri>(IAPIRootURI),
+      authStorageProvider: builder.getDependency<AuthStorageProvider>(IAuthStorageProviderDIToken)
+  ));
 
   var storage = builder.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
   var au = AuthProvider(Uri.parse('https://sso.foxstudios.ru:32460'), storage);
