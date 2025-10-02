@@ -161,7 +161,7 @@ class SmartMaterialsProvider implements IMaterialsProvider {
 }
 
 
-QueuedRequestModel queuedMaterial(TTNRecord record) {
+QueuedRequestModel queuedMaterial(TTNRecord record, String address) {
   final now = DateTime.now();
   final deliveryDate = now.toIso8601String().split('T').first;
 
@@ -175,7 +175,7 @@ QueuedRequestModel queuedMaterial(TTNRecord record) {
   return QueuedRequestModel(
     id: Uuid().v4(),
     timestamp: now.millisecondsSinceEpoch,
-    title: record.name,
+    title: "${record.name} для $address",
     url: Uri.parse(APIRootURI).resolve('/api/material').toString(),
     method: 'POST',
     headers: {
@@ -190,5 +190,22 @@ QueuedRequestModel queuedMaterial(TTNRecord record) {
       "volume": record.number,
     },
     attachments: attachments,
+  );
+}
+
+
+QueuedRequestModel queuedMaterialResearch(String id, String title) {
+  final now = DateTime.now();
+  return QueuedRequestModel(
+    id: Uuid().v4(),
+    timestamp: now.millisecondsSinceEpoch,
+    title: title,
+    url: Uri.parse(APIRootURI).resolve('/api/materials/request_research/$id').toString(),
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: {},
   );
 }

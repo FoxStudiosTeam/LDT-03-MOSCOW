@@ -80,6 +80,10 @@ class PunishmentStorageProvider implements IPunishmentStorageProvider {
 
   @override
   Future<void> savePunishmentItems(List<PunishmentItemAndAttachments> punishmentItems) async {
+    if (punishmentItems.isEmpty) {
+      await prefs?.setString(PUNISHMENT_ITEMS_KEY, jsonEncode([]));
+      return;
+    }
     final existing = await getPunishmentItems(punishmentItems.first.punishment_item.punishment);
 
     final combined = {

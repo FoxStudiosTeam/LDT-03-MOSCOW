@@ -130,7 +130,7 @@ class _MapScreenState extends State<MapScreen> {
     _scaffoldKey.currentState?.openDrawer();
   }
 
-  double _currentZoom = 2.0;
+  double _currentZoom = 11.0;
 
   void zoomIn() {
     final newZoom = (_currentZoom + 1).clamp(1.0, 18.0);

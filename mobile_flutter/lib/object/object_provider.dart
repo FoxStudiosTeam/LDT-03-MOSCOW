@@ -5,8 +5,10 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/main.dart';
 import 'package:mobile_flutter/object/object_storage_provider.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
+import 'package:uuid/uuid.dart';
 
 abstract class IObjectsProvider {
   Future<PaginationResponseWrapper<Project>> getObjects(String address, int offset);
@@ -236,3 +238,4 @@ class SmartObjectsProvider implements IObjectsProvider {
     }
   }
 }
+
