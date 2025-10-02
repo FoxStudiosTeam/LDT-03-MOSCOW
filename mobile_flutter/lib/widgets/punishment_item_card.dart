@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/screens/punishment_item_screen.dart';
+import 'package:mobile_flutter/screens/punishment/punishment_item_screen.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
-import 'package:mobile_flutter/screens/update_punishment_item.dart';
+import 'package:mobile_flutter/screens/punishment/update_punishment_item.dart';
 class PunishmentItemCard extends StatelessWidget {
   final PunishmentItem data;
   final List<Attachment>? atts;

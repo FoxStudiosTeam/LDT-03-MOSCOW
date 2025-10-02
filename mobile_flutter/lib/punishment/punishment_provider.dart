@@ -201,34 +201,22 @@ class SmartPunishmentProvider implements IPunishmentProvider {
 
   @override
   Future<Map<int, String>> get_statuses() async {
-    final hasConnection = await NetworkUtils.connectionExists();
-    print("Connection? $hasConnection");
-
-    if (hasConnection) {
-      final result = await remote.get_statuses();
-
-      await storage.saveStatuses(result);
-
-      return result;
-    } else {
-      return offline.get_statuses();
+    var data = await offline.get_statuses();
+    if (data.isEmpty) {
+      data = await remote.get_statuses();
+      await storage.saveStatuses(data);
     }
+    return data;
   }
 
   @override
   Future<Map<String, String>> get_documents() async {
-    final hasConnection = await NetworkUtils.connectionExists();
-    print("Connection? $hasConnection");
-
-    if (hasConnection) {
-      final result = await remote.get_documents();
-
-      await storage.saveDocuments(result);
-
-      return result;
-    } else {
-      return offline.get_documents();
+    var data = await offline.get_documents();
+    if (data.isEmpty) {
+      data = await remote.get_documents();
+      await storage.saveDocuments(data);
     }
+    return data;
   }
 
   @override

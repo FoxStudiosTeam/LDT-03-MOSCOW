@@ -9,21 +9,12 @@ import 'package:mobile_flutter/widgets/blur_menu.dart';
 class PunishmentCard extends StatelessWidget {
   final Punishment data;
   final Map<int, String> statuses;
-  final String addr;
-  final IDependencyContainer di;
-  final bool isNear;
-  final Map<int, String> statues;
-  final Map<String, String> documents;
-
+  final Function() onTap;
   const PunishmentCard({
     super.key,
     required this.statuses,
-    required this.di,
     required this.data,
-    required this.addr,
-    required this.isNear,
-    required this.documents,
-    required this.statues,
+    required this.onTap,
   });
 
   void _openPunishmentCardMenu(BuildContext context) {
@@ -100,22 +91,7 @@ class PunishmentCard extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade300),
       ),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PunishmentItemsScreen(
-                di: di,
-                punishmentUuid: data.uuid,
-                addr: addr,
-                is_new: false,
-                documents: documents,
-                statuses: statuses,
-                isNear: isNear,
-              ),
-            ),
-          );
-        },
+        onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.only(bottom: 16, top: 10, left: 20, right: 0),
           child: Column(

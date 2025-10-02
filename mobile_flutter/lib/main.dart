@@ -14,9 +14,10 @@ import 'package:mobile_flutter/reports/reports_provider.dart';
 import 'package:mobile_flutter/reports/reports_storage_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/screens/objects_screen.dart';
-import 'package:mobile_flutter/screens/punishments_screen.dart';
+import 'package:mobile_flutter/screens/punishment/punishments_screen.dart';
 import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
+import 'package:mobile_flutter/widgets/blur_menu.dart';
 
 import 'object/object_provider.dart';
 
@@ -163,5 +164,5 @@ class MainPage extends StatelessWidget {
         },
       ),
     );
-  }
+  }   
 }

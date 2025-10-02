@@ -113,7 +113,7 @@ class QueuedResponse {
   SyncedQueuedStatus toSyncedStatus() => SyncedQueuedStatus(
     DateTime.now().millisecondsSinceEpoch, 
     response?.statusCode, 
-    jsonDecode(response?.body ?? "{}"), 
+    tryDecode(response?.body ?? "{}") ?? {}, 
     isOk
   );
 }
@@ -139,6 +139,7 @@ class QueuedRequestModel {
   final String? attachmentOriginOverride;
 
   final List<AttachmentModel> attachments;
+  final List<QueuedRequestModel> children;
 
   QueuedRequestModel({
     required this.title,
@@ -150,6 +151,7 @@ class QueuedRequestModel {
     required this.id,
     this.attachmentOriginOverride,
     this.attachments = const [],
+    this.children = const [],
   });
   
 
@@ -166,7 +168,8 @@ class QueuedRequestModel {
         "headers": headers,
         "attachments": attachments.map((a) => a.toJson()).toList(),
         "attachmentOriginOverride": attachmentOriginOverride,
-        "title": title
+        "title": title,
+        "children": children.map((c) => c.toJson()).toList(),
       };
 
   static QueuedRequestModel fromJson(Map<String, dynamic> json) =>
@@ -179,6 +182,9 @@ class QueuedRequestModel {
         method: json["method"],
         body: Map<String, dynamic>.from(json["body"]),
         headers: Map<String, String>.from(json["headers"]),
+        children: (json["children"] as List)
+            .map((c) => QueuedRequestModel.fromJson(Map<String, dynamic>.from(c)))
+            .toList(),
         attachments: (json["attachments"] as List)
             .map((a) => AttachmentModel.fromJson(Map<String, dynamic>.from(a)))
             .toList(),
@@ -243,6 +249,14 @@ class QueuedRequestModel {
           log("[OFFLINE QUEUE] Attachment ${attachment.path} uploaded");
         }
       }
+      
+      for (final child in children) {
+        final resp = await child.execute(accessToken);
+        if (!resp.isOk) {
+          ok = false;
+        }
+      }
+
       return QueuedResponse(isDelayed: false, isOk: ok);
     }
   }

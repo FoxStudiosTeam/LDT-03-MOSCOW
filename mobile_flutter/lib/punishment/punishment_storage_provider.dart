@@ -67,6 +67,10 @@ class PunishmentStorageProvider implements IPunishmentStorageProvider {
 
   @override
   Future<void> savePunishments(List<Punishment> punishments) async {
+    if (punishments.isEmpty) {
+      await prefs?.setString(PUNISHMENTS_KEY, jsonEncode([]));
+      return;
+    }
     final existing = await getPunishments(punishments.first.project);
 
 

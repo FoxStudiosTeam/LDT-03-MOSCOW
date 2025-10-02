@@ -8,7 +8,8 @@ import 'package:mobile_flutter/domain/entities.dart'
     show ProjectStatus, FoxPolygon, ProjectStatusExtension, Role, roleFromString, InspectorInfo;
 import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/screens/activation_screen.dart';
-import 'package:mobile_flutter/screens/punishments_screen.dart';
+import 'package:mobile_flutter/screens/pun/punishments.dart';
+import 'package:mobile_flutter/screens/punishment/punishments_screen.dart';
 import 'package:mobile_flutter/utils/file_utils.dart';
 import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
@@ -146,11 +147,12 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 Navigator.push(
                   ctx,
                   MaterialPageRoute(
-                    builder: (_) => PunishmentsScreen(
+                    builder: (_) => ProjectPunishmentsScreen(
                       di: widget.di,
                       projectUuid: widget.projectUuid,
                       addr: widget.address,
-                      polygon: widget.polygon,
+                      isNear: isNear,
+                      role: _role!,
                     ),
                   ),
                 );
