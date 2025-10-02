@@ -13,12 +13,14 @@ class PunishmentsScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String projectUuid;
   final String addr;
+  final bool isNear;
 
   const PunishmentsScreen({
     super.key,
     required this.di,
     required this.projectUuid,
-    required this.addr
+    required this.addr,
+    required this.isNear,
   });
 
   @override
@@ -123,7 +125,7 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
         title: "Предписания",
         subtitle: widget.addr,
         onBack: leaveHandler,
-        onMore: (_role == Role.INSPECTOR || _role == Role.CUSTOMER || _role == Role.ADMIN) ? _openPunishmentMenu : null,
+        onMore: (((_role == Role.INSPECTOR || _role == Role.CUSTOMER) && widget.isNear) || _role == Role.ADMIN) ? _openPunishmentMenu : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

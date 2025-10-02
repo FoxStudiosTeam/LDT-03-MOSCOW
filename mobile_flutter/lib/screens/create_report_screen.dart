@@ -9,7 +9,9 @@ import 'package:mobile_flutter/widgets/base_header.dart';
 class ReportCreationScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String address;
-  const ReportCreationScreen({super.key, required this.di, required this.address});
+  final List<String> works;
+
+  const ReportCreationScreen({super.key, required this.di, required this.address, required this.works});
 
   @override
   State<ReportCreationScreen> createState() => _ReportCreationScreenState();
@@ -19,17 +21,13 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
   final TextEditingController _workNameController = TextEditingController();
   List<PlatformFile> attachments = [];
   String? _selectedWorkType;
+  List<String> _workTypes = [];
 
-  final List<String> _workTypes = [
-    'Подготовительные работы',
-    'Земляные работы',
-    'Монтажные работы',
-    'Отделочные работы',
-    'Электромонтажные работы',
-    'Сантехнические работы',
-    'Пусконаладочные работы',
-    'Другие работы'
-  ];//TODO УБРАТЬ ЗАГЛУШКУ
+  @override
+  void initState() {
+    super.initState();
+    _workTypes=widget.works;
+  }
 
   void leaveHandler() {
     Navigator.pop(context);
@@ -66,6 +64,7 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
       appBar: BaseHeader(
         title: "Создание отчета",
         subtitle: widget.address,
+        onBack: () => Navigator.pop(context),
       ),
       backgroundColor: Colors.white,
       body: Column(
@@ -96,7 +95,7 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
                       horizontal: 16,
                       vertical: 12,
                     ),
-                    hintText: "Выберите тип работы",
+                    hintText: "Выберите работу",
                   ),
                   items: _workTypes.map((String workType) {
                     return DropdownMenuItem<String>(
@@ -194,11 +193,9 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
     }
 
     // TODO: Реализовать логику сохранения отчета с вложениями
-    print('Тип работы: $_selectedWorkType');
-    print('Количество вложений: ${attachments.length}');
 
     for (var file in attachments) {
-      print('Файл: ${file.name}, Размер: ${file.size}');
+      // TODO: сохранение вложений
     }
 
     Navigator.pop(context);

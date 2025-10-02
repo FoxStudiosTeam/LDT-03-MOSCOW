@@ -475,29 +475,29 @@ void _openAddAttachmentMenu(BuildContext context) {
             color: Colors.grey[400],
             borderRadius: BorderRadius.circular(2),
           ),
-        ),
-        const SizedBox(height: 12),
-        ListTile(
-          titleAlignment: ListTileTitleAlignment.center,
-          leading: const Icon(Icons.attach_file),
-          title: const Text('Добавить файл'),
-          onTap: () {
-            // Navigator.pop(ctx);//TODO ДОБАВИТЬ ФАЙЛ
-          },
-        ),
-        const Divider(height: 1),
-        ListTile(
-          titleAlignment: ListTileTitleAlignment.center,
-          leading: const Icon(Icons.photo),
-          title: const Text('Добавить фото'),
-          onTap: () {
-            // Navigator.pop(ctx);//TODO ДОБАВИТЬ ФОТО
-          },
-        ),
-      ],
-    ),
-  );
-}
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.attach_file),
+            title: const Text('Добавить вложение'),
+            onTap: () {
+              Navigator.pop(ctx);//TODO ДОБАВИТЬ ФАЙЛ
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.photo),
+            title: const Text('Добавить фото'),
+            onTap: () {
+              Navigator.pop(ctx);//TODO ДОБАВИТЬ ФОТО
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
 
 enum ChecklistStatus {

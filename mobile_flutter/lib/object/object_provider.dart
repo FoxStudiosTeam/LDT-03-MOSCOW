@@ -11,6 +11,7 @@ import 'package:mobile_flutter/utils/network_utils.dart';
 abstract class IObjectsProvider {
   Future<PaginationResponseWrapper<Project>> getObjects(String address, int offset);
   Future<List<InspectorInfo>> getObjectInspectors(String project_uuid);
+  Future<List<ProjectScheduleItem>> getWorkTitles(String project_uuid);
 }
 
 const IObjectsProviderDIToken = "IObjectsProvider";
@@ -87,6 +88,36 @@ class ObjectsProvider implements IObjectsProvider {
           'Failed to fetch measurements: ${response.statusCode}');
     }
   }
+
+  @override
+  Future<List<ProjectScheduleItem>> getWorkTitles(String projectUuid) async {
+    final uri = apiRoot.resolve('/api/project/get-project-schedule')
+        .replace(queryParameters: {'project_uuid':projectUuid});
+    _accessToken = await authStorageProvider.getAccessToken();
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $_accessToken',
+      },
+      body: jsonEncode({"project_uuid":"${projectUuid}"})
+    ).timeout(Duration(seconds: 20),onTimeout: () {
+      throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
+    });
+
+    if (response.statusCode == 200) {
+      final jsonList = jsonDecode(response.body)['data'] as List<dynamic>;
+      final works = jsonList
+          .expand((e) => e['items'] as List<dynamic>)
+          .map((e) => ProjectScheduleItem.fromJson(e as Map<String, dynamic>, projectUuid)).toList();
+
+      return works;
+    } else {
+      throw Exception(
+          'Failed to fetch measurements: ${response.statusCode}');
+    }
+  }
 }
 
 class OfflineObjectsProvider implements IObjectsProvider {
@@ -103,6 +134,12 @@ class OfflineObjectsProvider implements IObjectsProvider {
   @override
   Future<List<InspectorInfo>> getObjectInspectors(String projectUuid) async {
     var data = await objectStorageProvider.getObjectInspectors(projectUuid);
+    return data;
+  }
+
+  @override
+  Future<List<ProjectScheduleItem>> getWorkTitles(String projectUuid) async {
+    var data = await objectStorageProvider.getWorkTitles(projectUuid);
     return data;
   }
 }
@@ -147,6 +184,20 @@ class SmartObjectsProvider implements IObjectsProvider {
       return result;
     } else {
       return offline.getObjectInspectors(projectUuid);
+    }
+  }
+
+  @override
+  Future<List<ProjectScheduleItem>> getWorkTitles(String projectUuid) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+    print("Connection? $hasConnection");
+
+    if (hasConnection) {
+      final result = await remote.getWorkTitles(projectUuid);
+
+      return result;
+    } else {
+      return offline.getWorkTitles(projectUuid);
     }
   }
 

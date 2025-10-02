@@ -36,6 +36,7 @@ class MaterialsScreen extends StatefulWidget {
 class _MaterialsScreenState extends State<MaterialsScreen> {
   String? _token;
   Role? _role;
+  Map<int, String>? _measurements;
   List<MaterialCard> materials = [];
   void leaveHandler() {
     Navigator.pop(context);
@@ -63,7 +64,13 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
   Future<List<MaterialCard>> _loadCards() async {
     final provider = widget.di.getDependency<IMaterialsProvider>(IMaterialsProviderDIToken);
     final measurements = await provider.get_measurements();
+
+    setState(() {
+      _measurements = measurements;
+    });
+
     final materials = await NetworkUtils.wrapRequest(() => provider.get_materials(widget.projectUuid), context, widget.di);
+
 
     return materials.map((mat) => MaterialCard(
       di: widget.di,
@@ -123,8 +130,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => TTNScanScreen()),
-                //MaterialCreationScreen(di: widget.di, address: widget.projectTitle)),
+                MaterialPageRoute(builder: (_) => TTNScanScreen(measurements: _measurements ?? {},)),
               );
             },
           ),
