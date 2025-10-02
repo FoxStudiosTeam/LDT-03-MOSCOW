@@ -7,7 +7,7 @@ import 'package:mobile_flutter/widgets/attachment_card.dart';
 
 import 'package:mobile_flutter/widgets/base_header.dart';
 
-import '../utils/style_utils.dart';
+import '../../utils/style_utils.dart';
 
 class PunishmentItemScreen extends StatefulWidget {
   final IDependencyContainer di;

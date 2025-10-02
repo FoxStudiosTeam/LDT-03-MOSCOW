@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:mobile_flutter/reports/reports_storage_provider.dart';
 
 import 'package:mobile_flutter/utils/network_utils.dart';
+import 'package:uuid/uuid.dart';
 
 abstract class IReportsProvider {
   Future<Map<int, String>> get_statuses();
@@ -153,4 +154,23 @@ class SmartReportsProvider implements IReportsProvider {
       return offline.get_reports(project);
     }
   }
+}
+
+
+QueuedRequestModel queuedReport(String id, String title) {
+  final now = DateTime.now();
+  return QueuedRequestModel(
+    id: Uuid().v4(),
+    timestamp: now.millisecondsSinceEpoch,
+    title: title,
+    url: Uri.parse(APIRootURI).resolve('/api/project/activate-project').toString(),
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: {
+      "project_uuid": id
+    },
+  );
 }

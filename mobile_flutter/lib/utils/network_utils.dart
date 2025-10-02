@@ -83,6 +83,33 @@ enum AttachmentVariant {
     }
   }
 }
+class QueuedChildModel {
+  String body_key;
+  String parent_key;
+  QueuedRequestModel model;
+
+  QueuedChildModel({
+    required this.body_key,
+    this.parent_key = "uuid",
+    required this.model,
+  });
+
+  Map<String, dynamic> toJson() => {
+        "body_key": body_key,
+        "parent_key": parent_key,
+        "model": model.toJson(),
+      };
+
+  static QueuedChildModel fromJson(Map<String, dynamic> json) => QueuedChildModel(
+        body_key: json["body_key"],
+        parent_key: json["parent_key"],
+        model: QueuedRequestModel.fromJson(
+          Map<String, dynamic>.from(json["model"]),
+        ),
+      );
+}
+
+
 
 class AttachmentModel {
   final AttachmentVariant type;
@@ -90,19 +117,19 @@ class AttachmentModel {
 
   AttachmentModel({required this.type, required this.path});
 
-    Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson() => {
         "type": type.toString(),
         "path": path,
       };
 
-  static AttachmentModel fromJson(Map<String, dynamic> json) =>
-      AttachmentModel(
+  static AttachmentModel fromJson(Map<String, dynamic> json) => AttachmentModel(
         type: AttachmentVariant.values.firstWhere(
           (e) => e.toString() == json["type"],
         ),
         path: json["path"],
       );
 }
+
 
 class QueuedResponse {
   bool isDelayed;
@@ -113,7 +140,7 @@ class QueuedResponse {
   SyncedQueuedStatus toSyncedStatus() => SyncedQueuedStatus(
     DateTime.now().millisecondsSinceEpoch, 
     response?.statusCode, 
-    jsonDecode(response?.body ?? "{}"), 
+    tryDecode(response?.body ?? "{}") ?? {}, 
     isOk
   );
 }
@@ -139,6 +166,7 @@ class QueuedRequestModel {
   final String? attachmentOriginOverride;
 
   final List<AttachmentModel> attachments;
+  final List<QueuedChildModel> children;
 
   QueuedRequestModel({
     required this.title,
@@ -150,12 +178,8 @@ class QueuedRequestModel {
     required this.id,
     this.attachmentOriginOverride,
     this.attachments = const [],
+    this.children = const [],
   });
-  
-
-  void now() {
-    timestamp = DateTime.now().millisecondsSinceEpoch;
-  }
 
   Map<String, dynamic> toJson() => {
         "timestamp": timestamp,
@@ -166,7 +190,8 @@ class QueuedRequestModel {
         "headers": headers,
         "attachments": attachments.map((a) => a.toJson()).toList(),
         "attachmentOriginOverride": attachmentOriginOverride,
-        "title": title
+        "title": title,
+        "children": children.map((c) => c.toJson()).toList(),
       };
 
   static QueuedRequestModel fromJson(Map<String, dynamic> json) =>
@@ -179,6 +204,10 @@ class QueuedRequestModel {
         method: json["method"],
         body: Map<String, dynamic>.from(json["body"]),
         headers: Map<String, String>.from(json["headers"]),
+        children: (json["children"] as List)
+            .map((c) =>
+                QueuedChildModel.fromJson(Map<String, dynamic>.from(c)))
+            .toList(),
         attachments: (json["attachments"] as List)
             .map((a) => AttachmentModel.fromJson(Map<String, dynamic>.from(a)))
             .toList(),
@@ -197,7 +226,8 @@ class QueuedRequestModel {
       return QueuedResponse(isDelayed: false, isOk: resp.statusCode == 200, response: resp);
     } else {
       var maybeOrigin = attachmentOriginOverride;
-      if (attachmentOriginOverride == null) {
+      var parent_body = null;
+      if (attachmentOriginOverride == null && children.isEmpty) {
         final request = http.Request(method, Uri.parse(url));
         request.headers.addAll({
           "Content-Type": "application/json",
@@ -216,7 +246,8 @@ class QueuedRequestModel {
           log("[OFFLINE QUEUE] Error uploading attachment origin: [${v.statusCode}] ${v.body}");
           return QueuedResponse(isDelayed: false, isOk: false, response: v);
         }
-        maybeOrigin = original;
+        if (attachmentOriginOverride == null) maybeOrigin = original;
+        parent_body = v;
       }
       var origin = maybeOrigin!;
       
@@ -241,6 +272,19 @@ class QueuedRequestModel {
           ok = false;
         } else {
           log("[OFFLINE QUEUE] Attachment ${attachment.path} uploaded");
+        }
+      }
+
+      for (final child in children) {
+        if (!parent_body) {
+          log("[OFFLINE QUEUE] Error uploading attachment origin: [${parent_body?.statusCode}] ${parent_body?.body}");
+          continue;
+        }
+        var ex = child.model;
+        ex.body[child.body_key] = parent_body[child.parent_key];
+        final resp = await ex.execute(accessToken);
+        if (!resp.isOk) {
+          ok = false;
         }
       }
       return QueuedResponse(isDelayed: false, isOk: ok);

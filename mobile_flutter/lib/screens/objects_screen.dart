@@ -8,6 +8,7 @@ import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/materials/materials_provider.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
+import 'package:mobile_flutter/reports/reports_provider.dart';
 import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/fox_button.dart';
@@ -33,6 +34,16 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   bool _isLoading = false;
   bool _isRefreshing = false;
 
+  void _asyncInit() async {
+    final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
+    final _ = await NetworkUtils.wrapRequest<Map<int, String>>(() => provider.get_statuses(),context,widget.di);
+    final _ = await NetworkUtils.wrapRequest<Map<String, String>>(() => provider.get_documents(),context,widget.di);
+    final mat_provider = widget.di.getDependency<IMaterialsProvider>(IMaterialsProviderDIToken);
+    final _ = await NetworkUtils.wrapRequest<Map<int, String>>(() => mat_provider.get_measurements(),context,widget.di);
+    final rep_provider = widget.di.getDependency<IReportsProvider>(IReportsProviderDIToken);
+    final _ = await NetworkUtils.wrapRequest<Map<int, String>>(() => rep_provider.get_statuses(),context,widget.di);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +51,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     _loadProjects();
     var v = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
     v.begin();
+    _asyncInit();
   }
 
   Future<void> _loadAuth() async {
