@@ -273,18 +273,27 @@ class _ObjectScreenState extends State<ObjectScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Padding(padding: const EdgeInsets.only(left: 10.0), child: 
               Text(
                 "Информация об объекте",
                 style: TextStyle(fontSize: 20, color: textColor),
               ),
+              ),
               const Divider(height: 1),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              Padding(padding: const EdgeInsets.only(left: 10.0), child: 
               widget.status.toRenderingString(),
-              const SizedBox(height: 16),
+              ),
+              
+              const SizedBox(height: 8),
 
               // Информация о участниках
               _buildInfoCard(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 4),
+              Padding(padding: const EdgeInsets.only(left: 10.0), child: 
+                Text("${isNear ? 'Вы находитесь в зоне объекта' : 'Вы не находитесь в зоне объекта'}", style: TextStyle(color: isNear ? Colors.green : Colors.red),),
+              ),
+              const SizedBox(height: 8),
               // Карта с полигоном
               Container(
                 width: double.infinity,

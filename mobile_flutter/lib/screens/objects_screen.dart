@@ -72,7 +72,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
       });
     }
   }
-
+  var _objectsProvider;
   Future<void> _loadProjects() async {
     if (_isLoading) return;
 
@@ -81,7 +81,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     });
 
     try {
-      var objectsProvider = widget.di.getDependency<IObjectsProvider>(
+      _objectsProvider = widget.di.getDependency<IObjectsProvider>(
         IObjectsProviderDIToken,
       );
 
@@ -100,10 +100,10 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
 
       print("Start Request");
 
-      var response = await NetworkUtils.wrapRequest(() => objectsProvider.getObjects("", 0), context, widget.di);
+      var response = await NetworkUtils.wrapRequest(() => _objectsProvider.getObjects("", 0), context, widget.di);
       final List<ProjectAndInspectors> result = [];
       for (var project in response.items) {
-        final inspectors = await NetworkUtils.wrapRequest(() => objectsProvider.getObjectInspectors(project.uuid),context,widget.di);
+        final inspectors = await NetworkUtils.wrapRequest(() => _objectsProvider.getObjectInspectors(project.uuid),context,widget.di);
         result.add(ProjectAndInspectors(
             project: project,
             inspectors: inspectors
@@ -149,9 +149,101 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     });
   }
 
+  void inspectorAll() async {
+    setState(() {
+      _isLoading = true;
+    });
+    var response = await NetworkUtils.wrapRequest(() => _objectsProvider.getObjects("", 0), context, widget.di);
+    final List<ProjectAndInspectors> result = [];
+    for (var project in response.items) {
+      final inspectors = await NetworkUtils.wrapRequest(() => _objectsProvider.getObjectInspectors(project.uuid),context,widget.di);
+      result.add(ProjectAndInspectors(
+          project: project,
+          inspectors: inspectors
+      ));
+    }
+    setState(() {
+      _isLoading = false;
+      projects = result;
+    });
+  }
+
+  void inspectorMine() async {
+    setState(() {
+      _isLoading = true;
+    });
+    var response = await NetworkUtils.wrapRequest(() => _objectsProvider.getInspectorObjects("", 0), context, widget.di);
+    final List<ProjectAndInspectors> result = [];
+    for (var project in response.items) {
+      final inspectors = await NetworkUtils.wrapRequest(() => _objectsProvider.getObjectInspectors(project.uuid),context,widget.di);
+      result.add(ProjectAndInspectors(
+          project: project,
+          inspectors: inspectors
+      ));
+    }
+    setState(() {
+      _isLoading = false;
+      projects = result;
+    });
+  }
+
   void openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
   }
+
+  Widget _defaultButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 30.0, left: 8.0),
+            child: FoxButton(
+              onPressed: sortInAction,
+              text: "В процессе",
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 30.0, right: 8.0),
+            child: FoxButton(
+              onPressed: sortExited,
+              text: "Завершенные",
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  
+  Widget _inspectorButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 30.0, left: 8.0),
+            child: FoxButton(
+              onPressed: inspectorAll,
+              text: "Все проекты",
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 30.0, right: 8.0),
+            child: FoxButton(
+              onPressed: inspectorMine,
+              text: "Мои проекты",
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -182,29 +274,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 30.0, left: 8.0),
-                    child: FoxButton(
-                      onPressed: sortInAction,
-                      text: "В процессе",
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 30.0, right: 8.0),
-                    child: FoxButton(
-                      onPressed: sortExited,
-                      text: "Завершенные",
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            child: _role == Role.INSPECTOR ? _inspectorButtons() : _defaultButtons(),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -224,7 +294,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   }
 
   Widget _buildContent() {
-    if (projects.isEmpty) {
+    if (projects.isEmpty || _isLoading) {
       return _buildLoadingState();
     } else {
       return ListView.builder(

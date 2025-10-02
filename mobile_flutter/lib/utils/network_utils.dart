@@ -220,9 +220,13 @@ class QueuedRequestModel {
         "Content-Type": "application/json",
         ...headers,
       });
+      log("[OFFLINE QUEUE] Headers ser!");
       request.headers["Authorization"] = "Bearer $accessToken";
       request.body = jsonEncode(body);
+      log("[OFFLINE QUEUE] Encoded!");
       var resp = await http.Response.fromStream(await request.send());
+      log("[OFFLINE QUEUE] Body: ${resp.body}!");
+      log("[OFFLINE QUEUE] Resp: ${resp.statusCode}!");
       return QueuedResponse(isDelayed: false, isOk: resp.statusCode == 200, response: resp);
     } else {
       var maybeOrigin = attachmentOriginOverride;
