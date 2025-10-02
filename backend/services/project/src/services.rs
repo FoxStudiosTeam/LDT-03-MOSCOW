@@ -119,6 +119,7 @@ impl IProjectService for ProjectService {
         left join auth.users u
             on u.\"uuid\" = ir.user_uuid
         where ir.project = $1
+        group by u.fcs, u.\"uuid\"
         ")
             .bind(&r.project_uuid)
             .fetch_all(self.state.orm().get_executor())
