@@ -118,7 +118,7 @@ impl IProjectService for ProjectService {
         from project.iko_relationship ir
         left join auth.users u
             on u.\"uuid\" = ir.user_uuid
-        where ir.project = = $1
+        where ir.project = $1
         ")
             .bind(&r.project_uuid)
             .fetch_all(self.state.orm().get_executor())
