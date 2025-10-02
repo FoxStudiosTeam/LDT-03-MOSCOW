@@ -35,6 +35,7 @@ class ReportScreen extends StatefulWidget {
 class _ReportScreenState extends State<ReportScreen> {
   String? _token;
   Role? _role;
+  bool _loaded = false;
   List<ReportCard> reports = [];
 
   void leaveHandler() {
@@ -64,7 +65,9 @@ class _ReportScreenState extends State<ReportScreen> {
     final provider = widget.di.getDependency<IReportsProvider>(IReportsProviderDIToken);
     final statuses = await provider.get_statuses();
     final reports = await NetworkUtils.wrapRequest(() => provider.get_reports(widget.projectUuid), context, widget.di);
-
+    setState(() {
+      _loaded = true;
+    });
     return reports.map((rep) => ReportCard(
       di: widget.di,
       data: rep,
@@ -130,7 +133,8 @@ class _ReportScreenState extends State<ReportScreen> {
         onBack: leaveHandler,
         onMore: ((_role == Role.FOREMAN && widget.isNear) || _role == Role.ADMIN) ? _openReportMenu : null,
       ),
-      body: Padding(
+      body: !_loaded ? const Center(child: CircularProgressIndicator())
+      : Padding(
         padding: const EdgeInsets.all(16.0),
         child: reports.isEmpty
           ? const Center(

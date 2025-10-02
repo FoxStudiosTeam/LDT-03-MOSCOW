@@ -41,6 +41,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
   Role? _role;
   Map<int, String>? _measurements;
   List<MaterialCard> materials = [];
+  bool _loaded = false;
   void leaveHandler() {
     Navigator.pop(context);
   }
@@ -72,7 +73,9 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
       _measurements = measurements;
     });
     final materials = await NetworkUtils.wrapRequest(() => provider.get_materials(widget.projectUuid), context, widget.di);
-
+    setState(() {
+      _loaded = true;
+    });
     return materials.map((mat) => MaterialCard(
       di: widget.di,
       data: mat,
@@ -157,7 +160,10 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         onBack: leaveHandler,
         onMore: ((_role == Role.FOREMAN  && isNear)|| _role == Role.ADMIN) ? _openMaterialMenu : null,
       ),
-      body: Padding(
+      body: 
+      !_loaded
+        ? const Center(child: CircularProgressIndicator())
+      : Padding(
         padding: const EdgeInsets.all(16.0),
         child: materials.isEmpty
           ? const Center(
