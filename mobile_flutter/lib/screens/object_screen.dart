@@ -232,7 +232,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                 }
               },
             ),
-            if ((_role == Role.INSPECTOR || _role == Role.ADMIN) && widget.status == ProjectStatus.PRE_ACTIVE && isNear)
+            if ((_role == Role.INSPECTOR && widget.status == ProjectStatus.PRE_ACTIVE && isNear) || _role == Role.ADMIN )
               ...[
                 const Divider(height: 1),
                 ListTile(

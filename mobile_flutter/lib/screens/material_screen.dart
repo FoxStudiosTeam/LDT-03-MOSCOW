@@ -155,7 +155,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         title: "Материалы",
         subtitle: widget.projectTitle,
         onBack: leaveHandler,
-        onMore: ((_role == Role.FOREMAN || _role == Role.ADMIN) && isNear) ? _openMaterialMenu : null,
+        onMore: ((_role == Role.FOREMAN  && isNear)|| _role == Role.ADMIN) ? _openMaterialMenu : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
