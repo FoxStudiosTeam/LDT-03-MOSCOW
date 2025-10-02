@@ -234,8 +234,6 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
 
 
   Widget _buildChecklistItem(ChecklistItem item, int index) {
-
-
     return item.header != null ?
       Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

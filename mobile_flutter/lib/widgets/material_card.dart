@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:mobile_flutter/attachment/attachments_download.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
@@ -92,7 +93,7 @@ class MaterialCard extends StatelessWidget {
   }
 
   void _handleDownload(String uuid) {
-    // TODO: Реализовать логику скачивания документа
+    downloadTroughBrowser(uuid);
   }
 
 
