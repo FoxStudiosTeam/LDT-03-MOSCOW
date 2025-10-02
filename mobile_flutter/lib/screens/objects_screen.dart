@@ -28,6 +28,8 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   Role? _role;
   List<ProjectAndInspectors> projects = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isLoading = false;
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -58,42 +60,67 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   }
 
   Future<void> _loadProjects() async {
-    var objectsProvider = widget.di.getDependency<IObjectsProvider>(
-      IObjectsProviderDIToken,
-    );
-
-    await NetworkUtils.wrapRequest(() =>
-        widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken).get_statuses(),
-        context, widget.di);
-
-    await NetworkUtils.wrapRequest(() =>
-        widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken).get_documents(),
-        context, widget.di);
-
-    await NetworkUtils.wrapRequest(() =>
-        widget.di.getDependency<IMaterialsProvider>(IMaterialsProviderDIToken).get_measurements(),
-        context, widget.di);
-
-    print("Start Request");
-
-    var response = await NetworkUtils.wrapRequest(() => objectsProvider.getObjects("", 0), context, widget.di);
-    final List<ProjectAndInspectors> result = [];
-    for (var project in response.items) {
-      final inspectors = await NetworkUtils.wrapRequest(() => objectsProvider.getObjectInspectors(project.uuid),context,widget.di);
-      result.add(ProjectAndInspectors(
-          project: project,
-          inspectors: inspectors
-      ));
-    };
-
-    print("END Request");
-    for (var elem in response.items) {
-      print("${elem.address} ${elem.polygon}");
-    }
+    if (_isLoading) return;
 
     setState(() {
-      projects = result;
+      _isLoading = true;
     });
+
+    try {
+      var objectsProvider = widget.di.getDependency<IObjectsProvider>(
+        IObjectsProviderDIToken,
+      );
+
+      // Загружаем дополнительные данные
+      await NetworkUtils.wrapRequest(() =>
+          widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken).get_statuses(),
+          context, widget.di);
+
+      await NetworkUtils.wrapRequest(() =>
+          widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken).get_documents(),
+          context, widget.di);
+
+      await NetworkUtils.wrapRequest(() =>
+          widget.di.getDependency<IMaterialsProvider>(IMaterialsProviderDIToken).get_measurements(),
+          context, widget.di);
+
+      print("Start Request");
+
+      var response = await NetworkUtils.wrapRequest(() => objectsProvider.getObjects("", 0), context, widget.di);
+      final List<ProjectAndInspectors> result = [];
+      for (var project in response.items) {
+        final inspectors = await NetworkUtils.wrapRequest(() => objectsProvider.getObjectInspectors(project.uuid),context,widget.di);
+        result.add(ProjectAndInspectors(
+            project: project,
+            inspectors: inspectors
+        ));
+      }
+
+      print("END Request");
+      for (var elem in response.items) {
+        print("${elem.address} ${elem.polygon}");
+      }
+
+      setState(() {
+        projects = result;
+      });
+    } catch (e) {
+      // Обработка ошибок
+      print("Error loading projects: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+        _isRefreshing = false;
+      });
+    }
+  }
+
+  // Метод для обновления при свайпе
+  Future<void> _handleRefresh() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+    await _loadProjects();
   }
 
   void sortExited() {
@@ -167,36 +194,68 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: projects.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ListView.builder(
-                itemCount: projects.length,
-                itemBuilder: (context, index) {
-                  final project = projects[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: ObjectCard(
-                      projectUuid: project.project.uuid,
-                      title: project.project.address,
-                      status: project.project.status,
-                      address: project.project.address,
-                      di: widget.di,
-                      polygon: project.project.polygon!,
-                      customer: project.project.created_by,
-                      foreman: project.project.foreman,
-                      inspector: project.inspectors,
-                      isStatic: false,
-                    ),
-                  );
-                },
-              ),
+            child: RefreshIndicator(
+              onRefresh: _handleRefresh,
+              color: Colors.red,
+              backgroundColor: Colors.white,
+              displacement: 40.0,
+              strokeWidth: 3.0,
+              child: _buildContent(),
             ),
           ),
         ],
       ),
       drawer: DrawerMenu(di: widget.di),
     );
+  }
+
+  Widget _buildContent() {
+    if (projects.isEmpty) {
+      return _buildLoadingState();
+    } else {
+      return ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        itemCount: projects.length,
+        itemBuilder: (context, index) {
+          final project = projects[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: ObjectCard(
+              projectUuid: project.project.uuid,
+              title: project.project.address,
+              status: project.project.status,
+              address: project.project.address,
+              di: widget.di,
+              polygon: project.project.polygon!,
+              customer: project.project.created_by,
+              foreman: project.project.foreman,
+              inspector: project.inspectors,
+              isStatic: false,
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Widget _buildLoadingState() {
+    if (_isLoading || _isRefreshing) {
+      return const Center(child: CircularProgressIndicator());
+    } else {
+      return ListView(
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: const Center(
+              child: Text(
+                "Нет объектов для отображения",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
   }
 }
