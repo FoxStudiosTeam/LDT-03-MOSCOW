@@ -461,44 +461,44 @@ class ChecklistItem {
   }
 }
 
-  void _openAddAttachmentMenu(BuildContext context) {
-    showBlurBottomSheet(
-      context: context,
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey[400],
-              borderRadius: BorderRadius.circular(2),
-            ),
+void _openAddAttachmentMenu(BuildContext context) {
+  showBlurBottomSheet(
+    context: context,
+    builder: (ctx) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 40,
+          height: 4,
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.grey[400],
+            borderRadius: BorderRadius.circular(2),
           ),
-          const SizedBox(height: 12),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.attach_file),
-            title: const Text('Добавить файл'),
-            onTap: () {
-              Navigator.pop(ctx);//TODO ДОБАВИТЬ ФАЙЛ
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.photo),
-            title: const Text('Добавить фото'),
-            onTap: () {
-              Navigator.pop(ctx);//TODO ДОБАВИТЬ ФОТО
-            },
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(height: 12),
+        ListTile(
+          titleAlignment: ListTileTitleAlignment.center,
+          leading: const Icon(Icons.attach_file),
+          title: const Text('Добавить файл'),
+          onTap: () {
+            // Navigator.pop(ctx);//TODO ДОБАВИТЬ ФАЙЛ
+          },
+        ),
+        const Divider(height: 1),
+        ListTile(
+          titleAlignment: ListTileTitleAlignment.center,
+          leading: const Icon(Icons.photo),
+          title: const Text('Добавить фото'),
+          onTap: () {
+            // Navigator.pop(ctx);//TODO ДОБАВИТЬ ФОТО
+          },
+        ),
+      ],
+    ),
+  );
 }
+
 
 enum ChecklistStatus {
   notSelected,

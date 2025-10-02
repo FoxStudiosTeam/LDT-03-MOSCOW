@@ -117,7 +117,7 @@ void main() async {
 
   var di = builder.build();
 
-  var auth = di.getDependency<IAuthStorageProvider>(IAuthProviderDIToken);
+  var auth = di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
   req.init(auth);
 
 

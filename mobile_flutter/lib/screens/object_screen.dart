@@ -8,7 +8,9 @@ import 'package:mobile_flutter/domain/entities.dart'
     show ProjectStatus, FoxPolygon, ProjectStatusExtension, Role, roleFromString, InspectorInfo;
 import 'package:mobile_flutter/screens/activation_screen.dart';
 import 'package:mobile_flutter/screens/punishments_screen.dart';
+import 'package:mobile_flutter/utils/file_utils.dart';
 import 'package:mobile_flutter/utils/geo_utils.dart';
+import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
@@ -18,6 +20,8 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/widgets/current_location_layer.dart';
+import 'package:mobile_flutter/widgets/funny_things.dart';
+import 'package:uuid/uuid.dart';
 
 class ObjectScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -83,10 +87,12 @@ class _ObjectScreenState extends State<ObjectScreen> {
   late final _locationProvider;
   late final _locationListener;
   LatLng? _location = null;
+  late final IQueuedRequests _queued;
   @override
   void initState() {
     super.initState();
     _loadAuth();
+    _queued = widget.di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
     _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
 
     _locationListener = () => setState(() {
@@ -146,10 +152,11 @@ class _ObjectScreenState extends State<ObjectScreen> {
               leading: const Icon(Icons.account_balance_outlined),
               title: const Text('Материалы'),
               onTap: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                     builder: (_) => MaterialsScreen(
+                      polygon: widget.polygon,
                       di: widget.di,
                       projectTitle: widget.address,
                       projectUuid: widget.projectUuid,
@@ -164,7 +171,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
               leading: const Icon(Icons.file_open),
               title: const Text('Отчеты'),
               onTap: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   ctx,
                   MaterialPageRoute(
                     builder: (_) =>
@@ -182,8 +189,34 @@ class _ObjectScreenState extends State<ObjectScreen> {
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.file_upload),
               title: const Text('Прикрепить файлы'),
-              onTap: () {
-                Navigator.pop(ctx);
+              onTap: () async {
+                var files = await FileUtils.pickFiles(context: context) ?? [];
+                Navigator.pop(context);
+                if (files.isEmpty) {
+                  showErrSnackbar(context, "Не выбраны файлы");
+                  return;
+                }
+                var toSend = QueuedRequestModel(
+                  id: Uuid().v4(),
+                  title: "Прикрепление файлов к проекту по адресу ${widget.address}",
+                  timestamp: DateTime.now().millisecondsSinceEpoch,
+                  attachmentOriginOverride: widget.projectUuid,
+                  url: "", method: "", body: {}, headers: {},
+                  attachments: files.map((e) => 
+                    AttachmentModel(
+                      type: AttachmentVariant.project,
+                      path: e.path!,
+                    )
+                  ).toList()
+                );
+                var res = await _queued.queuedSend(toSend, widget.projectUuid);
+                if (res.isDelayed) {
+                  showWarnSnackbar(context, "Файлы будут прикреплены после выхода в интернет");
+                } else if (res.isOk) {
+                  showSuccessSnackbar(context, "Файлы успешно прикреплены");
+                } else {
+                  showErrSnackbar(context, "Не удалось прикрепить файлы");
+                }
               },
             ),
             if ((_role == Role.INSPECTOR || _role == Role.ADMIN) && widget.status == ProjectStatus.PRE_ACTIVE && isNear)
