@@ -79,6 +79,14 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
     FileUtils.showErrorSnackbar(message, context);
   }
 
+  // Метод для удаления вложения
+  void _removeAttachment(int index) {
+    setState(() {
+      attachments.removeAt(index);
+    });
+    FileUtils.showSuccessSnackbar('Файл удален', context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,9 +151,12 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
 
           // Секция вложений с ограниченной высотой и скроллингом
           Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: AttachmentsSection(context, attachments, (v) => attachments.removeAt(v)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: _buildAttachmentsSection(),
+              ),
             ),
           ),
 
@@ -179,6 +190,7 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
                   ),
                 ),
                 // Кнопка добавления вложений
+                const SizedBox(width: 10),
                 Container(
                   width: 50,
                   height: 50,
@@ -217,10 +229,10 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
     print("$_selectedWorkUuid\n$_selectedWorkTitle");
 
     final record = ReportRecord(
-      title: _selectedWorkTitle!,
-      status: 2,
-      projectScheduleItem: _selectedWorkUuid!,
-      attachments: attachments
+        title: _selectedWorkTitle!,
+        status: 2,
+        projectScheduleItem: _selectedWorkUuid!,
+        attachments: attachments
     );
 
     final req = widget.di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
@@ -244,6 +256,10 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -269,48 +285,77 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
               ],
             ],
           ),
-          const SizedBox(height: 8),
-          Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.55,
-            ),
-            child: SingleChildScrollView(
-              child: Wrap(
-                alignment: WrapAlignment.start,
-                spacing: 8,
-                runSpacing: 8,
-                children: attachments.map((file) {
-                  return Chip(
-                    avatar: FileUtils.getFileIcon(file.extension ?? ''),
-                    label: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          file.name,
-                          style: const TextStyle(fontSize: 12),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          FileUtils.formatFileSize(file.size),
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
+          const SizedBox(height: 12),
+
+          if (attachments.isEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(20),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.attach_file, size: 40, color: Colors.grey[400]),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Нет прикрепленных файлов',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
                     ),
-                    onDeleted: () {
-                      setState(() {
-                        attachments.remove(file);
-                      });
-                    },
-                  );
-                }).toList(),
+                  ),
+                ],
               ),
             ),
-          ),
+          ] else ...[
+            Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.4,
+              ),
+              child: SingleChildScrollView(
+                child: Wrap(
+                  alignment: WrapAlignment.start,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: List.generate(attachments.length, (index) {
+                    final file = attachments[index];
+                    return Chip(
+                      avatar: FileUtils.getFileIcon(file.extension ?? ''),
+                      label: SizedBox(
+                        width: 120,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              file.name,
+                              style: const TextStyle(fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              FileUtils.formatFileSize(file.size),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      onDeleted: () {
+                        _removeAttachment(index);
+                      },
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
