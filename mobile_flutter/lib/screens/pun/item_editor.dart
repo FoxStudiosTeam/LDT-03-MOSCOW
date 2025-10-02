@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
+import 'package:mobile_flutter/utils/file_utils.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
+import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/attachments.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
@@ -16,12 +18,12 @@ class PunishmentEditorScreen extends StatefulWidget {
 
   const PunishmentEditorScreen({
     super.key,
-    required this.addr, 
-    required this.onSubmit, 
-    required this.statuses, 
+    required this.addr,
+    required this.onSubmit,
+    required this.statuses,
     required this.documents,
   });
-  
+
   @override
   State<StatefulWidget> createState() => _PunishmentEditorScreenState();
 }
@@ -31,7 +33,7 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
 
   bool isLoading = true;
   String? _errorMessage;
-  
+
   // Контроллеры
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _regulationDocController = TextEditingController();
@@ -67,9 +69,7 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
     super.dispose();
   }
 
-  Widget _loading() => const Center(child: CircularProgressIndicator());
-
-  // Метод для выбора даты
+  // Исправленный метод для выбора даты
   Future<void> _selectDate(BuildContext context, TextEditingController controller, Function(DateTime?) onDateSelected) async {
     try {
       final DateTime? picked = await showDatePicker(
@@ -78,18 +78,105 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
         firstDate: DateTime(2000),
         lastDate: DateTime(2100),
         locale: const Locale('ru', 'RU'),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: FoxThemeButtonActiveBackground,
+                onPrimary: Colors.white,
+                onSurface: Colors.black,
+              ),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(
+                  foregroundColor: FoxThemeButtonActiveBackground,
+                ),
+              ),
+            ),
+            child: child!,
+          );
+        },
       );
-      
+
       if (picked != null && mounted) {
-        final formattedDate = "${picked.day.toString().padLeft(2, '0')}.${picked.month.toString().padLeft(2, '0')}.${picked.year}";
-        controller.text = formattedDate;
-        onDateSelected(picked);
-        
-        setState(() {});
+        setState(() {
+          final formattedDate = "${picked.day.toString().padLeft(2, '0')}.${picked.month.toString().padLeft(2, '0')}.${picked.year}";
+          controller.text = formattedDate;
+          onDateSelected(picked);
+        });
       }
     } catch (e) {
       print("Error selecting date: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка выбора даты: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+  }
+
+
+  // Методы для работы с вложениями (как в TTNScanScreen)
+  Future<void> _pickFiles() async {
+    final files = await FileUtils.pickFiles(context: context);
+    if (files != null && files.isNotEmpty) {
+      setState(() {
+        _attachments.addAll(files);
+      });
+      FileUtils.showSuccessSnackbar('Файлы добавлены', context);
+    }
+  }
+
+  Future<void> _pickImages() async {
+    final images = await FileUtils.pickImages(context: context);
+    if (images != null && images.isNotEmpty) {
+      setState(() {
+        _attachments.addAll(images);
+      });
+      FileUtils.showSuccessSnackbar('Фото добавлены', context);
+    }
+  }
+
+  void _openAddAttachmentMenu(BuildContext context) {
+    showBlurBottomSheet(
+      context: context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.attach_file),
+            title: const Text('Добавить файл'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _pickFiles();
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            titleAlignment: ListTileTitleAlignment.center,
+            leading: const Icon(Icons.photo),
+            title: const Text('Добавить фото'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _pickImages();
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -100,42 +187,80 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
         subtitle: widget.addr,
         onBack: () => Navigator.pop(context),
       ),
+      backgroundColor: Colors.grey[50],
       body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
-    if (isLoading) return _loading();
     return _mainContent();
   }
 
   Widget _mainContent() {
-    return SingleChildScrollView(
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Карточка с формой
+                _buildFormCard(),
+
+                const SizedBox(height: 20),
+
+                // Секция вложений (как в TTNScanScreen)
+                _buildAttachmentsSection(),
+              ],
+            ),
+          ),
+        ),
+
+        // Кнопки действий (как в TTNScanScreen)
+        _buildActionButtons(),
+      ],
+    );
+  }
+
+  Widget _buildFormCard() {
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle("Регламентный документ"),
-          const SizedBox(height: 8),
+          _buildSectionTitle("Регламентный документ", required: true),
+          const SizedBox(height: 6),
           DropdownButtonFormField<String>(
             value: _selectedDocKey,
             items: widget.documents.entries
                 .map((e) => DropdownMenuItem<String>(
-                      value: e.key,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width - 80,
-                        ),
-                        child: Text(
-                          e.value,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          maxLines: 2,
-                        ),
-                      ),
-                    ))
+              value: e.key,
+              child: Text(
+                e.value,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ))
                 .toList(),
             onChanged: (String? val) {
               setState(() {
@@ -143,90 +268,99 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
                 _regulationDocController.text = val ?? "";
               });
             },
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: FoxThemeButtonActiveBackground, width: 2),
+              ),
               hintText: "Выберите документ",
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              filled: true,
+              fillColor: Colors.grey[50],
             ),
             isExpanded: true,
+            icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 16),
 
-          _buildSectionTitle("Дата плановая"),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _correctionDatePlanController,
-            readOnly: true,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: "ДД.ММ.ГГГГ",
-              suffixIcon: Icon(Icons.calendar_today),
-            ),
-            onTap: () => _selectDate(
-              context, 
-              _correctionDatePlanController,
-              (date) => _selectedPlanDate = date,
-            ),
+          // Плановая дата
+          _buildSectionTitle("Плановая дата", required: true),
+          const SizedBox(height: 6),
+          _buildDateField(
+            _correctionDatePlanController,
+            "ДД.ММ.ГГГГ",
+                (date) => _selectedPlanDate = date,
           ),
           const SizedBox(height: 16),
 
-          _buildSectionTitle("Дата фактическая"),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _correctionDateFactController,
-            readOnly: true,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: "ДД.ММ.ГГГГ",
-              suffixIcon: Icon(Icons.calendar_today),
-            ),
-            onTap: () => _selectDate(
-              context, 
-              _correctionDateFactController,
-              (date) => _selectedFactDate = date,
-            ),
+          // Фактическая дата (перемещена под плановую)
+          _buildSectionTitle("Фактическая дата", required: true),
+          const SizedBox(height: 6),
+          _buildDateField(
+            _correctionDateFactController,
+            "ДД.ММ.ГГГГ",
+                (date) => _selectedFactDate = date,
           ),
           const SizedBox(height: 16),
 
-          _buildSectionTitle("Дата информации"),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _correctionDateInfoController,
-            readOnly: true,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: "ДД.ММ.ГГГГ",
-              suffixIcon: Icon(Icons.calendar_today),
-            ),
-            onTap: () => _selectDate(
-              context, 
-              _correctionDateInfoController,
-              (date) => _selectedInfoDate = date,
-            ),
+          _buildSectionTitle("Дата информации", required: true),
+          const SizedBox(height: 6),
+          _buildDateField(
+            _correctionDateInfoController,
+            "ДД.ММ.ГГГГ",
+                (date) => _selectedInfoDate = date,
           ),
           const SizedBox(height: 16),
 
-          _buildSectionTitle("Комментарий"),
-          const SizedBox(height: 8),
+          _buildSectionTitle("Комментарий", required: true),
+          const SizedBox(height: 6),
           TextField(
             controller: _commentController,
             maxLines: 3,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: "Введите комментарий",
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: FoxThemeButtonActiveBackground, width: 2),
+              ),
+              hintText: "Введите комментарий...",
+              contentPadding: const EdgeInsets.all(16),
+              filled: true,
+              fillColor: Colors.grey[50],
             ),
           ),
           const SizedBox(height: 16),
 
-          _buildSectionTitle("Статус"),
-          const SizedBox(height: 8),
+          _buildSectionTitle("Статус", required: true),
+          const SizedBox(height: 6),
           DropdownButtonFormField<int>(
             value: _selectedStatusKey,
             items: widget.statuses.entries
                 .map((e) => DropdownMenuItem<int>(
-                      value: e.key,
-                      child: Text(e.value.toString()),
-                    ))
+              value: e.key,
+              child: Text(
+                e.value,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
+              ),
+            ))
                 .toList(),
             onChanged: (int? val) {
               setState(() {
@@ -234,40 +368,238 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
                 _statusController.text = val?.toString() ?? "";
               });
             },
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: FoxThemeButtonActiveBackground, width: 2),
+              ),
               hintText: "Выберите статус",
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              filled: true,
+              fillColor: Colors.grey[50],
             ),
-          ),
-          const SizedBox(height: 32),
-
-          AttachmentsSection(
-            context, 
-            _attachments,
-            (index) => setState(() => _attachments.removeAt(index)),
-          ),
-
-          // todo! attachments button
-          ElevatedButton(
-            onPressed: _allFieldsFilled() ? _onSubmit : null,
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-            ),
-            child: const Text("Сохранить"),
+            isExpanded: true,
+            icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Colors.black87,
+  Widget _buildDateField(TextEditingController controller, String hintText, Function(DateTime?) onDateSelected) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      decoration: InputDecoration(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: FoxThemeButtonActiveBackground, width: 2),
+        ),
+        hintText: hintText,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        filled: true,
+        fillColor: Colors.grey[50],
+        suffixIcon: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: FoxThemeButtonActiveBackground,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: () => _selectDate(context, controller, onDateSelected),
+            icon: const Icon(Icons.calendar_today, color: Colors.white, size: 20),
+            padding: EdgeInsets.zero,
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildAttachmentsSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.attach_file, color: Colors.blue, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                "Вложения",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+              if (_attachments.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: FoxThemeButtonActiveBackground.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${_attachments.length}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: FoxThemeButtonActiveBackground,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          if (_attachments.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.attach_file, size: 40, color: Colors.grey.shade400),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Нет прикрепленных файлов",
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+          // Используем AttachmentsSection как в TTNScanScreen
+            AttachmentsSection(
+              context,
+              _attachments,
+                  (index) => setState(() => _attachments.removeAt(index)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // Кнопки действий как в TTNScanScreen
+  Widget _buildActionButtons() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          // Кнопка сохранения
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _allFieldsFilled() ? _onSubmit : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FoxThemeButtonActiveBackground,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: const Text(
+                'Сохранить нарушение',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Кнопка добавления вложений (как в TTNScanScreen)
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: FoxThemeButtonActiveBackground,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              onPressed: () => _openAddAttachmentMenu(context),
+              icon: const Icon(Icons.add, color: Colors.white, size: 24),
+              tooltip: 'Добавить вложения',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, {bool required = false}) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[800],
+          ),
+        ),
+        if (required) ...[
+          const SizedBox(width: 4),
+          const Text(
+            '*',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.red,
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -282,9 +614,15 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
 
   void _onSubmit() {
     if (!_allFieldsFilled()) {
-      // todo: notify user
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Заполните все обязательные поля'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
+
     var item = PunishmentItem(
       title: _titleController.text,
       regulationDoc: _regulationDocController.text,
@@ -295,7 +633,7 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
       status: _selectedStatusKey!,
       attachments: _attachments,
     );
-    
+
     widget.onSubmit(item);
   }
 }
