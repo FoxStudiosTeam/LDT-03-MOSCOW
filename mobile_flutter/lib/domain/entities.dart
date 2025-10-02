@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
@@ -527,9 +528,10 @@ class MaterialsAndAttachments {
   });
 
   factory MaterialsAndAttachments.fromJson(Map<String, dynamic> json) {
+
     return MaterialsAndAttachments(
       material: Materials.fromJson(
-        json['material'] as Map<String, dynamic>,
+        json['material'] as Map<String, dynamic>? ?? {},
       ),
       attachments: (json['attachments'] as List<dynamic>? ?? [])
           .map((a) => Attachment.fromJson(a as Map<String, dynamic>))

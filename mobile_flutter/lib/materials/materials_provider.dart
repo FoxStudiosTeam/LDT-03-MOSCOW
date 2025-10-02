@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:developer';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/main.dart';
@@ -8,8 +10,10 @@ import 'package:mobile_flutter/di/dependency_container.dart';
 import 'dart:convert';
 
 import 'package:mobile_flutter/materials/materials_storage_provider.dart';
+import 'package:mobile_flutter/screens/ocr/ttn.dart';
 
 import 'package:mobile_flutter/utils/network_utils.dart';
+import 'package:uuid/uuid.dart';
 
 abstract class IMaterialsProvider {
   Future<Map<int, String>> get_measurements();
@@ -75,11 +79,11 @@ class MaterialsProvider implements IMaterialsProvider {
     });
 
     if (response.statusCode == 200) {
+      log("Before decode: ${response.body}");
       final List<dynamic> jsonList = jsonDecode(response.body);
+      log("After decode: $jsonList");
       if (jsonList.isEmpty) return [];
-
-      if (jsonList.isEmpty) return [];
-
+      log("Materials: $jsonList");
       final matAatt = jsonList.map((json) => MaterialsAndAttachments.fromJson(json)).toList();
       return matAatt;
     } else {
@@ -154,4 +158,37 @@ class SmartMaterialsProvider implements IMaterialsProvider {
       return offline.get_materials(project);
     }
   }
+}
+
+
+QueuedRequestModel queuedMaterial(TTNRecord record) {
+  final now = DateTime.now();
+  final deliveryDate = now.toIso8601String().split('T').first;
+
+  final attachments = record.attachments.map((file) {
+    return AttachmentModel(
+      type: AttachmentVariant.materials,
+      path: file.path!,
+    );
+  }).toList();
+
+  return QueuedRequestModel(
+    id: Uuid().v4(),
+    timestamp: now.millisecondsSinceEpoch,
+    title: record.name,
+    url: Uri.parse(APIRootURI).resolve('/api/material').toString(),
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: {
+      "delivery_date": deliveryDate,
+      "measurement": record.unit,
+      "project": record.projectId,
+      "title": record.name,
+      "volume": record.number,
+    },
+    attachments: attachments,
+  );
 }

@@ -11,7 +11,10 @@ import 'package:mobile_flutter/auth/auth_provider.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/main.dart';
+import 'package:mobile_flutter/materials/materials_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
+import 'package:mobile_flutter/screens/ocr/ttn.dart';
+import 'package:mobile_flutter/utils/file_utils.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,7 +50,6 @@ class NetworkUtils {
         rethrow;
       }
     } catch (e) {
-      log("YA 4MOOOO ${e.toString()}");
       rethrow;
     }
   }
@@ -61,120 +63,6 @@ class NetworkUtils {
     }
   }
 }
-
-
-const INetworkProviderDIToken = "I-Network-Provider-Provider-DI-Token";
-
-
-abstract class INetworkProvider {
-  Future<bool> connectionExists();
-  ValueNotifier<bool> get connectionNotifier;
-
-  Future<T> lazySend<T>(Future<T> Function() request);
-
-  void begin();
-  void dispose();
-}
-
-// class NetworkProvider extends INetworkProvider {
-//   var _updating = false;
-//   @override
-//   Future<bool> connectionExists() async => NetworkUtils.connectionExists();
-
-//   @override
-
-//   @override
-//   ValueNotifier<bool> connectionNotifier = ValueNotifier<bool>(false);
-
-//   @override
-//   void begin() {
-//     if (_updating) return;
-//     _updating = true;
-//     connectionNotifier.value = false;
-//     connectionNotifier.addListener(() => connectionNotifier.value = false);
-//     Connectivity().onConnectivityChanged.listen(
-//       (event) => connectionNotifier.value = event != ConnectivityResult.none
-//     );
-//   }
-
-//   @override
-//   void dispose() => connectionNotifier.dispose();
-// }
-
-
-class NetworkProvider implements INetworkProvider {
-  final Queue<_QueuedRequest> _requestQueue = Queue();
-  bool _updating = false;
-  StreamSubscription? _subscription;
-  final ValueNotifier<bool> _connectionNotifier = ValueNotifier<bool>(false);
-
-  @override
-  ValueNotifier<bool> get connectionNotifier => _connectionNotifier;
-
-  @override
-  Future<bool> connectionExists() async {
-    try {
-      final result = await InternetAddress.lookup("example.com");
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException {
-      return false;
-    }
-  }
-
-  @override
-  void begin() {
-    if (_updating) return;
-    _updating = true;
-
-    _subscription = Connectivity().onConnectivityChanged.listen((event) async {
-      final online = await NetworkUtils.connectionExists();
-      connectionNotifier.value = online;
-      if (online) {
-        _flushQueue();
-      }
-    });
-
-    connectionExists().then((exists) => connectionNotifier.value = exists);
-  }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    connectionNotifier.dispose();
-  }
-
-  @override
-  Future<T> lazySend<T>(Future<T> Function() request) async {
-    if (connectionNotifier.value) {
-      return await request();
-    } else {
-      final completer = Completer<T>();
-      _requestQueue.add(_QueuedRequest<T>(request, completer));
-      return completer.future;
-    }
-  }
-
-  void _flushQueue() async {
-    while (_requestQueue.isNotEmpty && connectionNotifier.value) {
-      final queued = _requestQueue.removeFirst();
-      try {
-        final result = await queued.request();
-        queued.completer.complete(result);
-      } catch (e, st) {
-        queued.completer.completeError(e, st);
-      }
-    }
-  }
-}
-
-class _QueuedRequest<T> {
-  final Future<T> Function() request;
-  final Completer<T> completer;
-
-  _QueuedRequest(this.request, this.completer);
-}
-
-
 
 enum AttachmentVariant {
   project,
@@ -198,7 +86,7 @@ enum AttachmentVariant {
 
 class AttachmentModel {
   final AttachmentVariant type;
-  final String path;
+  String path;
 
   AttachmentModel({required this.type, required this.path});
 
@@ -230,6 +118,14 @@ class QueuedResponse {
   );
 }
 
+
+dynamic tryDecode(String source) {
+  try {
+    return jsonDecode(source);
+  } catch (e) {
+    return null; // или {} / [] если хочешь дефолт
+  }
+}
 
 
 class QueuedRequestModel {
@@ -310,7 +206,11 @@ class QueuedRequestModel {
         request.headers["Authorization"] = "Bearer $accessToken";
         request.body = jsonEncode(body);
         var v = await http.Response.fromStream(await request.send());
-        var decoded = jsonDecode(v.body);
+        var decoded = tryDecode(v.body);
+        if (decoded == null) {
+          log("[OFFLINE QUEUE] Error uploading attachment origin: [${v.statusCode}] ${v.body}");
+          return QueuedResponse(isDelayed: false, isOk: false, response: v);
+        }
         var original = decoded["uuid"] as String?;
         if (original == null) {
           log("[OFFLINE QUEUE] Error uploading attachment origin: [${v.statusCode}] ${v.body}");
@@ -473,6 +373,12 @@ class QueuedRequests implements IQueuedRequests {
   Future<QueuedResponse> queuedSend(QueuedRequestModel request, String token) async {
     log("[OFFLINE QUEUE] Trying to send queued request");
     if (!await NetworkUtils.connectionExists()) {
+      for (var f in request.attachments) {
+        var newPath = await savePathToCache(f.path);
+        f.path = newPath;
+      }
+
+
       log("[OFFLINE QUEUE] No connection");
       _history[request.id] = request.toHistory();
       _queuedRequests[request.id] = request;

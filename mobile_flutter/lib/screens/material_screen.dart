@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/materials/materials_provider.dart';
@@ -20,12 +22,14 @@ class MaterialsScreen extends StatefulWidget {
   final String projectTitle;
   final String projectUuid;
   final FoxPolygon polygon;
+  final String address;
 
   const MaterialsScreen({
     super.key,
     required this.di,
     required this.projectTitle,
     required this.projectUuid,
+    required this.address,
     required this.polygon,
   });
 
@@ -68,9 +72,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
     setState(() {
       _measurements = measurements;
     });
-
     final materials = await NetworkUtils.wrapRequest(() => provider.get_materials(widget.projectUuid), context, widget.di);
-
 
     return materials.map((mat) => MaterialCard(
       di: widget.di,
@@ -130,7 +132,11 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => TTNScanScreen(measurements: _measurements ?? {},)),
+                MaterialPageRoute(builder: (_) => TTNScanScreen(
+                  di: widget.di, measurements: _measurements ?? {},
+                  projectId: widget.projectUuid,
+                  address: widget.address,
+                )),
               );
             },
           ),

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
@@ -69,7 +71,6 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     await NetworkUtils.wrapRequest(() =>
         widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken).get_documents(),
         context, widget.di);
-
     await NetworkUtils.wrapRequest(() =>
         widget.di.getDependency<IMaterialsProvider>(IMaterialsProviderDIToken).get_measurements(),
         context, widget.di);
