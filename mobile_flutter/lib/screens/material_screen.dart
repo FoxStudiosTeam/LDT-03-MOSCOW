@@ -1,8 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/materials/materials_provider.dart';
-import 'package:mobile_flutter/screens/create_material_screen.dart';
 import 'package:mobile_flutter/screens/ocr/ttn.dart';
+import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 
@@ -11,17 +13,23 @@ import 'package:mobile_flutter/widgets/material_card.dart';
 
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
+import 'package:latlong2/latlong.dart';
+
 
 class MaterialsScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String projectTitle;
   final String projectUuid;
+  final FoxPolygon polygon;
+  final String address;
 
   const MaterialsScreen({
     super.key,
     required this.di,
     required this.projectTitle,
-    required this.projectUuid
+    required this.projectUuid,
+    required this.address,
+    required this.polygon,
   });
 
   @override
@@ -31,6 +39,7 @@ class MaterialsScreen extends StatefulWidget {
 class _MaterialsScreenState extends State<MaterialsScreen> {
   String? _token;
   Role? _role;
+  Map<int, String>? _measurements;
   List<MaterialCard> materials = [];
   void leaveHandler() {
     Navigator.pop(context);
@@ -58,6 +67,10 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
   Future<List<MaterialCard>> _loadCards() async {
     final provider = widget.di.getDependency<IMaterialsProvider>(IMaterialsProviderDIToken);
     final measurements = await provider.get_measurements();
+
+    setState(() {
+      _measurements = measurements;
+    });
     final materials = await NetworkUtils.wrapRequest(() => provider.get_materials(widget.projectUuid), context, widget.di);
 
     return materials.map((mat) => MaterialCard(
@@ -67,11 +80,27 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
       measurements: measurements,
     )).toList();
   }
+  
+  @override
+  void dispose() {
+    _locationProvider.reactiveLocation.removeListener(_locationListener);
+    super.dispose();
+  }
+
+  late final _locationProvider;
+  late final _locationListener;
+  LatLng? _location = null;
 
   @override
   void initState() {
     super.initState();
     _loadAuth();
+    _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
+
+    _locationListener = () => setState(() {
+      _location = _locationProvider.reactiveLocation.value;
+    });
+    _locationProvider.reactiveLocation.addListener(_locationListener);
     _loadCards().then((cards) {
       setState(() {
         materials = cards;
@@ -100,10 +129,14 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
             leading: const Icon(Icons.download),
             title: const Text('Зарегистрировать новый материал'),
             onTap: () {
+              Navigator.pop(ctx);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => TTNScanScreen()),
-                //MaterialCreationScreen(di: widget.di, address: widget.projectTitle)),
+                MaterialPageRoute(builder: (_) => TTNScanScreen(
+                  di: widget.di, measurements: _measurements ?? {},
+                  projectId: widget.projectUuid,
+                  address: widget.address,
+                )),
               );
             },
           ),
@@ -114,12 +147,15 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var isNear = _location == null ? false :
+      isNearOrInsidePolygon(widget.polygon, 100.0, _location!);
+
     return Scaffold(
       appBar: BaseHeader(
         title: "Материалы",
         subtitle: widget.projectTitle,
         onBack: leaveHandler,
-        onMore: (_role == Role.FOREMAN || _role == Role.ADMIN) ? _openMaterialMenu : null,
+        onMore: ((_role == Role.FOREMAN  && isNear)|| _role == Role.ADMIN) ? _openMaterialMenu : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

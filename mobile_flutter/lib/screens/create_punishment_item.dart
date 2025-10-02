@@ -4,15 +4,24 @@ import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
+import 'package:mobile_flutter/widgets/punishment_item_card.dart';
+import 'package:dropdown_search/dropdown_search.dart';
+import 'package:mobile_flutter/domain/entities.dart';
 
 class CreatePunishmentScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String objectTitle;
+  final Map<int, String> statues;
+  final Map<String, String> documents;
+  final bool isNear;
 
   const CreatePunishmentScreen({
     super.key,
     required this.di,
     required this.objectTitle,
+    required this.statues,
+    required this.documents,
+    required this.isNear,
   });
 
   @override
@@ -30,27 +39,8 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
 
   // Переменные для селектора и чекбокса
   String? _selectedStatus;
+  String? _selectedDocUuid;
   bool _isWorkStopped = false;
-
-  // Список статусов для селектора
-  final List<String> _statuses = [
-    'Активный',
-    'На рассмотрении',
-    'Устранен',
-    'Отклонен'
-  ];
-
-  // TODO: Список нормативных документов для поискового селектора
-  final List<String> _regulationDocuments = [
-    'ГОСТ 31937-2011 Здания и сооружения. Правила обследования и мониторинга технического состояния',
-    'СП 20.13330.2016 Нагрузки и воздействия',
-    'СП 22.13330.2016 Основания зданий и сооружений',
-    'СП 70.13330.2012 Несущие и ограждающие конструкции',
-    'Федеральный закон №384-ФЗ Технический регламент о безопасности зданий и сооружений',
-    'ГОСТ Р 54257-2010 Надежность строительных конструкций и оснований',
-    'СНиП 3.03.01-87 Несущие и ограждающие конструкции',
-    'Пособие к СНиП 2.03.01-84 по проектированию бетонных и железобетонных конструкций',
-  ];
 
   // Отфильтрованный список документов для поиска
   List<String> _filteredDocuments = [];
@@ -58,7 +48,7 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredDocuments = _regulationDocuments;
+    _filteredDocuments = widget.documents.values.toList();
   }
 
   void leaveHandler() {
@@ -118,9 +108,9 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
   void _filterDocuments(String query) {
     setState(() {
       if (query.isEmpty) {
-        _filteredDocuments = _regulationDocuments;
+        _filteredDocuments = widget.documents.values.toList();
       } else {
-        _filteredDocuments = _regulationDocuments
+        _filteredDocuments = widget.documents.values.toList()
             .where((doc) => doc.toLowerCase().contains(query.toLowerCase()))
             .toList();
       }
@@ -128,16 +118,23 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
   }
 
   void _savePunishment() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Реализовать сохранение нарушения
-      print("Сохранение нарушения...");
-      print("Наименование: ${_titleController.text}");
-      print("Нормативный документ: ${_regulationDocController.text}");
-      print("Дата устранения: ${_correctionDateController.text}");
-      print("Статус: $_selectedStatus");
-      print("Остановка работ: $_isWorkStopped");
-      print("Комментарий: ${_commentController.text}");
-    }
+    // if (_formKey.currentState!.validate()) {
+    //   final data = PunishmentItem(
+    //       correction_date_plan: correction_date_plan,
+    //       is_suspend: is_suspend,
+    //       place: place,
+    //       punish_datetime: punish_datetime,
+    //       punishment: punishment,
+    //       punish_item_status: punish_item_status,
+    //       title: title,
+    //       uuid: uuid)
+    //   Navigator.pop(context, PunishmentItemCreateRequest(punishment: PunishmentItemCard(
+    //       di: di,
+    //       data: data,
+    //       statuses: statuses,
+    //       docs: docs,
+    //       isNear: isNear),
+    // } TODO govno
   }
 
   @override
@@ -189,77 +186,50 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // TODO Нормативный документ (поисковый селектор)
                       _buildSectionTitle("Нормативный документ"),
                       const SizedBox(height: 8),
-                      Autocomplete<String>(
-                        optionsBuilder: (TextEditingValue textEditingValue) {
-                          if (textEditingValue.text.isEmpty) {
-                            return const Iterable<String>.empty();
-                          }
-                          return _regulationDocuments.where((String option) {
-                            return option
-                                .toLowerCase()
-                                .contains(textEditingValue.text.toLowerCase());
+                      DropdownButtonFormField<String>(
+                        value: _selectedDocUuid,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        items: widget.documents.entries.map((doc) {
+                          return DropdownMenuItem<String>(
+                            value: doc.key,
+                            child: ConstrainedBox(
+                              constraints:
+                              const BoxConstraints(maxWidth: 250),
+                              child: Text(
+                                doc.value,
+                                softWrap: true,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedDocUuid = newValue;
                           });
                         },
-                        onSelected: (String selection) {
-                          _regulationDocController.text = selection;
-                        },
-                        fieldViewBuilder: (
-                            BuildContext context,
-                            TextEditingController textEditingController,
-                            FocusNode focusNode,
-                            VoidCallback onFieldSubmitted,
-                            ) {
-                          return TextFormField(
-                            controller: textEditingController,
-                            focusNode: focusNode,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                            ),
-                          );
-                        },
-                        optionsViewBuilder: (
-                            BuildContext context,
-                            AutocompleteOnSelected<String> onSelected,
-                            Iterable<String> options,
-                            ) {
-                          return Align(
-                            alignment: Alignment.topLeft,
-                            child: Material(
-                              elevation: 4.0,
-                              child: Container(
-                                constraints: const BoxConstraints(maxHeight: 200),
-                                child: ListView.builder(
-                                  padding: EdgeInsets.zero,
-                                  shrinkWrap: true,
-                                  itemCount: options.length,
-                                  itemBuilder: (BuildContext context, int index) {
-                                    final String option = options.elementAt(index);
-                                    return ListTile(
-                                      title: Text(option),
-                                      onTap: () {
-                                        onSelected(option);
-                                      },
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          );
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Выберите документ';
+                          }
+                          return null;
                         },
                       ),
                       const SizedBox(height: 16),
 
                       // Дата устранения
-                      _buildSectionTitle("Дата устранения"),
+                      _buildSectionTitle("Плановая дата устранения"),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _correctionDateController,
@@ -289,10 +259,10 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
                             vertical: 12,
                           ),
                         ),
-                        items: _statuses.map((String status) {
+                        items: widget.statues.entries.map((status) {
                           return DropdownMenuItem<String>(
-                            value: status,
-                            child: Text(status),
+                            value: status.key.toString(),
+                            child: Text(status.value),
                           );
                         }).toList(),
                         onChanged: (String? newValue) {

@@ -8,15 +8,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/tabler.dart';
+import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/bridges/ocr.dart';
+import 'package:mobile_flutter/di/dependency_container.dart';
+import 'package:mobile_flutter/materials/materials_provider.dart';
+import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/utils/file_utils.dart';
+import 'package:mobile_flutter/widgets/attachments.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
+import 'package:mobile_flutter/widgets/funny_things.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image/image.dart' as img;
 import 'package:file_picker/file_picker.dart';
+import 'package:uuid/uuid.dart';
 
 const String cameraSvg ='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="24" height="24" fill="none"/><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2"/><path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></g></svg>';
 
@@ -73,15 +80,15 @@ class MaybeTTN {
 
 class TTNRecord {
   final String name;
-  final String number;
-  final String volume;
-  final String unit;
+  final double number;
+  final int unit;
+  final String projectId;
   final List<PlatformFile> attachments;
   const TTNRecord({
     required this.name,
     required this.number,
-    required this.volume,
     required this.unit,
+    required this.projectId,
     required this.attachments,
   });
 }
@@ -89,8 +96,16 @@ class TTNRecord {
 class TTNScanScreen extends StatefulWidget {
   final void Function(TTNRecord record)? onSubmit;
   final void Function()? onBack;
+  final Map<int, String> measurements;
+  final IDependencyContainer di;
+  final String projectId;
+  final String address;
 
-  const TTNScanScreen({super.key, this.onSubmit, this.onBack});
+  const TTNScanScreen({
+    super.key, this.onSubmit, this.onBack,
+     required this.measurements, required this.di,
+     required this.projectId, required this.address
+    });
 
   @override
   State<TTNScanScreen> createState() => _TTNScanScreenState();
@@ -105,26 +120,21 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
   bool _inCamera = true;
 
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _volumeController = TextEditingController();
   final TextEditingController _countController = TextEditingController();
 
   List<PlatformFile> attachments = [];
   String? _selectedUnit;
 
   // Список единиц измерения
-  final List<String> _units = [
-    'шт',
-    'кг',
-    'т',
-    'м',
-    'м²',
-    'м³',
-    'л',
-    'упак.',
-    'рулон',
-    'плита',
-    'Другое'
-  ];
+  List<String> _units = [];
+
+
+  @override
+  void initState() {
+    super.initState();
+    _initCamera();
+    _units = widget.measurements.values.toList();
+  }
 
   Future<bool> _requestCameraPermission() async {
     var status = await Permission.camera.status;
@@ -187,7 +197,6 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
         log("OCR: Extracted number: ${_maybeTTN.number}");
         log("OCR: Extracted volume: ${_maybeTTN.volume}");
         _nameController.text = _maybeTTN.name ?? _nameController.text;
-        _volumeController.text = _maybeTTN.volume ?? _volumeController.text;
         _countController.text = _maybeTTN.number ?? _countController.text;
         _inCamera = false;
       });
@@ -258,102 +267,6 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
     );
   }
 
-  // Виджет для отображения вложений
-  Widget _buildAttachmentsSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                "Вложения",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
-              if (attachments.isNotEmpty) ...[
-                const SizedBox(width: 8),
-                Text(
-                  '(${attachments.length})',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (attachments.isEmpty)
-            Text(
-              "Документы, фото и другие файлы",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            )
-          else
-            Container(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.3,
-              ),
-              child: SingleChildScrollView(
-                child: Wrap(
-                  alignment: WrapAlignment.start,
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: attachments.map((file) {
-                    return Chip(
-                      avatar: FileUtils.getFileIcon(file.extension ?? ''),
-                      label: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            file.name,
-                            style: const TextStyle(fontSize: 12),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            FileUtils.formatFileSize(file.size),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                      onDeleted: () {
-                        setState(() {
-                          attachments.remove(file);
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _initCamera();
-  }
 
   @override
   Widget build(BuildContext ctx) {
@@ -678,103 +591,90 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
                             _buildSectionTitle("Наименование товара"),
                             const SizedBox(height: 8),
                             _buildInput(ctx, _nameController, hintText: "Введите наименование"),
-                            const SizedBox(height: 20),
-
-                            // Количество и единицы измерения в одной строке
-                            Row(
-                              children: [
-                                // Поле количества
-                                Expanded(
-                                  flex: 4,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle("Количество"),
-                                      const SizedBox(height: 8),
-                                      _buildInput(ctx, _countController, hintText: "Введите количество"),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                // Селектор единиц измерения
-                                Expanded(
-                                  flex: 3,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle("Единицы"),
-                                      const SizedBox(height: 8),
-                                      DropdownButtonFormField<String>(
-                                        value: _selectedUnit,
-                                        decoration: InputDecoration(
-                                          filled: true,
-                                          fillColor: Colors.grey[50],
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey.shade300,
-                                              width: 1,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey.shade300,
-                                              width: 1,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(
-                                              color: FoxThemeButtonActiveBackground,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          contentPadding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 16,
-                                          ),
-                                        ),
-                                        hint: Text(
-                                          "",
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                        items: _units.map((String unit) {
-                                          return DropdownMenuItem<String>(
-                                            value: unit,
-                                            child: Text(
-                                              unit,
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: Colors.grey[800],
-                                              ),
-                                            ),
-                                          );
-                                        }).toList(),
-                                        onChanged: (String? newValue) {
-                                          setState(() {
-                                            _selectedUnit = newValue;
-                                          });
-                                        },
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Выберите единицу';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildSectionTitle("Количество"),
+                                  const SizedBox(height: 8),
+                                  _buildInput(ctx, _countController, hintText: "Введите количество"),
+                                  const SizedBox(width: 15),
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 20),
-
-                            _buildSectionTitle("Объем"),
-                            const SizedBox(height: 8),
-                            _buildInput(ctx, _volumeController, hintText: "Введите объем"),
+                            // Селектор единиц измерения
+                            SizedBox(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildSectionTitle("Единицы"),
+                                  const SizedBox(height: 8),
+                                  DropdownButtonFormField<String>(
+                                    value: _selectedUnit,
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.grey[50],
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Colors.grey.shade300,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Colors.grey.shade300,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: FoxThemeButtonActiveBackground,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 16,
+                                      ),
+                                    ),
+                                    hint: Text(
+                                      "",
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    items: _units.map((String unit) {
+                                      return DropdownMenuItem<String>(
+                                        value: unit,
+                                        child: Text(
+                                          unit,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey[800],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        _selectedUnit = newValue;
+                                      });
+                                    },
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Выберите единицу';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
                           ],
                         ),
                       ),
@@ -782,7 +682,11 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
                       const SizedBox(height: 20),
 
                       // Раздел вложений
-                      _buildAttachmentsSection(),
+                      AttachmentsSection(
+                        context,
+                        attachments,
+                        (index) => setState(() => attachments.removeAt(index)),
+                      ),
 
                       // Подсказка
                       Container(
@@ -830,10 +734,9 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
                     // Кнопка сохранения
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (_nameController.text.isEmpty ||
                               _countController.text.isEmpty ||
-                              _volumeController.text.isEmpty ||
                               _selectedUnit == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -844,16 +747,34 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
                             return;
                           }
 
+                          int? c = int.tryParse(_countController.text);
+                          if (c == null) {
+                            showErrSnackbar(ctx, "Введите корректное количество");
+                            return;
+                          }
+
                           final record = TTNRecord(
                             name: _nameController.text,
-                            number: _countController.text,
-                            volume: _volumeController.text,
-                            unit: _selectedUnit!,
+                            number: c!.toDouble(),
+                            unit: _units.indexOf(_selectedUnit!),
                             attachments: attachments,
+                            projectId: widget.projectId
                           );
 
-                          widget.onSubmit?.call(record);
-                          Navigator.pop(context);
+                          final req = widget.di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
+                          var toSend = queuedMaterial(record, widget.address);
+
+                          final token = await widget.di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken).getAccessToken();
+                          var res = await req.queuedSend(toSend, token);
+                          if (res.isDelayed) {
+                            Navigator.pop(context);
+                            showWarnSnackbar(context, "Материал будет отправлен после выхода в интернет");
+                          } else if (res.isOk) {
+                            Navigator.pop(context);
+                            showSuccessSnackbar(context, "Материал отправлен");
+                          } else {
+                            showErrSnackbar(context, "Не удалось отправить материал");
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: FoxThemeButtonActiveBackground,
@@ -964,7 +885,6 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
   void dispose() {
     _cameraController?.dispose();
     _nameController.dispose();
-    _volumeController.dispose();
     _countController.dispose();
     super.dispose();
   }

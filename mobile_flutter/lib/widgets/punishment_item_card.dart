@@ -7,20 +7,22 @@ import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/screens/update_punishment_item.dart';
 class PunishmentItemCard extends StatelessWidget {
   final PunishmentItem data;
-  final List<Attachment> atts;
+  final List<Attachment>? atts;
   final Map<int, String> statuses;
   final IDependencyContainer di;
   final Map<String, String> docs;
   final Role? role;
+  final bool isNear;
 
   const PunishmentItemCard({
     super.key,
     required this.di,
-    required this.atts,
+    this.atts,
     required this.data,
     required this.statuses,
     required this.docs,
-    this.role
+    this.role,
+    required this.isNear,
   });
 
   void _openPunishmentItemMenu(BuildContext context) {
@@ -39,7 +41,7 @@ class PunishmentItemCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          if (role == Role.ADMIN || role == Role.CUSTOMER || role == Role.INSPECTOR)
+          if (role == Role.ADMIN || ((role == Role.CUSTOMER || role == Role.INSPECTOR) && isNear))
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.edit),
@@ -49,16 +51,17 @@ class PunishmentItemCard extends StatelessWidget {
                 _handleEditItem();
               },
             ),
+          if (atts != null)
             const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.attach_file),
-            title: const Text('Вложения'),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleViewAttachments(context);
-            },
-          ),
+            ListTile(
+              titleAlignment: ListTileTitleAlignment.center,
+              leading: const Icon(Icons.attach_file),
+              title: const Text('Вложения'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _handleViewAttachments(context);
+              },
+            ),
         ],
       ),
     );
@@ -76,7 +79,7 @@ class PunishmentItemCard extends StatelessWidget {
         builder: (_) => PunishmentItemScreen(
           di: di,
           addr: data.title,
-          atts: atts,
+          atts: atts!,
         ),
       ),
     );

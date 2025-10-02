@@ -45,6 +45,10 @@ class ReportsStorageProvider implements IReportsStorageProvider {
 
   @override
   Future<void> saveReports(List<ReportAndAttachments> reports) async {
+    if (reports.isEmpty) {
+      await prefs?.setString(REPORTS_KEY, jsonEncode([]));
+      return;
+    }
     final existing = await getReports(reports.first.report.project);
 
 

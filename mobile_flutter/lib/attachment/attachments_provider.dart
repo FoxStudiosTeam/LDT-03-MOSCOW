@@ -73,7 +73,6 @@ class AttachmentsProvider implements IAttachmentsProvider {
     final uri = apiRoot.resolve('/api/attach/project')
         .replace(queryParameters: {"id": uuid});
     _accessToken = await authStorageProvider.getAccessToken();
-
     final request = http.MultipartRequest('POST', uri);
     request.headers['Authorization'] = 'Bearer $_accessToken';
     request.files.add(

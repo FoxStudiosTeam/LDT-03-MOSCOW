@@ -11,7 +11,9 @@ class PunishmentCard extends StatelessWidget {
   final Map<int, String> statuses;
   final String addr;
   final IDependencyContainer di;
-  final bool is_new;
+  final bool isNear;
+  final Map<int, String> statues;
+  final Map<String, String> documents;
 
   const PunishmentCard({
     super.key,
@@ -19,7 +21,9 @@ class PunishmentCard extends StatelessWidget {
     required this.di,
     required this.data,
     required this.addr,
-    required this.is_new
+    required this.isNear,
+    required this.documents,
+    required this.statues,
   });
 
   void _openPunishmentCardMenu(BuildContext context) {
@@ -104,7 +108,10 @@ class PunishmentCard extends StatelessWidget {
                 di: di,
                 punishmentUuid: data.uuid,
                 addr: addr,
-                is_new: is_new,
+                is_new: false,
+                documents: documents,
+                statuses: statuses,
+                isNear: isNear,
               ),
             ),
           );

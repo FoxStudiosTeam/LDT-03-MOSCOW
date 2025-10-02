@@ -9,9 +9,12 @@ abstract class IObjectStorageProvider {
   Future<void> saveObjects(List<Project> data);
   Future<List<InspectorInfo>> getObjectInspectors(String projectUuid);
   Future<void> saveObjectInspectors(List<InspectorInfo> data);
+  Future<List<ProjectScheduleItem>> getWorkTitles(String projectUuid);
+  Future<void> saveWorkTitles(List<ProjectScheduleItem> data);
 }
 
 const OBJECTS_STORAGE_KEY = "OBJECTS_STORAGE_KEY";
+const WORK_TITLES_KEY = "WORK_TITLES_KEY";
 const INSPECTORS_STORAGE_KEY = "INSPECTORS_STORAGE_KEY";
 
 class ObjectStorageProvider implements IObjectStorageProvider{
@@ -92,6 +95,40 @@ class ObjectStorageProvider implements IObjectStorageProvider{
 
     final combined = {
       for (var p in [...existing, ...newData]) p.uuid: p
+    }.values.toList();
+
+    final encoded = jsonEncode(combined.map((e) => e.toJson()).toList());
+    await preferences?.setString(OBJECTS_STORAGE_KEY, encoded);
+  }
+
+  @override
+  Future<List<ProjectScheduleItem>> getWorkTitles(String projectUuid) async {
+    if (preferences == null) {
+      await init();
+    }
+
+    var rawData = preferences?.getString(WORK_TITLES_KEY);
+
+    if (rawData != null) {
+      final List<dynamic> jsonList = jsonDecode(rawData);
+
+      final works = jsonList
+          .map((e) => ProjectScheduleItem.fromStorageJson(e as Map<String, dynamic>))
+          .where((e) => e.projectUuid == projectUuid)
+          .toList();
+
+      return works;
+    } else {
+      return [];
+    }
+  }
+
+  @override
+  Future<void> saveWorkTitles(List<ProjectScheduleItem> newData) async {
+    final existing = await getWorkTitles(newData.first.projectUuid);
+
+    final combined = {
+      for (var p in [...existing, ...newData]) p.title: p
     }.values.toList();
 
     final encoded = jsonEncode(combined.map((e) => e.toJson()).toList());

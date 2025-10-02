@@ -12,6 +12,8 @@ import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/screens/ocr/camera.dart';
+import 'package:mobile_flutter/utils/geo_utils.dart';
+import 'package:mobile_flutter/widgets/current_location_layer.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/fox_button.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
@@ -37,11 +39,27 @@ class _MapScreenState extends State<MapScreen> {
 
   ProjectAndInspectors? currentProject; // ✅ Сделали nullable
 
+  LatLng? _location = null;
+  
+  late final _locationProvider;
+  late final _locationListener;
   @override
   void initState() {
     super.initState();
     _loadAuth();
     _loadProjects();
+    _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
+
+    _locationListener = () => setState(() {
+      _location = _locationProvider.reactiveLocation.value;
+    });
+    _locationProvider.reactiveLocation.addListener(_locationListener);
+  }
+
+  @override
+  void dispose() {
+    _locationProvider.reactiveLocation.removeListener(_locationListener);
+    super.dispose();
   }
 
   Future<void> _loadAuth() async {
@@ -112,7 +130,7 @@ class _MapScreenState extends State<MapScreen> {
     _scaffoldKey.currentState?.openDrawer();
   }
 
-  double _currentZoom = 8.0;
+  double _currentZoom = 11.0;
 
   void zoomIn() {
     final newZoom = (_currentZoom + 1).clamp(1.0, 18.0);
@@ -232,7 +250,7 @@ class _MapScreenState extends State<MapScreen> {
                           child: IconButton(
                             onPressed: () => onClickMapPin(p),
                             style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(p.project.status.getStatusColor()),
+                              backgroundColor: WidgetStateProperty.all(p.project.status.getStatusColor().withAlpha(200)),
                               shadowColor: WidgetStateProperty.all(Colors.black),
                             ),
                             // constraints: BoxConstraints(
@@ -266,6 +284,9 @@ class _MapScreenState extends State<MapScreen> {
                       )
                           .toList(),
                     ),
+                    CurrentLocationMarkerLayer(
+                      location: _location,
+                    )
                   ],
                 ),
 

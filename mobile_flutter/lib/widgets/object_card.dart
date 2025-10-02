@@ -3,7 +3,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
+import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
+import 'package:mobile_flutter/widgets/current_location_layer.dart';
 import '../domain/entities.dart';
 import '../screens/object_screen.dart';
 import '../di/dependency_container.dart';
@@ -47,10 +49,20 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
   late Animation<double> _heightAnimation;
   late Animation<double> _opacityAnimation;
   late final MapController _mapController = MapController();
+  LatLng? _currentLocation = null;
 
+  late final _locationListener;
+  late final _locationProvider;
   @override
   void initState() {
     super.initState();
+    _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
+
+    _locationListener = () => setState(() {
+      _currentLocation = _locationProvider.reactiveLocation.value;
+    });
+    _locationProvider.reactiveLocation.addListener(_locationListener);
+    
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -85,6 +97,7 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
   @override
   void dispose() {
     _animationController.dispose();
+    _locationProvider.reactiveLocation.removeListener(_locationListener);
     super.dispose();
   }
 
@@ -146,13 +159,18 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  SizedBox.fromSize(size: const Size(10, 0)),
                   Expanded(
                     child: Text(
                       "Адрес: ${widget.title}",
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium
-                          ?.copyWith(color: textAndIconColor),
+                          ?.copyWith(
+                            color: textAndIconColor, 
+                            fontSize: 16, 
+                            fontWeight: FontWeight.bold
+                          ),
                     ),
                   ),
                   TextButton(
@@ -173,26 +191,34 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              widget.status.toRenderingString(),
-              const SizedBox(height: 8),
-
-              // Анимированная область раскрытия
-              AnimatedBuilder(
-                animation: _animationController,
-                builder: (context, child) {
-                  return SizeTransition(
-                    sizeFactor: _heightAnimation,
-                    axisAlignment: -1.0,
-                    child: FadeTransition(
-                      opacity: _opacityAnimation,
-                      child: child,
-                    ),
-                  );
-                },
-                child: _buildExpandedContent(textAndIconColor),
+              Row(
+                children: [
+                  SizedBox.fromSize(size: const Size(10, 0)),
+                  widget.status.toRenderingString(),
+                ],
               ),
-            ],
+              const SizedBox(height: 8),
+              // Row(
+              //   children: [
+              //     SizedBox.fromSize(size: const Size(10, 0)),
+                  // Анимированная область раскрытия
+                  AnimatedBuilder(
+                    animation: _animationController,
+                    builder: (context, child) {
+                      return SizeTransition(
+                        sizeFactor: _heightAnimation,
+                        axisAlignment: -1.0,
+                        child: FadeTransition(
+                          opacity: _opacityAnimation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _buildExpandedContent(textAndIconColor),
+                  ),
+                ],
+              // ),
+            // ],
           ),
         ),
       ),
@@ -200,13 +226,21 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
   }
 
   Widget _buildExpandedContent(Color textAndIconColor) {
+
+    var isNear =_currentLocation == null ? false :
+      isNearOrInsidePolygon(widget.polygon, 100.0, _currentLocation!);
+    var col = isNear ? const Color.fromARGB(255, 46, 255, 53) : Colors.blue;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Заказчик: ${widget.customer}"),
-        Text("Подрядчик: ${widget.foreman}"),
-        Text("Ответственный инспектор: \n${widget.inspector.map((e) => e.fcs).join('\n')}"),
-        // Анимированная карта
+        Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Заказчик: ${widget.customer}",)),
+        Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Подрядчик: ${widget.foreman}",)),
+        Padding(padding: const EdgeInsets.only(left: 10.0), child: Text("Ответственный инспектор: \n${widget.inspector.map((e) => e.fcs).join('\n')}"),),
+        Padding(padding: const EdgeInsets.only(left: 10.0), child: 
+          Text("${isNear ? 'Вы находитесь в зоне объекта' : 'Вы не находитесь в зоне объекта'}", style: TextStyle(color: isNear ? Colors.green : Colors.red),),
+        ),
+        
+        
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
@@ -234,12 +268,13 @@ class _ObjectCardState extends State<ObjectCard> with SingleTickerProviderStateM
                   polygons: [
                     Polygon(
                       points: widget.polygon.points,
-                      color: Colors.blue.withOpacity(0.3),
-                      borderColor: Colors.blue,
+                      color: col.withOpacity(0.3),
+                      borderColor: col,
                       borderStrokeWidth: 2,
                     ),
                   ],
                 ),
+                CurrentLocationMarkerLayer(location: _currentLocation)
               ],
             ),
           ),

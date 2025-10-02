@@ -1,5 +1,10 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:file_picker/file_picker.dart';
+
 
 class FileUtils {
   // Метод для выбора файлов
@@ -146,4 +151,15 @@ class FileUtils {
     final extension = getFileExtension(fileName);
     return ['zip', 'rar', '7z'].contains(extension);
   }
+}
+
+
+Future<String> savePathToCache(String originalPath) async {
+  final cacheDir = await getTemporaryDirectory();
+
+  final filename = "${DateTime.now().millisecondsSinceEpoch}_${p.basename(originalPath)}";
+  final newPath = p.join(cacheDir.path, filename);
+
+  final newFile = await File(originalPath).copy(newPath);
+  return newFile.path;
 }

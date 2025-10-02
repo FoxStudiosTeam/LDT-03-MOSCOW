@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
@@ -81,7 +82,7 @@ extension ProjectStatusExtension on ProjectStatus {
   Color getStatusColor() {
     switch (this) {
       case ProjectStatus.NEW:
-        return const Color.fromARGB(255, 0, 255, 8);
+        return const Color.fromARGB(255, 80, 171, 0);
       case ProjectStatus.NORMAL:
         return Colors.green;
       case ProjectStatus.PRE_ACTIVE:
@@ -527,15 +528,17 @@ class MaterialsAndAttachments {
   });
 
   factory MaterialsAndAttachments.fromJson(Map<String, dynamic> json) {
+
     return MaterialsAndAttachments(
       material: Materials.fromJson(
-        json['material'] as Map<String, dynamic>,
+        json['material'] as Map<String, dynamic>? ?? {},
       ),
       attachments: (json['attachments'] as List<dynamic>? ?? [])
           .map((a) => Attachment.fromJson(a as Map<String, dynamic>))
           .toList(),
     );
   }
+
 
   Map<String, dynamic> toJson() {
     return {
@@ -877,4 +880,41 @@ class ProjectAndInspectors {
     required this.project,
     required this.inspectors,
   });
+}
+
+class ProjectScheduleItem {
+  final String title;
+  final String projectUuid;
+
+  ProjectScheduleItem({
+    required this.title,
+    required this.projectUuid,
+  });
+
+  factory ProjectScheduleItem.fromJson(Map<String, dynamic> json, String projectUuid) {
+    return ProjectScheduleItem (
+      title: json['title'],
+      projectUuid: projectUuid,
+    );
+  }
+
+  factory ProjectScheduleItem.fromStorageJson(Map<String, dynamic> json) {
+    return ProjectScheduleItem (
+      title: json['title'],
+      projectUuid: json['project_uuid'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title' : title,
+    };
+  }
+
+  Map<String, dynamic> toStorageJson() {
+    return {
+      'title' : title,
+      'project_uuid': projectUuid,
+    };
+  }
 }

@@ -16,43 +16,27 @@ class ReportScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String projectTitle;
   final String projectUuid;
+  final bool isNear;
+  final List<String> works;
 
   const ReportScreen({
     super.key,
     required this.di,
     required this.projectTitle,
-    required this.projectUuid
+    required this.projectUuid,
+    required this.isNear,
+    required this.works,
   });
 
   @override
   State<ReportScreen> createState() => _ReportScreenState();
-}
-// Модель отчета
-class Report {
-  final String workName;
-  final DateTime createdAt;
-  DateTime? checkedAt;
-  ReportStatus status;
-
-  Report({
-    required this.workName,
-    required this.createdAt,
-    this.checkedAt,
-    required this.status,
-  });
-}
-
-// Статусы отчета
-enum ReportStatus {
-  pending,
-  approved,
-  rejected,
 }
 
 class _ReportScreenState extends State<ReportScreen> {
   String? _token;
   Role? _role;
   List<ReportCard> reports = [];
+
   void leaveHandler() {
     Navigator.pop(context);
   }
@@ -133,7 +117,7 @@ class _ReportScreenState extends State<ReportScreen> {
   void _handleCreateReport() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ReportCreationScreen(di: widget.di, address: widget.projectTitle)),
+      MaterialPageRoute(builder: (_) => ReportCreationScreen(di: widget.di, address: widget.projectTitle, works: widget.works)),
     );
   }
 
@@ -144,7 +128,7 @@ class _ReportScreenState extends State<ReportScreen> {
         title: "Отчеты",
         subtitle: widget.projectTitle,
         onBack: leaveHandler,
-        onMore: (_role == Role.FOREMAN || _role == Role.ADMIN) ? _openReportMenu : null,
+        onMore: ((_role == Role.FOREMAN && widget.isNear) || _role == Role.ADMIN) ? _openReportMenu : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
