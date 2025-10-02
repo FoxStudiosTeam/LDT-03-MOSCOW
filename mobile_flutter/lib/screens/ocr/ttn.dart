@@ -609,7 +609,6 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _buildSectionTitle("Единицы"),
-                                  _buildSectionTitle("${_units.indexOf(_selectedUnit!)}"),
                                   const SizedBox(height: 8),
                                   DropdownButtonFormField<String>(
                                     value: _selectedUnit,
@@ -763,16 +762,18 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
                           );
 
                           final req = widget.di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
-                          var toSend = queuedMaterial(record);
+                          var toSend = queuedMaterial(record, widget.address);
 
                           final token = await widget.di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken).getAccessToken();
                           var res = await req.queuedSend(toSend, token);
                           if (res.isDelayed) {
-                            showWarnSnackbar(context, "Файлы будут прикреплены после выхода в интернет");
+                            Navigator.pop(context);
+                            showWarnSnackbar(context, "Материал будет отправлен после выхода в интернет");
                           } else if (res.isOk) {
-                            showSuccessSnackbar(context, "Файлы успешно прикреплены");
+                            Navigator.pop(context);
+                            showSuccessSnackbar(context, "Материал отправлен");
                           } else {
-                            showErrSnackbar(context, "Не удалось прикрепить файлы");
+                            showErrSnackbar(context, "Не удалось отправить материал");
                           }
                         },
                         style: ElevatedButton.styleFrom(

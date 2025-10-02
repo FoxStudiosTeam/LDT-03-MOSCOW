@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/materials/materials_provider.dart';
+import 'package:mobile_flutter/utils/network_utils.dart';
+import 'package:mobile_flutter/widgets/funny_things.dart';
 
 import 'blur_menu.dart';
 
@@ -66,8 +70,20 @@ class MaterialCard extends StatelessWidget {
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.science),
               title: const Text('Запросить исследование'),
-              onTap: () {
-                Navigator.pop(ctx);
+              onTap: () async {
+                final req = di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
+                var toSend = queuedMaterialResearch(data.material.uuid, "${data.material.title} - исследование");
+                final token = await di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken).getAccessToken();
+                var res = await req.queuedSend(toSend, token);
+                if (res.isDelayed) {
+                  Navigator.pop(context);
+                  showWarnSnackbar(context, "Запрос будет выполнен после выхода в интернет");
+                } else if (res.isOk) {
+                  Navigator.pop(context);
+                  showSuccessSnackbar(context, "Отправлен запрос на исследование");
+                } else {
+                  showErrSnackbar(context, "Не удалось отправить запрос");
+                }
               },
             ),
         ],
@@ -79,11 +95,6 @@ class MaterialCard extends StatelessWidget {
     // TODO: Реализовать логику скачивания документа
   }
 
-  void _handleRequestResearch(int materialIndex) {
-    // Обработка запроса исследования
-    print("Запросить исследование для: ${data.material.title}");
-    // TODO: Реализовать логику запроса исследования
-  }
 
   Widget _buildInfoRow({
     required IconData icon,

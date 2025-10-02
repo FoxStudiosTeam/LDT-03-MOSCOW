@@ -129,6 +129,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
             leading: const Icon(Icons.download),
             title: const Text('Зарегистрировать новый материал'),
             onTap: () {
+              Navigator.pop(ctx);
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => TTNScanScreen(
