@@ -65,4 +65,6 @@ flutter_native_splash:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/icons/logo.svg"
+  image_path: "assets/images/logoIcon.png"
+  android_adaptive_icon_background: "#FFFFFF"
+  android_adaptive_icon_foreground: "assets/icon/icon_foreground.png"
