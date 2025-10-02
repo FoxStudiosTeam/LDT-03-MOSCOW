@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
+import 'package:mobile_flutter/attachment/attachments_download.dart';
 
 class ReportAttachmentsScreen extends StatelessWidget {
   final ReportAndAttachments data;
@@ -24,7 +25,7 @@ class ReportAttachmentsScreen extends StatelessWidget {
       backgroundColor: Colors.grey[50],
       body: attachments.isEmpty
           ? _buildEmptyState()
-          : _buildAttachmentsList(),
+          : _buildAttachmentsList(context),
     );
   }
 
@@ -60,18 +61,18 @@ class ReportAttachmentsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachmentsList() {
+  Widget _buildAttachmentsList(BuildContext context) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: data.attachments.length,
       itemBuilder: (context, index) {
         final attachment = data.attachments[index];
-        return _buildAttachmentCard(attachment);
+        return _buildAttachmentCard(attachment, context);
       },
     );
   }
 
-  Widget _buildAttachmentCard(Attachment attachment) {
+  Widget _buildAttachmentCard(Attachment attachment, BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Card(
@@ -81,78 +82,136 @@ class ReportAttachmentsScreen extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Иконка файла
-              _getFileIcon(attachment.name),
-              const SizedBox(width: 16),
+              // Заголовок и кнопка скачивания
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          attachment.originalFilename,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _getFileType(attachment.originalFilename),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    onPressed: () => _downloadAttachment(attachment, context),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.download,
+                        color: Colors.blue,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
 
               // Информация о файле
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      attachment.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Размер: ${_formatFileSize(attachment.size)}",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    if (attachment.description?.isNotEmpty == true) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        attachment.description!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              // Кнопка скачивания (если нужна)
-              IconButton(
-                onPressed: () {
-                  // Показываем сообщение, что скачивание недоступно
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Для скачивания необходим доступ к di"),
-                    ),
-                  );
-                },
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.download,
-                    color: Colors.blue,
-                    size: 20,
-                  ),
-                ),
-              ),
+              _buildFileInfo(attachment),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildFileInfo(Attachment attachment) {
+    return Row(
+      children: [
+        // Иконка типа файла
+        _getFileIcon(attachment.originalFilename),
+        const SizedBox(width: 12),
+
+        // Информация
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Тип: ${_getFileType(attachment.originalFilename)}",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _downloadAttachment(Attachment attachment, BuildContext context) async {
+    try {
+      // Показываем индикатор загрузки
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 16),
+              Text("Открываем файл"),
+            ],
+          ),
+        ),
+      );
+
+      // Используем существующий метод загрузки
+      await downloadTroughBrowser(attachment.uuid);
+
+      // Закрываем диалог
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Файл ${attachment.originalFilename} открывается..."),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      // Закрываем диалог при ошибке
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Ошибка при открытии файла: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _getFileIcon(String fileName) {
@@ -190,13 +249,30 @@ class ReportAttachmentsScreen extends StatelessWidget {
     return Icon(icon, size: 32, color: color);
   }
 
-  String _formatFileSize(int bytes) {
-    if (bytes < 1024) {
-      return '$bytes B';
-    } else if (bytes < 1024 * 1024) {
-      return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    } else {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  String _getFileType(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return 'PDF документ';
+      case 'doc':
+      case 'docx':
+        return 'Word документ';
+      case 'xls':
+      case 'xlsx':
+        return 'Excel таблица';
+      case 'jpg':
+      case 'jpeg':
+        return 'Изображение JPEG';
+      case 'png':
+        return 'Изображение PNG';
+      case 'gif':
+        return 'Анимированное изображение';
+      case 'zip':
+        return 'ZIP архив';
+      case 'rar':
+        return 'RAR архив';
+      default:
+        return 'Файл $extension';
     }
   }
 }
