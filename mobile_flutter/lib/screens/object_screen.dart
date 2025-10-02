@@ -166,6 +166,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => MaterialsScreen(
+                      address: widget.address,
                       polygon: widget.polygon,
                       di: widget.di,
                       projectTitle: widget.address,

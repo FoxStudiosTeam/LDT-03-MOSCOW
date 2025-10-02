@@ -45,6 +45,10 @@ class MaterialsStorageProvider implements IMaterialsStorageProvider {
 
   @override
   Future<void> saveMaterials(List<MaterialsAndAttachments> materials) async {
+    if (materials.isEmpty) {
+      await prefs?.setString(MATERIALS_KEY, jsonEncode([]));
+      return;
+    }
     final existing = await getMaterials(materials.first.material.project);
 
 
