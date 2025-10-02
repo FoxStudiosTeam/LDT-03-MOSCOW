@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/reports/reports_provider.dart';
+import 'package:mobile_flutter/screens/report_attachments_screen.dart';
 
 import '../auth/auth_storage_provider.dart';
 import '../utils/network_utils.dart';
@@ -76,7 +77,14 @@ class ReportCard extends StatelessWidget {
   }
 
   void _handleAttachments(BuildContext context) {
-    // TODO: Реализовать логику просмотра вложений
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReportAttachmentsScreen(
+          data: data,
+        ),
+      ),
+    );
   }
 
   void _handleApprove(BuildContext context) async {
