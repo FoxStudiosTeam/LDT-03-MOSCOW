@@ -2,9 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/punishment/punishment_provider.dart';
 import 'package:mobile_flutter/utils/file_utils.dart';
-import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/attachments.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
@@ -29,47 +27,30 @@ class PunishmentEditorScreen extends StatefulWidget {
 }
 
 class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
-  List<PunishmentItemAndAttachments> _items = [];
-
-  bool isLoading = true;
-  String? _errorMessage;
-
   // Контроллеры
-  final TextEditingController _titleController = TextEditingController();
   final TextEditingController _regulationDocController = TextEditingController();
   final TextEditingController _correctionDatePlanController = TextEditingController();
   final TextEditingController _correctionDateFactController = TextEditingController();
   final TextEditingController _correctionDateInfoController = TextEditingController();
   final TextEditingController _commentController = TextEditingController();
-  final TextEditingController _statusController = TextEditingController();
 
   List<PlatformFile> _attachments = [];
 
   // Выбранные значения
   String? _selectedDocKey;
   int? _selectedStatusKey;
-  DateTime? _selectedPlanDate;
-  DateTime? _selectedFactDate;
-  DateTime? _selectedInfoDate;
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
-    _titleController.dispose();
     _regulationDocController.dispose();
     _correctionDatePlanController.dispose();
     _correctionDateFactController.dispose();
     _correctionDateInfoController.dispose();
     _commentController.dispose();
-    _statusController.dispose();
     super.dispose();
   }
 
-  // Исправленный метод для выбора даты
+  // Замененный метод для выбора даты
   Future<void> _selectDate(BuildContext context, TextEditingController controller, Function(DateTime?) onDateSelected) async {
     try {
       final DateTime? picked = await showDatePicker(
@@ -81,14 +62,14 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
         builder: (context, child) {
           return Theme(
             data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.light(
-                primary: FoxThemeButtonActiveBackground,
+              colorScheme: const ColorScheme.light(
+                primary: Colors.blue,
                 onPrimary: Colors.white,
                 onSurface: Colors.black,
               ),
               textButtonTheme: TextButtonThemeData(
                 style: TextButton.styleFrom(
-                  foregroundColor: FoxThemeButtonActiveBackground,
+                  foregroundColor: Colors.blue,
                 ),
               ),
             ),
@@ -97,12 +78,14 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
         },
       );
 
-      if (picked != null && mounted) {
-        setState(() {
-          final formattedDate = "${picked.day.toString().padLeft(2, '0')}.${picked.month.toString().padLeft(2, '0')}.${picked.year}";
-          controller.text = formattedDate;
-          onDateSelected(picked);
-        });
+      if (picked != null) {
+        if (mounted) {
+          setState(() {
+            final formattedDate = "${picked.day.toString().padLeft(2, '0')}.${picked.month.toString().padLeft(2, '0')}.${picked.year}";
+            controller.text = formattedDate;
+            onDateSelected(picked);
+          });
+        }
       }
     } catch (e) {
       print("Error selecting date: $e");
@@ -117,8 +100,7 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
     }
   }
 
-
-  // Методы для работы с вложениями (как в TTNScanScreen)
+  // Методы для работы с вложениями
   Future<void> _pickFiles() async {
     final files = await FileUtils.pickFiles(context: context);
     if (files != null && files.isNotEmpty) {
@@ -205,19 +187,13 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Карточка с формой
                 _buildFormCard(),
-
                 const SizedBox(height: 20),
-
-                // Секция вложений (как в TTNScanScreen)
                 _buildAttachmentsSection(),
               ],
             ),
           ),
         ),
-
-        // Кнопки действий (как в TTNScanScreen)
         _buildActionButtons(),
       ],
     );
@@ -291,23 +267,21 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Плановая дата
           _buildSectionTitle("Плановая дата", required: true),
           const SizedBox(height: 6),
           _buildDateField(
             _correctionDatePlanController,
             "ДД.ММ.ГГГГ",
-                (date) => _selectedPlanDate = date,
+                (date) {}, // callback не используется, но оставлен для совместимости
           ),
           const SizedBox(height: 16),
 
-          // Фактическая дата (перемещена под плановую)
           _buildSectionTitle("Фактическая дата", required: true),
           const SizedBox(height: 6),
           _buildDateField(
             _correctionDateFactController,
             "ДД.ММ.ГГГГ",
-                (date) => _selectedFactDate = date,
+                (date) {},
           ),
           const SizedBox(height: 16),
 
@@ -316,7 +290,7 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
           _buildDateField(
             _correctionDateInfoController,
             "ДД.ММ.ГГГГ",
-                (date) => _selectedInfoDate = date,
+                (date) {},
           ),
           const SizedBox(height: 16),
 
@@ -365,7 +339,6 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
             onChanged: (int? val) {
               setState(() {
                 _selectedStatusKey = val;
-                _statusController.text = val?.toString() ?? "";
               });
             },
             decoration: InputDecoration(
@@ -484,9 +457,7 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
               ],
             ],
           ),
-
           const SizedBox(height: 12),
-
           if (_attachments.isEmpty)
             Container(
               padding: const EdgeInsets.all(20),
@@ -509,7 +480,6 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
               ),
             )
           else
-          // Используем AttachmentsSection как в TTNScanScreen
             AttachmentsSection(
               context,
               _attachments,
@@ -520,13 +490,11 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
     );
   }
 
-  // Кнопки действий как в TTNScanScreen
   Widget _buildActionButtons() {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          // Кнопка сохранения
           Expanded(
             child: ElevatedButton(
               onPressed: _allFieldsFilled() ? _onSubmit : null,
@@ -550,8 +518,6 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
             ),
           ),
           const SizedBox(width: 12),
-
-          // Кнопка добавления вложений (как в TTNScanScreen)
           Container(
             width: 56,
             height: 56,
@@ -624,7 +590,7 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
     }
 
     var item = PunishmentItem(
-      title: _titleController.text,
+      title: "",
       regulationDoc: _regulationDocController.text,
       correctionDatePlan: _correctionDatePlanController.text,
       correctionDateFact: _correctionDateFactController.text,

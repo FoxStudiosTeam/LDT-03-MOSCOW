@@ -20,8 +20,8 @@ values
 insert into norm.report_statuses (title, id)
 values
     ('Принят', 0),
-    ('На рассмотрении', 1),
-    ('Отклонен', 2);
+    ('На рассмотрении', 2),
+    ('Отклонен', 1);
 
 insert into norm.kpgz (code, title, id)
 values ('02.03.01.02.02','СТРОИТЕЛЬСТВО СПОРТИВНЫХ СООРУЖЕНИЙ',638862539),

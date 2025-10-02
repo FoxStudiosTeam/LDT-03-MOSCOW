@@ -884,16 +884,19 @@ class ProjectAndInspectors {
 
 class ProjectScheduleItem {
   final String title;
+  final String uuid;
   final String projectUuid;
 
   ProjectScheduleItem({
     required this.title,
+    required this.uuid,
     required this.projectUuid,
   });
 
   factory ProjectScheduleItem.fromJson(Map<String, dynamic> json, String projectUuid) {
     return ProjectScheduleItem (
       title: json['title'],
+      uuid: json['uuid'],
       projectUuid: projectUuid,
     );
   }
@@ -901,6 +904,7 @@ class ProjectScheduleItem {
   factory ProjectScheduleItem.fromStorageJson(Map<String, dynamic> json) {
     return ProjectScheduleItem (
       title: json['title'],
+      uuid: json['uuid'],
       projectUuid: json['project_uuid'],
     );
   }
@@ -908,12 +912,14 @@ class ProjectScheduleItem {
   Map<String, dynamic> toJson() {
     return {
       'title' : title,
+      'uuid' : uuid
     };
   }
 
   Map<String, dynamic> toStorageJson() {
     return {
       'title' : title,
+      'uuid' : uuid,
       'project_uuid': projectUuid,
     };
   }

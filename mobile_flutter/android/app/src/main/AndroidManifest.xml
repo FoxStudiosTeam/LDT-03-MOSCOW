@@ -11,7 +11,7 @@
     <!-- Для Android 10 (API 29) и выше -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
     <application
-        android:label="mobile_flutter"
+        android:label="Электронный строительный журнал"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

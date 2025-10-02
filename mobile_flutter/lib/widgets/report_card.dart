@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/reports/reports_provider.dart';
+import 'package:mobile_flutter/screens/report_attachments_screen.dart';
 
+import '../auth/auth_storage_provider.dart';
+import '../utils/network_utils.dart';
 import 'blur_menu.dart';
+import 'funny_things.dart';
 
 class ReportCard extends StatelessWidget {
   final ReportAndAttachments data;
@@ -22,7 +27,7 @@ class ReportCard extends StatelessWidget {
   void _openReportMenu(BuildContext context) {
     showBlurBottomSheet(
       context: context,
-      builder: (ctx) => Column(
+      builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
@@ -40,55 +45,83 @@ class ReportCard extends StatelessWidget {
             leading: const Icon(Icons.attach_file),
             title: const Text('Вложения'),
             onTap: () {
-              Navigator.pop(ctx);
-              _handleAttachments();
+              Navigator.pop(context);
+              _handleAttachments(context);
             },
           ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.check_circle, color: Colors.green),
-            title: const Text('Принять', style: TextStyle(color: Colors.green)),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleApprove();
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.cancel, color: Colors.red),
-            title: const Text('Отклонить', style: TextStyle(color: Colors.red)),
-            onTap: () {
-              Navigator.pop(ctx);
-              _handleReject();
-            },
-          ),
+          if (role == Role.ADMIN || role == Role.INSPECTOR || role == Role.CUSTOMER)
+            const Divider(height: 1),
+            ListTile(
+              titleAlignment: ListTileTitleAlignment.center,
+              leading: const Icon(Icons.check_circle, color: Colors.green),
+              title: const Text('Принять', style: TextStyle(color: Colors.green)),
+              onTap: () {
+                Navigator.pop(context);
+                _handleApprove(context);
+              },
+            ),
+          if (role == Role.ADMIN || role == Role.INSPECTOR || role == Role.CUSTOMER)
+            const Divider(height: 1),
+            ListTile(
+              titleAlignment: ListTileTitleAlignment.center,
+              leading: const Icon(Icons.cancel, color: Colors.red),
+              title: const Text('Отклонить', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                _handleReject(context);
+              },
+            ),
         ],
       ),
     );
   }
 
-  void _handleAttachments() {
-    // Обработка просмотра вложений
-    // TODO: Реализовать логику просмотра вложений
+  void _handleAttachments(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReportAttachmentsScreen(
+          data: data,
+        ),
+      ),
+    );
   }
 
-  void _handleApprove() {
-    // TODO: Реализовать логику принятия отчета
+  void _handleApprove(BuildContext context) async {
+    final req = di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
+    var toSend = queuedReportChangeStatus(data.report.uuid, "${data.report.title} - подтверждение", 0);
+    final token = await di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken).getAccessToken();
+    var res = await req.queuedSend(toSend, token);
+    if (res.isDelayed) {
+      showWarnSnackbar(context, "Запрос будет выполнен после выхода в интернет");
+    } else if (res.isOk) {
+      showSuccessSnackbar(context, "Отправлен запрос на подтверждение отчета");
+    } else {
+      showErrSnackbar(context, "Не удалось отправить запрос");
+    }
   }
 
-  void _handleReject() {
-    // TODO: Реализовать логику отклонения отчета
+  void _handleReject(BuildContext context) async {
+    final req = di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
+    var toSend = queuedReportChangeStatus(data.report.uuid, "${data.report.title} - отклонение", 1);
+    final token = await di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken).getAccessToken();
+    var res = await req.queuedSend(toSend, token);
+    if (res.isDelayed) {
+      showWarnSnackbar(context, "Запрос будет выполнен после выхода в интернет");
+    } else if (res.isOk) {
+      showSuccessSnackbar(context, "Отправлен запрос на отклонение отчета");
+    } else {
+      showErrSnackbar(context, "Не удалось отправить запрос");
+    }
   }
 
   Color _getStatusColor(int status) {
     switch (status) {
-      case 1:
-        return Colors.orange;
       case 0:
         return Colors.green;
       case 2:
+        return Colors.orange;
+      case 1:
         return Colors.red;
       default: return Colors.grey;
     }

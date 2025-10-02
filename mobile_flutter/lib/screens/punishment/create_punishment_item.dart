@@ -4,9 +4,6 @@ import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
-import 'package:mobile_flutter/widgets/punishment_item_card.dart';
-import 'package:dropdown_search/dropdown_search.dart';
-import 'package:mobile_flutter/domain/entities.dart';
 
 class CreatePunishmentScreen extends StatefulWidget {
   final IDependencyContainer di;
