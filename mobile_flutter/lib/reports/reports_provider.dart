@@ -8,9 +8,12 @@ import 'package:mobile_flutter/di/dependency_container.dart';
 import 'dart:convert';
 
 import 'package:mobile_flutter/reports/reports_storage_provider.dart';
+import 'package:mobile_flutter/screens/create_report_screen.dart';
 
 import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:uuid/uuid.dart';
+
+import 'package:mobile_flutter/screens/ocr/ttn.dart';
 
 abstract class IReportsProvider {
   Future<Map<int, String>> get_statuses();
@@ -156,21 +159,52 @@ class SmartReportsProvider implements IReportsProvider {
   }
 }
 
+QueuedRequestModel queuedReport(ReportRecord record, String address) {
+  final now = DateTime.now();
 
-QueuedRequestModel queuedReport(String id, String title) {
+  final attachments = record.attachments.map((file) {
+    return AttachmentModel(
+      type: AttachmentVariant.reports,
+      path: file.path!,
+    );
+  }).toList();
+
+  return QueuedRequestModel(
+    id: Uuid().v4(),
+    timestamp: now.millisecondsSinceEpoch,
+    title: "Отчет по ${record.title} для $address",
+    url: Uri.parse(APIRootURI).resolve('/api/report/create_report').toString(),
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: {
+      "project_schedule_item": record.projectScheduleItem,
+      "report_date": now.toIso8601String().split("T").first,
+      "status": record.status,
+      "check_date": null,
+    },
+    attachments: attachments,
+  );
+}
+
+
+QueuedRequestModel queuedReportChangeStatus(String id, String title, int status) {
   final now = DateTime.now();
   return QueuedRequestModel(
     id: Uuid().v4(),
     timestamp: now.millisecondsSinceEpoch,
     title: title,
-    url: Uri.parse(APIRootURI).resolve('/api/project/activate-project').toString(),
+    url: Uri.parse(APIRootURI).resolve('/api/report/upd_report').toString(),
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
     body: {
-      "project_uuid": id
+      "uuid" : id,
+      "status": status
     },
   );
 }

@@ -5,7 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart'
-    show ProjectStatus, FoxPolygon, ProjectStatusExtension, Role, roleFromString, InspectorInfo;
+    show ProjectStatus, FoxPolygon, ProjectStatusExtension, Role, roleFromString, InspectorInfo, ProjectScheduleItem;
 import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/screens/activation_screen.dart';
 import 'package:mobile_flutter/screens/pun/punishments.dart';
@@ -55,7 +55,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
   bool _showPoints = false;
   String? _token;
   Role? _role;
-  List<String>? _workTitles;
+  List<ProjectScheduleItem>? _workTitles;
 
 
   void leaveHandler() {
@@ -84,7 +84,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
   Future<void> _loadWorks() async {
     final provider = widget.di.getDependency<IObjectsProvider>(IObjectsProviderDIToken);
     final works = await provider.getWorkTitles(widget.projectUuid);
-    _workTitles = works.map((e) => e.title).toList();
+    _workTitles = works;
   }
 
   @override
@@ -192,7 +192,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                           di: widget.di,
                           projectUuid: widget.projectUuid,
                           projectTitle: widget.address,
-                          isNear: isNear,
+                          polygon: widget.polygon,
                           works: _workTitles ?? [],
                         ),
                   ),
