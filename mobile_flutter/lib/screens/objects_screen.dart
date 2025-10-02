@@ -3,7 +3,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/materials/materials_provider.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
+import 'package:mobile_flutter/punishment/punishment_provider.dart';
 import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/fox_button.dart';
@@ -59,6 +61,18 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     var objectsProvider = widget.di.getDependency<IObjectsProvider>(
       IObjectsProviderDIToken,
     );
+
+    await NetworkUtils.wrapRequest(() =>
+        widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken).get_statuses(),
+        context, widget.di);
+
+    await NetworkUtils.wrapRequest(() =>
+        widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken).get_documents(),
+        context, widget.di);
+
+    await NetworkUtils.wrapRequest(() =>
+        widget.di.getDependency<IMaterialsProvider>(IMaterialsProviderDIToken).get_measurements(),
+        context, widget.di);
 
     print("Start Request");
 

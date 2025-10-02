@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart'
     show ProjectStatus, FoxPolygon, ProjectStatusExtension, Role, roleFromString, InspectorInfo;
+import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/screens/activation_screen.dart';
 import 'package:mobile_flutter/screens/punishments_screen.dart';
 import 'package:mobile_flutter/utils/geo_utils.dart';
@@ -49,6 +50,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
   bool _showPoints = false;
   String? _token;
   Role? _role;
+  List<String>? _workTitles;
 
 
   void leaveHandler() {
@@ -74,6 +76,12 @@ class _ObjectScreenState extends State<ObjectScreen> {
     }
   }
 
+  Future<void> _loadWorks() async {
+    final provider = widget.di.getDependency<IObjectsProvider>(IObjectsProviderDIToken);
+    final works = await provider.getWorkTitles(widget.projectUuid);
+    _workTitles = works.map((e) => e.title).toList();
+  }
+
   @override
   void dispose() {
     _locationProvider.reactiveLocation.removeListener(_locationListener);
@@ -87,6 +95,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
   void initState() {
     super.initState();
     _loadAuth();
+    _loadWorks();
     _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
 
     _locationListener = () => setState(() {
@@ -135,6 +144,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                       di: widget.di,
                       projectUuid: widget.projectUuid,
                       addr: widget.address,
+                      isNear: isNear,
                     ),
                   ),
                 );
@@ -153,6 +163,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                       di: widget.di,
                       projectTitle: widget.address,
                       projectUuid: widget.projectUuid,
+                      isNear: isNear,
                     ),
                   ),
                 );
@@ -172,6 +183,8 @@ class _ObjectScreenState extends State<ObjectScreen> {
                           di: widget.di,
                           projectUuid: widget.projectUuid,
                           projectTitle: widget.address,
+                          isNear: isNear,
+                          works: _workTitles ?? [],
                         ),
                   ),
                 );
