@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/utils/file_utils.dart';
+import 'package:mobile_flutter/widgets/attachments.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 
@@ -123,7 +124,7 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
           Expanded(
             child: Align(
               alignment: Alignment.centerLeft,
-              child: _buildAttachmentsSection(),
+              child: AttachmentsSection(context, attachments, (v) => attachments.removeAt(v)),
             ),
           ),
 
@@ -192,11 +193,7 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
       return;
     }
 
-    // TODO: Реализовать логику сохранения отчета с вложениями
-
-    for (var file in attachments) {
-      // TODO: сохранение вложений
-    }
+    
 
     Navigator.pop(context);
   }

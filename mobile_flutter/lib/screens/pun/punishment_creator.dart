@@ -32,8 +32,6 @@ class _PunishmentCreatorScreenState extends State<PunishmentCreatorScreen> {
   
   bool isLoading = true;
   String? _errorMessage;
-  
-
 
   // Выбранные значения
   String? _selectedDocKey;

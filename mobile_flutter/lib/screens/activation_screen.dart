@@ -4,11 +4,16 @@ import 'package:flutter_svg/svg.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/object/object_provider.dart';
+import 'package:mobile_flutter/utils/file_utils.dart';
+import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/widgets/attachments.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
+import 'package:flutter/src/widgets/framework.dart';
+import 'package:mobile_flutter/widgets/funny_things.dart';
 
 class ChecklistActivationScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -147,13 +152,14 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
         children: [
           // Список пунктов чек-листа
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              itemCount: checklistItems.length,
-              itemBuilder: (context, index) {
-                return _buildChecklistItem(checklistItems[index], index);
-              },
-            ),
+            child: 
+                ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                itemCount: checklistItems.length,
+                itemBuilder: (context, index) {
+                  return _buildChecklistItem(checklistItems[index], index);
+                },
+              ),
           ),
 
           // Раздел вложений
@@ -168,8 +174,7 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
                 // Кнопка сохранения
                 Expanded(
                   child: ElevatedButton(
-                    onPressed:() {
-                      // Navigator.pop(context);
+                    onPressed:() async {
                       for (var v in checklistItems) {
                         if (v.status == ChecklistStatus.notSelected || v.status == ChecklistStatus.no) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -182,7 +187,21 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
                           return;
                         }
                       }
-                      // TODO: ACTIVATE OBJECT AND BACK
+                      var toSend = queuedProjectActivation(
+                        widget.projectUuid,
+                        "Запрос на активацию объекта ${widget.address}",
+                      );
+                      final req = widget.di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
+                      var res = await req.queuedSend(toSend, widget.projectUuid);
+                      if (res.isDelayed) {
+                        Navigator.pop(context);
+                        showWarnSnackbar(context, "Объект будет активирован после выхода в интернет");
+                      } else if (res.isOk) {
+                        Navigator.pop(context);
+                        showSuccessSnackbar(context, "Объект успешно активирован");
+                      } else {
+                        showErrSnackbar(context, "Не удалось активировать объект");
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: FoxThemeButtonActiveBackground,
@@ -219,7 +238,7 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
                     ],
                   ),
                   child: IconButton(
-                    onPressed: () => _openAddAttachmentMenu(context),//TODO ВЛОЖЕНИЯ
+                    onPressed: () => _openAddAttachmentMenu(context),
                     icon: const Icon(Icons.add, color: Colors.white, size: 24),
                   ),
                 ),
@@ -230,6 +249,54 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
       ),
     );
   }
+
+  void _openAddAttachmentMenu(BuildContext context) {
+      showBlurBottomSheet(
+        context: context,
+        builder: (ctx) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                titleAlignment: ListTileTitleAlignment.center,
+                leading: const Icon(Icons.attach_file),
+                title: const Text('Добавить вложение'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  FileUtils.pickFiles(context: context)
+                    .then((v) => setState((){
+                      if (v == null || v.isEmpty) return;
+                      attachments.addAll(v);
+                    }));
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                titleAlignment: ListTileTitleAlignment.center,
+                leading: const Icon(Icons.photo),
+                title: const Text('Добавить фото'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  FileUtils.pickImages(context: context)
+                    .then((v) => setState((){
+                      if (v == null || v.isEmpty) return;
+                      attachments.addAll(v);
+                    }));
+                },
+              ),
+            ],
+          ),
+        );
+      }
 
 
 
@@ -273,7 +340,8 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
           ),
         ],
       ),
-      child: Column(
+      child: 
+        Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Номер и название пункта
@@ -321,7 +389,8 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
           ),
         ],
       ),
-    );
+      )
+      ;
   }
 
   Widget _buildStatusSelector(ChecklistItem item, int index) {
@@ -461,43 +530,6 @@ class ChecklistItem {
   }
 }
 
-void _openAddAttachmentMenu(BuildContext context) {
-  showBlurBottomSheet(
-    context: context,
-    builder: (ctx) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 40,
-          height: 4,
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.grey[400],
-            borderRadius: BorderRadius.circular(2),
-          ),
-          ),
-          const SizedBox(height: 12),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.attach_file),
-            title: const Text('Добавить вложение'),
-            onTap: () {
-              Navigator.pop(ctx);//TODO ДОБАВИТЬ ФАЙЛ
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            titleAlignment: ListTileTitleAlignment.center,
-            leading: const Icon(Icons.photo),
-            title: const Text('Добавить фото'),
-            onTap: () {
-              Navigator.pop(ctx);//TODO ДОБАВИТЬ ФОТО
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
 
 enum ChecklistStatus {
@@ -506,3 +538,4 @@ enum ChecklistStatus {
   notRequired,
   no,
 }
+

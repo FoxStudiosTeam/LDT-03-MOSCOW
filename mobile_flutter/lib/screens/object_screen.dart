@@ -211,6 +211,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                   showErrSnackbar(context, "Не выбраны файлы");
                   return;
                 }
+                
                 var toSend = QueuedRequestModel(
                   id: Uuid().v4(),
                   title: "Прикрепление файлов к проекту по адресу ${widget.address}",

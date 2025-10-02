@@ -239,3 +239,23 @@ class SmartObjectsProvider implements IObjectsProvider {
   }
 }
 
+
+
+
+QueuedRequestModel queuedProjectActivation(String id, String title) {
+  final now = DateTime.now();
+  return QueuedRequestModel(
+    id: Uuid().v4(),
+    timestamp: now.millisecondsSinceEpoch,
+    title: title,
+    url: Uri.parse(APIRootURI).resolve('/api/project/activate-project').toString(),
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: {
+      "project_uuid": id
+    },
+  );
+}
