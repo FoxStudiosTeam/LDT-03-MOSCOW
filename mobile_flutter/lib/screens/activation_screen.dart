@@ -175,7 +175,6 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed:() async {
-                      // Navigator.pop(context);
                       for (var v in checklistItems) {
                         if (v.status == ChecklistStatus.notSelected || v.status == ChecklistStatus.no) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -188,7 +187,6 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
                           return;
                         }
                       }
-                      // TODO: ACTIVATE OBJECT AND BACK
                       var toSend = queuedProjectActivation(
                         widget.projectUuid,
                         "Запрос на активацию объекта ${widget.address}",
