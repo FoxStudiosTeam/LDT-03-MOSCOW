@@ -132,20 +132,20 @@ class _PunishmentCreatorScreenState extends State<PunishmentCreatorScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextButton(
-            onPressed: () => {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PunishmentEditorScreen(
-                    addr: widget.addr,
-                    documents: _docs,
-                    statuses: _statuses,
-                    onSubmit: (item) => {},
+              onPressed: () => {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PunishmentEditorScreen(
+                      addr: widget.addr,
+                      documents: _docs,
+                      statuses: _statuses,
+                      onSubmit: (item) => {},
+                    ),
                   ),
-                ),
-              )
-            },
-            child: Text("Добавить")
+                )
+              },
+              child: Text("Добавить")
           ),
           TextButton(
             onPressed: () => {},
