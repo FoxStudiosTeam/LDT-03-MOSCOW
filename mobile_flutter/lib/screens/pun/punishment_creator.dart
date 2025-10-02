@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
+import 'package:mobile_flutter/screens/pun/item_editor.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/widgets/attachments.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
@@ -31,8 +32,6 @@ class _PunishmentCreatorScreenState extends State<PunishmentCreatorScreen> {
   
   bool isLoading = true;
   String? _errorMessage;
-  
-
 
   // Выбранные значения
   String? _selectedDocKey;
@@ -133,7 +132,19 @@ class _PunishmentCreatorScreenState extends State<PunishmentCreatorScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextButton(
-            onPressed: () => {},
+            onPressed: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PunishmentEditorScreen(
+                    addr: widget.addr,
+                    documents: _docs,
+                    statuses: _statuses,
+                    onSubmit: (item) => {},
+                  ),
+                ),
+              )
+            },
             child: Text("Добавить")
           ),
           TextButton(
