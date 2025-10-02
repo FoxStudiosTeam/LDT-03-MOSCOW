@@ -1,8 +1,10 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/widgets/attachments.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
@@ -125,7 +127,7 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
   ];
 
 
-  List<String> attachments = [];
+  List<PlatformFile> attachments = [];
 
   void leaveHandler() {
     Navigator.pop(context);
@@ -155,7 +157,7 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
           ),
 
           // Раздел вложений
-          if (attachments.isNotEmpty) _buildAttachmentsSection(),
+          if (attachments.isNotEmpty) AttachmentsSection(context, attachments, (i) => attachments.removeAt(i)),
 
           // Нижняя панель с кнопками
           Padding(padding: EdgeInsetsGeometry.all(16),
@@ -392,39 +394,39 @@ class _ChecklistActivationScreenState extends State<ChecklistActivationScreen> {
     );
   }
 
-  Widget _buildAttachmentsSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Вложения",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: attachments.map((attachment) {
-              return Chip(
-                label: Text(attachment),
-                onDeleted: () {
-                  setState(() {
-                    attachments.remove(attachment);
-                  });
-                },
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildAttachmentsSection() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(16),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Text(
+  //           "Вложения",
+  //           style: TextStyle(
+  //             fontSize: 16,
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.grey[800],
+  //           ),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         Wrap(
+  //           spacing: 8,
+  //           runSpacing: 8,
+  //           children: attachments.map((attachment) {
+  //             return Chip(
+  //               label: Text(attachment),
+  //               onDeleted: () {
+  //                 setState(() {
+  //                   attachments.remove(attachment);
+  //                 });
+  //               },
+  //             );
+  //           }).toList(),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }
 
 class ChecklistItem {

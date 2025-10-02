@@ -41,7 +41,7 @@ class PunishmentItemCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          if (role == Role.ADMIN || (role == Role.CUSTOMER || role == Role.INSPECTOR)&&isNear)
+          if (role == Role.ADMIN || ((role == Role.CUSTOMER || role == Role.INSPECTOR) && isNear))
             ListTile(
               titleAlignment: ListTileTitleAlignment.center,
               leading: const Icon(Icons.edit),
