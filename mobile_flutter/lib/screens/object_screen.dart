@@ -150,7 +150,7 @@ class _ObjectScreenState extends State<ObjectScreen> {
                       di: widget.di,
                       projectUuid: widget.projectUuid,
                       addr: widget.address,
-                      isNear: isNear,
+                      polygon: widget.polygon,
                     ),
                   ),
                 );

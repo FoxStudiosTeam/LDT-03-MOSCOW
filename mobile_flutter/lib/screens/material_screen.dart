@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/materials/materials_provider.dart';
-import 'package:mobile_flutter/screens/create_material_screen.dart';
 import 'package:mobile_flutter/screens/ocr/ttn.dart';
 import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
@@ -150,6 +149,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
   Widget build(BuildContext context) {
     var isNear = _location == null ? false :
       isNearOrInsidePolygon(widget.polygon, 100.0, _location!);
+
     return Scaffold(
       appBar: BaseHeader(
         title: "Материалы",

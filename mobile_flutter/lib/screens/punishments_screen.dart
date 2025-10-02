@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
+import 'package:mobile_flutter/screens/punishment_items_screen.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
 import 'package:mobile_flutter/widgets/punishment_card.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
 
-import '../widgets/base_header.dart';
+import 'package:mobile_flutter/utils/geo_utils.dart';
+import 'package:mobile_flutter/widgets/base_header.dart';
 class PunishmentsScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String projectUuid;
   final String addr;
-  final bool isNear;
+  final FoxPolygon polygon;
 
   const PunishmentsScreen({
     super.key,
     required this.di,
     required this.projectUuid,
     required this.addr,
-    required this.isNear,
+    required this.polygon,
   });
 
   @override
@@ -66,15 +69,46 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
     );
   }
 
-  void _handleCreatePunishment() {
-    // TODO: Реализовать создание предписания
-    print("Создать новое предписание");
+  void _handleCreatePunishment() async {
+    final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
+    final statuses = await NetworkUtils.wrapRequest(provider.get_statuses, context, widget.di);
+    final docs = await NetworkUtils.wrapRequest(provider.get_documents,context,widget.di);
+
+    data.add(await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => PunishmentItemsScreen(
+        is_new: true,
+        addr: widget.addr,
+        di: widget.di,
+        punishmentUuid: null,
+        statuses: statuses,
+        documents: docs,
+        isNear: _location == null ? false :
+        isNearOrInsidePolygon(widget.polygon, 100.0, _location!)
+      )),
+    ));
   }
+
+  @override
+  void dispose() {
+    _locationProvider.reactiveLocation.removeListener(_locationListener);
+    super.dispose();
+  }
+
+  late final _locationProvider;
+  late final _locationListener;
+  LatLng? _location = null;
 
   @override
   void initState() {
     super.initState();
     _loadAuth();
+    _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
+
+    _locationListener = () => setState(() {
+      _location = _locationProvider.reactiveLocation.value;
+    });
+    _locationProvider.reactiveLocation.addListener(_locationListener);
     _loadCards().then((cards) {
       setState(() {
         data = cards;
@@ -104,6 +138,7 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
   Future<List<PunishmentCard>> _loadCards() async {
     final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
     final statuses = await NetworkUtils.wrapRequest<Map<int, String>>(() => provider.get_statuses(),context,widget.di);
+    final docs = await NetworkUtils.wrapRequest<Map<String, String>>(() => provider.get_documents(),context,widget.di);
 
     final punishments = await NetworkUtils.wrapRequest<List<Punishment>>(() => provider.get_punishments(widget.projectUuid),context,widget.di);
 
@@ -114,18 +149,23 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
       statuses: statuses,
       di: widget.di,
       addr: widget.addr,
-      is_new: false,
+      isNear: _location == null ? false :
+      isNearOrInsidePolygon(widget.polygon, 100.0, _location!),
+      documents: docs,
+      statues: statuses,
     )).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    var isNear = _location == null ? false :
+    isNearOrInsidePolygon(widget.polygon, 100.0, _location!);
     return Scaffold(
       appBar: BaseHeader(
         title: "Предписания",
         subtitle: widget.addr,
         onBack: leaveHandler,
-        onMore: (((_role == Role.INSPECTOR || _role == Role.CUSTOMER) && widget.isNear) || _role == Role.ADMIN) ? _openPunishmentMenu : null,
+        onMore: (((_role == Role.INSPECTOR || _role == Role.CUSTOMER) && isNear) || _role == Role.ADMIN) ? _openPunishmentMenu : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -147,10 +187,5 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
       ),
       drawer: DrawerMenu(di: widget.di),
     );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }
