@@ -112,13 +112,13 @@ impl IProjectService for ProjectService {
 
     async fn get_project_inspectors(&self, r: GetProjectInspectorsRequest, _t: AccessTokenPayload) -> Result<Response, AppErr> { 
         let inspectors = sqlx::query_as::<_, InspectorInfo>("
-            select 
+        select 
             u.fcs,
             u.\"uuid\"
-            from auth.users u
-            left join project.iko_relationship ir
-                on u.\"uuid\" = ir.user_uuid
-                and ir.project = $1
+        from project.iko_relationship ir
+        left join auth.users u
+            on u.\"uuid\" = ir.user_uuid
+        where ir.project = = $1
         ")
             .bind(&r.project_uuid)
             .fetch_all(self.state.orm().get_executor())
