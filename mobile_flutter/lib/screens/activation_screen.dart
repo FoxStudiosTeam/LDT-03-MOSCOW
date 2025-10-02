@@ -480,7 +480,7 @@ class ChecklistItem {
           ListTile(
             titleAlignment: ListTileTitleAlignment.center,
             leading: const Icon(Icons.attach_file),
-            title: const Text('Добавить файл'),
+            title: const Text('Добавить вложение'),
             onTap: () {
               Navigator.pop(ctx);//TODO ДОБАВИТЬ ФАЙЛ
             },
@@ -498,7 +498,6 @@ class ChecklistItem {
       ),
     );
   }
-}
 
 enum ChecklistStatus {
   notSelected,
