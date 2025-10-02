@@ -16,10 +16,12 @@ import 'package:mobile_flutter/screens/auth_screen.dart';
 import 'package:mobile_flutter/screens/objects_screen.dart';
 import 'package:mobile_flutter/screens/punishments_screen.dart';
 import 'package:mobile_flutter/utils/geo_utils.dart';
+import 'package:mobile_flutter/utils/network_utils.dart';
 
 import 'object/object_provider.dart';
 
 const IAPIRootURI = "I-API-Root-URI";
+const APIRootURI = "https://test.foxstudios.ru:32460";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +32,7 @@ void main() async {
 
   var builder = DependencyBuilder();
   builder.registerDependency(IAuthStorageProviderDIToken, AuthStorageProvider());
-  builder.registerDependency(IAPIRootURI, Uri.parse("https://test.foxstudios.ru:32460"));
+  builder.registerDependency(IAPIRootURI, Uri.parse(APIRootURI));
 
   builder.registerDependency(ILocationProviderDIToken, LocationProvider());
 
@@ -97,7 +99,11 @@ void main() async {
       remote: onlineReportsProvider,
       storage: reportsStorageProvider
   ));
+  
+  var req = QueuedRequests();
 
+  builder.registerDependency(IQueuedRequestsDIToken, req);
+  
   // Attachment provider
 
   builder.registerDependency(IAttachmentsProviderDIToken, AttachmentsProvider(
@@ -110,6 +116,11 @@ void main() async {
   builder.registerDependency(IAuthProviderDIToken, au);
 
   var di = builder.build();
+
+  var auth = di.getDependency<IAuthStorageProvider>(IAuthProviderDIToken);
+  req.init(auth);
+
+
 
   runApp(MaterialApp(
     theme: ThemeData(
