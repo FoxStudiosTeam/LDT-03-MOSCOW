@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
+import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/reports/reports_provider.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/utils/file_utils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 
+import 'package:mobile_flutter/auth/auth_storage_provider.dart';
+import 'package:mobile_flutter/utils/network_utils.dart';
+import 'package:mobile_flutter/widgets/funny_things.dart';
+
 class ReportCreationScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String address;
-  final List<String> works;
+  final List<ProjectScheduleItem> works;
 
   const ReportCreationScreen({super.key, required this.di, required this.address, required this.works});
 
@@ -17,11 +23,25 @@ class ReportCreationScreen extends StatefulWidget {
   State<ReportCreationScreen> createState() => _ReportCreationScreenState();
 }
 
+class ReportRecord {
+  final String title;
+  final String projectScheduleItem;
+  final int status;
+  final List<PlatformFile> attachments;
+  const ReportRecord({
+    required this.title,
+    required this.projectScheduleItem,
+    required this.attachments,
+    required this.status
+  });
+}
+
 class _ReportCreationScreenState extends State<ReportCreationScreen> {
   final TextEditingController _workNameController = TextEditingController();
   List<PlatformFile> attachments = [];
-  String? _selectedWorkType;
-  List<String> _workTypes = [];
+  String? _selectedWorkUuid;
+  String? _selectedWorkTitle;
+  List<ProjectScheduleItem> _workTypes = [];
 
   @override
   void initState() {
@@ -86,7 +106,7 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
                 const SizedBox(height: 8),
                 // Селектор вместо поля ввода
                 DropdownButtonFormField<String>(
-                  value: _selectedWorkType,
+                  value: _selectedWorkUuid,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -97,15 +117,16 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
                     ),
                     hintText: "Выберите работу",
                   ),
-                  items: _workTypes.map((String workType) {
+                  items: _workTypes.map((ProjectScheduleItem workType) {
                     return DropdownMenuItem<String>(
-                      value: workType,
-                      child: Text(workType),
+                      value: workType.uuid,
+                      child: Text(workType.title),
                     );
                   }).toList(),
                   onChanged: (String? newValue) {
                     setState(() {
-                      _selectedWorkType = newValue;
+                      _selectedWorkUuid = widget.works.where((e) => e.uuid == newValue).first.uuid;
+                      _selectedWorkTitle = widget.works.where((e) => e.uuid == newValue).first.title;
                     });
                   },
                   validator: (value) {
@@ -186,19 +207,35 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
   }
 
   // Метод сохранения отчета
-  void _saveReport() {
-    if (_selectedWorkType == null) {
+  void _saveReport() async {
+    if (_selectedWorkUuid == null || _selectedWorkTitle == null) {
       _showErrorSnackbar('Выберите тип работы');
       return;
     }
 
-    // TODO: Реализовать логику сохранения отчета с вложениями
+    print("$_selectedWorkUuid\n$_selectedWorkTitle");
 
-    for (var file in attachments) {
-      // TODO: сохранение вложений
+    final record = ReportRecord(
+      title: _selectedWorkTitle!,
+      status: 2,
+      projectScheduleItem: _selectedWorkUuid!,
+      attachments: attachments
+    );
+
+    final req = widget.di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
+    var toSend = queuedReport(record, widget.address);
+
+    final token = await widget.di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken).getAccessToken();
+    var res = await req.queuedSend(toSend, token);
+    if (res.isDelayed) {
+      Navigator.pop(context);
+      showWarnSnackbar(context, "Отчет будет отправлен после выхода в интернет");
+    } else if (res.isOk) {
+      Navigator.pop(context);
+      showSuccessSnackbar(context, "Отчет отправлен");
+    } else {
+      showErrSnackbar(context, "Не удалось отправить отчет");
     }
-
-    Navigator.pop(context);
   }
 
   // Список с вложениями

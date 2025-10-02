@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/reports/reports_provider.dart';
@@ -12,19 +13,21 @@ import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/report_card.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 
+import 'package:mobile_flutter/utils/geo_utils.dart';
+
 class ReportScreen extends StatefulWidget {
   final IDependencyContainer di;
   final String projectTitle;
   final String projectUuid;
-  final bool isNear;
-  final List<String> works;
+  final FoxPolygon polygon;
+  final List<ProjectScheduleItem> works;
 
   const ReportScreen({
     super.key,
     required this.di,
     required this.projectTitle,
     required this.projectUuid,
-    required this.isNear,
+    required this.polygon,
     required this.works,
   });
 
@@ -40,6 +43,17 @@ class _ReportScreenState extends State<ReportScreen> {
   void leaveHandler() {
     Navigator.pop(context);
   }
+
+  @override
+  void dispose() {
+    _locationProvider.reactiveLocation.removeListener(_locationListener);
+    super.dispose();
+  }
+
+  late final _locationProvider;
+  late final _locationListener;
+  LatLng? _location = null;
+  late final IQueuedRequests _queued;
 
   Future<void> _loadAuth() async {
     try {
@@ -65,6 +79,8 @@ class _ReportScreenState extends State<ReportScreen> {
     final statuses = await provider.get_statuses();
     final reports = await NetworkUtils.wrapRequest(() => provider.get_reports(widget.projectUuid), context, widget.di);
 
+    reports.sort((a, b) => b.report.status.compareTo(a.report.status));
+
     return reports.map((rep) => ReportCard(
       di: widget.di,
       data: rep,
@@ -77,6 +93,13 @@ class _ReportScreenState extends State<ReportScreen> {
   void initState() {
     super.initState();
     _loadAuth();
+    _queued = widget.di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
+    _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
+
+    _locationListener = () => setState(() {
+      _location = _locationProvider.reactiveLocation.value;
+    });
+    _locationProvider.reactiveLocation.addListener(_locationListener);
     _loadCards().then((cards) {
       setState(() {
         reports = cards;
@@ -117,18 +140,25 @@ class _ReportScreenState extends State<ReportScreen> {
   void _handleCreateReport() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ReportCreationScreen(di: widget.di, address: widget.projectTitle, works: widget.works)),
+      MaterialPageRoute(builder: (_) => ReportCreationScreen(
+          di: widget.di,
+          address: widget.projectTitle,
+          works: widget.works
+      )),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    var isNear = _location == null ? false :
+    isNearOrInsidePolygon(widget.polygon, 100.0, _location!);
+
     return Scaffold(
       appBar: BaseHeader(
         title: "Отчеты",
         subtitle: widget.projectTitle,
         onBack: leaveHandler,
-        onMore: ((_role == Role.FOREMAN && widget.isNear) || _role == Role.ADMIN) ? _openReportMenu : null,
+        onMore: ((_role == Role.FOREMAN && isNear) || _role == Role.ADMIN) ? _openReportMenu : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
