@@ -31,7 +31,7 @@ pub fn router(state: AppState) -> OpenApiRouter {
         .layer(axum::middleware::from_fn(auth_jwt::prelude::optional_token_extractor))
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize, ToSchema, Debug)]
 pub struct MaterialInsertRequest {
     #[schema(example = 1.0)]
     volume: f64,
@@ -72,6 +72,7 @@ pub async fn insert(
     State(app) : State<AppState>,
     Json(r) : Json<MaterialInsertRequest>
 ) -> Result<Response, AppErr> {
+    tracing::debug!("{:#?}", r);
     let Some(r) = app.orm.materials().save(r.into_active(), Insert).await.into_app_err()? else {
         return Ok((StatusCode::CONFLICT).into_response());
     };

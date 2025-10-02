@@ -42,13 +42,13 @@ impl AppState {
 
             tracing::info!("Received field: {} (filename: {})", name, file_name);
 
-            if let Some(mime) = &content_type {
-                if !allowed_mimes.contains(mime.as_str()) {
-                    return Ok((StatusCode::NOT_FOUND, format!("Invalid MIME type: {}", mime)).into_response());
-                }
-            } else {
-                return Ok((StatusCode::NOT_FOUND, "Missing Content-Type header".to_string()).into_response());
-            }
+            // if let Some(mime) = &content_type {
+            //     if !allowed_mimes.contains(mime.as_str()) {
+            //         return Ok((StatusCode::NOT_FOUND, format!("Invalid MIME type: {}", mime)).into_response());
+            //     }
+            // } else {
+            //     return Ok((StatusCode::NOT_FOUND, "Missing Content-Type header".to_string()).into_response());
+            // }
 
             let mut data = Vec::new();
             let mut field_data = field.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e)).into_async_read();
