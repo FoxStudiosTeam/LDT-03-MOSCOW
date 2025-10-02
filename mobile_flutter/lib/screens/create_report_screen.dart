@@ -88,124 +88,146 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
         onBack: () => Navigator.pop(context),
       ),
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // Селектор типа работы
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                // Название поля
-                Text(
-                  "Наименование работы",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // Селектор вместо поля ввода
-                DropdownButtonFormField<String>(
-                  value: _selectedWorkUuid,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    hintText: "Выберите работу",
-                  ),
-                  items: _workTypes.map((ProjectScheduleItem workType) {
-                    return DropdownMenuItem<String>(
-                      value: workType.uuid,
-                      child: Text(workType.title),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedWorkUuid = widget.works.where((e) => e.uuid == newValue).first.uuid;
-                      _selectedWorkTitle = widget.works.where((e) => e.uuid == newValue).first.title;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Выберите тип работы';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          // Секция вложений с ограниченной высотой и скроллингом
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: AttachmentsSection(context, attachments, (v) => attachments.removeAt(v)),
-            ),
-          ),
-
-          // Сохранить и добавить вложения
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            child: Row(
-              children: [
-                // Кнопка сохранения
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _saveReport();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: FoxThemeButtonActiveBackground,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                    child: const Text(
-                      'Сохранить',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-                // Кнопка добавления вложений
-                Container(
-                  width: 50,
-                  height: 50,
-                  margin: const EdgeInsets.only(left: 10),
-                  decoration: BoxDecoration(
-                    color: FoxThemeButtonActiveBackground,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    onPressed: () => _openAddAttachmentMenu(context),
-                    icon: const Icon(Icons.add, color: Colors.white, size: 24),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      body: _mainContent()
+    
     );
   }
+
+  Widget _mainContent(){
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(children: [
+              // Название поля
+              Text(
+                "Наименование работы",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Селектор вместо поля ввода
+              DropdownButtonFormField<String>(
+                value: _selectedWorkUuid,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  hintText: "Выберите работу",
+                ),
+                items: _workTypes.map((ProjectScheduleItem workType) {
+                  return DropdownMenuItem<String>(
+                    value: workType.uuid,
+                    child: Text(workType.title),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedWorkUuid = widget.works.where((e) => e.uuid == newValue).first.uuid;
+                    _selectedWorkTitle = widget.works.where((e) => e.uuid == newValue).first.title;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Выберите тип работы';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              AttachmentsSection(context, attachments, (v) => setState(() => attachments.removeAt(v)))
+            ]),
+          )
+        ),
+        _buildActionButtons()
+      ],
+    );
+  }
+/*
+SingleChildScrollView(
+        child: Column(children: [
+            // Селектор типа работы
+            Padding(
+              child: Column(
+                
+              ),
+            ),
+
+            // Секция вложений с ограниченной высотой и скроллингом
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: AttachmentsSection(context, attachments, (v) => attachments.removeAt(v)),
+                  ),
+                ),
+            ),
+            // Сохранить и добавить вложения
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: Row(
+                children: [
+                  // Кнопка сохранения
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _saveReport();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: FoxThemeButtonActiveBackground,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: const Text(
+                        'Сохранить',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Кнопка добавления вложений
+                  Container(
+                    width: 50,
+                    height: 50,
+                    margin: const EdgeInsets.only(left: 10),
+                    decoration: BoxDecoration(
+                      color: FoxThemeButtonActiveBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      onPressed: () => _openAddAttachmentMenu(context),
+                      icon: const Icon(Icons.add, color: Colors.white, size: 24),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      )
+  */
 
   // Метод сохранения отчета
   void _saveReport() async {
@@ -239,6 +261,61 @@ class _ReportCreationScreenState extends State<ReportCreationScreen> {
     }
   }
 
+    Widget _buildActionButtons() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => {
+                _saveReport(),
+                Navigator.pop(context)
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FoxThemeButtonActiveBackground,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: const Text(
+                'Сохранить нарушение',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: FoxThemeButtonActiveBackground,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              onPressed: () => _openAddAttachmentMenu(context),
+              icon: const Icon(Icons.add, color: Colors.white, size: 24),
+              tooltip: 'Добавить вложения',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   // Список с вложениями
   Widget _buildAttachmentsSection() {
     return Container(

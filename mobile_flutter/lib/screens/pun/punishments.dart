@@ -118,8 +118,10 @@ class _ProjectPunishmentsScreenState extends State<ProjectPunishmentsScreen>  {
                 MaterialPageRoute(
                   builder: (_) => PunishmentCreatorScreen(
                     di: widget.di,
+                    isNear: widget.isNear,
                     addr: widget.addr,
                     projectUuid: widget.projectUuid,
+                    role: widget.role,
                   ),
                 ),
               );

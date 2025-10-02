@@ -121,8 +121,6 @@ void main() async {
   var auth = di.getDependency<IAuthStorageProvider>(IAuthStorageProviderDIToken);
   req.init(auth);
 
-
-
   runApp(MaterialApp(
     theme: ThemeData(
       colorScheme: ColorScheme.fromSeed(

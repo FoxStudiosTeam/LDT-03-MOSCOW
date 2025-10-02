@@ -2,24 +2,29 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
+import 'package:mobile_flutter/screens/pun/item_card.dart';
 import 'package:mobile_flutter/utils/file_utils.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/attachments.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
+import 'package:intl/intl.dart';
+
+
 
 class PunishmentEditorScreen extends StatefulWidget {
   final String addr;
   final Map<int, String> statuses;
   final Map<String, String> documents;
-  final Function(PunishmentItem item) onSubmit;
-
+  final Function(DataPunishmentItem item) onSubmit;
+  final DataPunishmentItem? initial;
   const PunishmentEditorScreen({
     super.key,
     required this.addr,
     required this.onSubmit,
     required this.statuses,
     required this.documents,
+    this.initial = null,
   });
 
   @override
@@ -28,6 +33,7 @@ class PunishmentEditorScreen extends StatefulWidget {
 
 class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
   // Контроллеры
+  final TextEditingController _titleController = TextEditingController();
   final TextEditingController _regulationDocController = TextEditingController();
   final TextEditingController _correctionDatePlanController = TextEditingController();
   final TextEditingController _correctionDateFactController = TextEditingController();
@@ -39,6 +45,21 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
   // Выбранные значения
   String? _selectedDocKey;
   int? _selectedStatusKey;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initial != null) {
+      _titleController.text = widget.initial!.title;
+      _regulationDocController.text = widget.initial!.regulationDoc;
+      _correctionDatePlanController.text = widget.initial!.correctionDatePlan;
+      _correctionDateFactController.text = widget.initial!.correctionDateFact;
+      _correctionDateInfoController.text = widget.initial!.correctionDateInfo;
+      _commentController.text = widget.initial!.comment;
+      _selectedDocKey = widget.initial!.regulationDoc;
+      _selectedStatusKey = widget.initial!.status;
+    }
+  }
 
   @override
   void dispose() {
@@ -58,18 +79,18 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
         initialDate: DateTime.now(),
         firstDate: DateTime(2000),
         lastDate: DateTime(2100),
-        locale: const Locale('ru', 'RU'),
+        // locale: const Locale('ru', 'RU'),
         builder: (context, child) {
           return Theme(
             data: Theme.of(context).copyWith(
               colorScheme: const ColorScheme.light(
-                primary: Colors.blue,
+                primary: Colors.red,
                 onPrimary: Colors.white,
                 onSurface: Colors.black,
               ),
               textButtonTheme: TextButtonThemeData(
                 style: TextButton.styleFrom(
-                  foregroundColor: Colors.blue,
+                  foregroundColor: Colors.red,
                 ),
               ),
             ),
@@ -100,7 +121,6 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
     }
   }
 
-  // Методы для работы с вложениями
   Future<void> _pickFiles() async {
     final files = await FileUtils.pickFiles(context: context);
     if (files != null && files.isNotEmpty) {
@@ -189,7 +209,11 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
               children: [
                 _buildFormCard(),
                 const SizedBox(height: 20),
-                _buildAttachmentsSection(),
+                AttachmentsSection(
+                  context,
+                  _attachments,
+                      (index) => setState(() => _attachments.removeAt(index)),
+                ),
               ],
             ),
           ),
@@ -220,8 +244,32 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle("Регламентный документ", required: true),
+          _buildSectionTitle("Заголовок", required: true),
           const SizedBox(height: 6),
+          TextField(
+            controller: _titleController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: FoxThemeButtonActiveBackground, width: 2),
+              ),
+              hintText: "Введите заголовок...",
+              contentPadding: const EdgeInsets.all(16),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+          ),
+          _buildSectionTitle("Регламентный документ", required: true),
+          const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: _selectedDocKey,
             items: widget.documents.entries
@@ -266,7 +314,6 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
             icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 16),
-
           _buildSectionTitle("Плановая дата", required: true),
           const SizedBox(height: 6),
           _buildDateField(
@@ -294,7 +341,7 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
           ),
           const SizedBox(height: 16),
 
-          _buildSectionTitle("Комментарий", required: true),
+          _buildSectionTitle("Комментарий"),
           const SizedBox(height: 6),
           TextField(
             controller: _commentController,
@@ -425,66 +472,7 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.attach_file, color: Colors.blue, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                "Вложения",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
-                ),
-              ),
-              if (_attachments.isNotEmpty) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: FoxThemeButtonActiveBackground.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${_attachments.length}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: FoxThemeButtonActiveBackground,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (_attachments.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Column(
-                children: [
-                  Icon(Icons.attach_file, size: 40, color: Colors.grey.shade400),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Нет прикрепленных файлов",
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            AttachmentsSection(
-              context,
-              _attachments,
-                  (index) => setState(() => _attachments.removeAt(index)),
-            ),
+            
         ],
       ),
     );
@@ -571,11 +559,10 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
 
   bool _allFieldsFilled() {
     return _selectedDocKey != null &&
-        _correctionDatePlanController.text.isNotEmpty &&
-        _correctionDateFactController.text.isNotEmpty &&
-        _correctionDateInfoController.text.isNotEmpty &&
-        _commentController.text.isNotEmpty &&
-        _selectedStatusKey != null;
+      _correctionDatePlanController.text.isNotEmpty &&
+      _correctionDateFactController.text.isNotEmpty &&
+      _correctionDateInfoController.text.isNotEmpty &&
+      _selectedStatusKey != null;
   }
 
   void _onSubmit() {
@@ -588,40 +575,19 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
       );
       return;
     }
-
-    var item = PunishmentItem(
-      title: "",
+    
+    var item = DataPunishmentItem(
+      title: _titleController.text,
       regulationDoc: _regulationDocController.text,
-      correctionDatePlan: _correctionDatePlanController.text,
-      correctionDateFact: _correctionDateFactController.text,
-      correctionDateInfo: _correctionDateInfoController.text,
+      correctionDatePlan: DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(DateFormat("dd.MM.yyyy").parse(_correctionDatePlanController.text)),
+      correctionDateFact: DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(DateFormat("dd.MM.yyyy").parse(_correctionDateFactController.text)),
+      correctionDateInfo: DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(DateFormat("dd.MM.yyyy").parse(_correctionDateInfoController.text)),
       comment: _commentController.text,
       status: _selectedStatusKey!,
       attachments: _attachments,
     );
-
+    Navigator.pop(context);
     widget.onSubmit(item);
   }
 }
 
-class PunishmentItem {
-  final String title;
-  final String regulationDoc;
-  final String correctionDatePlan;
-  final String correctionDateFact;
-  final String correctionDateInfo;
-  final String comment;
-  final int status;
-  final List<PlatformFile> attachments;
-
-  PunishmentItem({
-    required this.title,
-    required this.regulationDoc,
-    required this.correctionDatePlan,
-    required this.correctionDateFact,
-    required this.correctionDateInfo,
-    required this.comment,
-    required this.status,
-    required this.attachments,
-  });
-}

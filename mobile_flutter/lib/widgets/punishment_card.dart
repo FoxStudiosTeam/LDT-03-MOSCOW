@@ -79,7 +79,7 @@ class PunishmentCard extends StatelessWidget {
       case 4:
         return Colors.red;
       default:
-        return const Color.fromARGB(255, 88, 88, 88);
+        return Colors.grey;
     }
   }
 

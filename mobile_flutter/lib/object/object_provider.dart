@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 
 abstract class IObjectsProvider {
   Future<PaginationResponseWrapper<Project>> getObjects(String address, int offset);
+  Future<PaginationResponseWrapper<Project>> getInspectorObjects(String address, int offset);
   Future<List<InspectorInfo>> getObjectInspectors(String project_uuid);
   Future<List<ProjectScheduleItem>> getWorkTitles(String project_uuid);
 }
@@ -34,6 +35,39 @@ class ObjectsProvider implements IObjectsProvider {
     _accessToken = await authStorageProvider.getAccessToken();
 
     final uri = apiRoot.resolve('/api/project/get-project');
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $_accessToken',
+      },
+      body: jsonEncode({
+        'address': address,
+        'pagination': Pagination(10, offset).toJson(),
+      }),
+    ).timeout(Duration(seconds: 20), onTimeout: () {
+      throw TimeoutException('Request timed out after ${Duration(seconds: 20)} ms');
+    });
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      return PaginationResponseWrapper<Project>.fromJson(
+        json,
+            (item) => Project.fromJson(item),
+      );
+    } else {
+      if (response.statusCode == 401){
+          throw HttpException('Unauthorized 401');
+      }
+      throw HttpException('Failed to load projects');
+    }
+  }
+  @override
+  Future<PaginationResponseWrapper<Project>> getInspectorObjects(String address, int offset) async {
+    _accessToken = await authStorageProvider.getAccessToken();
+
+    final uri = apiRoot.resolve('/api/project/get-inspector-projects');
 
     final response = await http.post(
       uri,
@@ -144,6 +178,12 @@ class OfflineObjectsProvider implements IObjectsProvider {
     var data = await objectStorageProvider.getWorkTitles(projectUuid);
     return data;
   }
+  
+  @override
+  Future<PaginationResponseWrapper<Project>> getInspectorObjects(String address, int offset) async {
+    var data = await objectStorageProvider.getInspectorObjects();
+    return PaginationResponseWrapper(items: data, total: data.length);
+  }
 }
 
 class SmartObjectsProvider implements IObjectsProvider {
@@ -235,6 +275,23 @@ class SmartObjectsProvider implements IObjectsProvider {
       }
     } else {
       // TODO оффлайн функции
+    }
+  }
+  
+  @override
+  Future<PaginationResponseWrapper<Project>> getInspectorObjects(String address, int offset) async {
+    final hasConnection = await NetworkUtils.connectionExists();
+
+    if (hasConnection) {
+      final result = await remote.getInspectorObjects(address, offset);
+
+      if (offset == 0) {
+        await storage.saveInspectorObjects(result.items);
+      }
+
+      return result;
+    } else {
+      return offline.getInspectorObjects(address, offset);
     }
   }
 }
