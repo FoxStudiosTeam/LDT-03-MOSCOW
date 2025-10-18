@@ -19,8 +19,6 @@ class SomeAImplB implements SomeA {
   }
 }
 
-
-
 void main() {
   test("Di builders Tests", (){
       var builder = DependencyBuilder();
@@ -28,7 +26,12 @@ void main() {
       builder.registerDependency("SomeB", SomeAImplB());
       var container = builder.build();
 
-      expect(container.getDependency<SomeA>("SomeA").some(), "someA");
-      expect(container.getDependency<SomeA>("SomeB").some(), "someAImplB");
+      var buildA = builder.getDependency<SomeA>("SomeA");
+      expect(buildA.some(), "someA");
+
+      var actualA = container.getDependency<SomeA>("SomeA").some();
+      var actualB = container.getDependency<SomeA>("SomeB").some();
+      expect(actualA, "someA");
+      expect(actualB, "someAImplB");
   });
 }

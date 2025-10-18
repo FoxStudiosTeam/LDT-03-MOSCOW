@@ -6,7 +6,6 @@ abstract class IDependencyBuilder {
   IDependencyContainer build();
 }
 
-
 class DependencyBuilder implements IDependencyBuilder{
   final dependencies = <String, Object>{};
 
