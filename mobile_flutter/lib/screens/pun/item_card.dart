@@ -1,11 +1,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/main.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
-import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:uuid/uuid.dart';
 

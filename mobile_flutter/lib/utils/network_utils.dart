@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
@@ -11,17 +9,12 @@ import 'package:mobile_flutter/auth/auth_provider.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/main.dart';
-import 'package:mobile_flutter/materials/materials_provider.dart';
 import 'package:mobile_flutter/screens/auth_screen.dart';
-import 'package:mobile_flutter/screens/ocr/ttn.dart';
 import 'package:mobile_flutter/utils/file_utils.dart';
-import 'dart:async';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
 import 'package:http_parser/src/media_type.dart';
-import 'package:uuid/uuid.dart';
 
 class NetworkUtils {
   static Future<T> wrapRequest<T>(

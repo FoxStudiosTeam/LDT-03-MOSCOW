@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/punishment/punishment_provider.dart';
-import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
-import 'package:mobile_flutter/widgets/blur_menu.dart';
 
 class PunishmentViewerScreen extends StatefulWidget {
   final IDependencyContainer di;
@@ -26,15 +23,15 @@ class PunishmentViewerScreen extends StatefulWidget {
 }
 
 class _PunishmentViewerScreenState extends State<PunishmentViewerScreen>  {
-  late List<PunishmentItemAndAttachments> _items;
+  //late List<PunishmentItemAndAttachments> _items;
 
   void _loadPunishments() async {
-    final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
-    final items = await NetworkUtils.wrapRequest<List<PunishmentItemAndAttachments>>(() => provider.get_punishment_items(widget.data.uuid),context,widget.di);
+    //final provider = widget.di.getDependency<IPunishmentProvider>(IPunishmentProviderDIToken);
+    //final items = await NetworkUtils.wrapRequest<List<PunishmentItemAndAttachments>>(() => provider.get_punishment_items(widget.data.uuid),context,widget.di);
 
     setState(() {
       isLoading = false;
-      _items = items;
+      //_items = items;
     });
   }
 
@@ -65,35 +62,35 @@ class _PunishmentViewerScreenState extends State<PunishmentViewerScreen>  {
   //   itemBuilder: (context, index) => _items[index],
   // );
 
-  void _openPunishmentMenu() {
-      showBlurBottomSheet(
-        context: context,
-        builder: (ctx) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 12),
-            ListTile(
-              titleAlignment: ListTileTitleAlignment.center,
-              leading: const Icon(Icons.add),
-              title: const Text('Создать предписание'),
-              onTap: () {
-                Navigator.pop(ctx);
-                
-              },
-            ),
-          ],
-        ),
-      );
-  }
+  // void _openPunishmentMenu() {
+  //     showBlurBottomSheet(
+  //       context: context,
+  //       builder: (ctx) => Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           Container(
+  //             width: 40,
+  //             height: 4,
+  //             margin: const EdgeInsets.only(bottom: 16),
+  //             decoration: BoxDecoration(
+  //               color: Colors.grey[400],
+  //               borderRadius: BorderRadius.circular(2),
+  //             ),
+  //           ),
+  //           const SizedBox(height: 12),
+  //           ListTile(
+  //             titleAlignment: ListTileTitleAlignment.center,
+  //             leading: const Icon(Icons.add),
+  //             title: const Text('Создать предписание'),
+  //             onTap: () {
+  //               Navigator.pop(ctx);
+  //
+  //             },
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  // }
 
   
 }

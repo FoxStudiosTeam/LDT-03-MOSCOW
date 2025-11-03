@@ -36,7 +36,7 @@ dependencies:
   latlong2: ^0.9.1
   uuid: ^4.5.1
   dropdown_search: ^6.0.2
-
+  url_launcher: ^6.1.10
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/main.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/di/dependency_container.dart';
 import 'dart:convert';
 
 import 'package:mobile_flutter/materials/materials_storage_provider.dart';

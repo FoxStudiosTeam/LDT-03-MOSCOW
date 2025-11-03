@@ -4,18 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/emojione_monotone.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
-import 'package:iconify_flutter/icons/tabler.dart';
-import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
-import 'package:mobile_flutter/screens/ocr/camera.dart';
 import 'package:mobile_flutter/utils/geo_utils.dart';
 import 'package:mobile_flutter/widgets/current_location_layer.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
-import 'package:mobile_flutter/widgets/fox_button.dart';
 import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/object_card.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
@@ -30,8 +25,7 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 class _MapScreenState extends State<MapScreen> {
-  String? _token;
-  Role? _role;
+
   List<ProjectAndInspectors> projects = [];
   bool _isLoading = true;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -39,14 +33,13 @@ class _MapScreenState extends State<MapScreen> {
 
   ProjectAndInspectors? currentProject; // ✅ Сделали nullable
 
-  LatLng? _location = null;
+  LatLng? _location;
   
   late final _locationProvider;
   late final _locationListener;
   @override
   void initState() {
     super.initState();
-    _loadAuth();
     _loadProjects();
     _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
 
@@ -60,25 +53,6 @@ class _MapScreenState extends State<MapScreen> {
   void dispose() {
     _locationProvider.reactiveLocation.removeListener(_locationListener);
     super.dispose();
-  }
-
-  Future<void> _loadAuth() async {
-    try {
-      var authStorageProvider = widget.di.getDependency<IAuthStorageProvider>(
-        IAuthStorageProviderDIToken,
-      );
-      var role = await authStorageProvider.getRole();
-      var token = await authStorageProvider.getAccessToken();
-      setState(() {
-        _token = token;
-        _role = roleFromString(role);
-      });
-    } catch (e) {
-      setState(() {
-        _token = "NO TOKEN";
-        _role = Role.UNKNOWN;
-      });
-    }
   }
 
   Future<void> _loadProjects() async {
@@ -135,7 +109,7 @@ class _MapScreenState extends State<MapScreen> {
   void zoomIn() {
     final newZoom = (_currentZoom + 1).clamp(1.0, 18.0);
     _currentZoom = newZoom;
-    final center = _mapController.camera.center ?? calcCameraPosition();
+    final center = _mapController.camera.center;
     _mapController.move(center, newZoom);
     setState(() {});
   }
@@ -143,7 +117,7 @@ class _MapScreenState extends State<MapScreen> {
   void zoomOut() {
     final newZoom = (_currentZoom - 1).clamp(1.0, 18.0);
     _currentZoom = newZoom;
-    final center = _mapController.camera.center ?? calcCameraPosition();
+    final center = _mapController.camera.center;
     _mapController.move(center, newZoom);
     setState(() {});
   }
@@ -182,7 +156,7 @@ class _MapScreenState extends State<MapScreen> {
           'assets/icons/logo.svg',
           width: 40,
           height: 40,
-          color: Colors.black,
+          colorFilter: ColorFilter.mode(Colors.black, BlendMode.clear),
         ),
         title: "ЭСЖ",
         rightIcon: IconButton(
@@ -191,7 +165,7 @@ class _MapScreenState extends State<MapScreen> {
             'assets/icons/menu.svg',
             width: 40,
             height: 40,
-            color: Colors.black,
+            colorFilter: ColorFilter.mode(Colors.black, BlendMode.clear),
           ),
         ),
       ),
@@ -212,7 +186,7 @@ class _MapScreenState extends State<MapScreen> {
                     onPositionChanged:
                         (MapCamera camera, bool hasGesture) {
                       setState(() {
-                        _currentZoom = camera.zoom ?? _currentZoom;
+                        _currentZoom = camera.zoom;
                       });
                     },
                     interactionOptions: InteractionOptions(
@@ -233,7 +207,7 @@ class _MapScreenState extends State<MapScreen> {
                           p.project.polygon!.points.isNotEmpty)
                           .map((p) => Polygon(
                         points: p.project.polygon!.points,
-                        color: Colors.blue.withOpacity(0.3),
+                        color: Colors.blue.withValues(alpha: 0.3),
                         borderColor: Colors.blue,
                         borderStrokeWidth: 2,
                       ))
@@ -263,7 +237,7 @@ class _MapScreenState extends State<MapScreen> {
                               Stack(children: [
                                 ImageFiltered(
                                   imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                                  child: Iconify(Mdi.worker, color: Colors.black.withOpacity(1.0), size: 42),
+                                  child: Iconify(Mdi.worker, color: Colors.black.withValues(alpha: 1.0), size: 42),
                                 ),
                                 Iconify(Mdi.worker, color: Colors.white, size: 42),
                               ],)

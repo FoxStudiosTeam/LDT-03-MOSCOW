@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/reports/reports_provider.dart';
 import 'package:mobile_flutter/screens/create_report_screen.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
-import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
-import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/report_card.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 
@@ -36,7 +33,6 @@ class ReportScreen extends StatefulWidget {
 }
 
 class _ReportScreenState extends State<ReportScreen> {
-  String? _token;
   Role? _role;
   bool _loaded = false;
   List<ReportCard> reports = [];
@@ -54,7 +50,6 @@ class _ReportScreenState extends State<ReportScreen> {
   late final _locationProvider;
   late final _locationListener;
   LatLng? _location = null;
-  late final IQueuedRequests _queued;
 
   Future<void> _loadAuth() async {
     try {
@@ -62,14 +57,11 @@ class _ReportScreenState extends State<ReportScreen> {
         IAuthStorageProviderDIToken,
       );
       var role = await authStorageProvider.getRole();
-      var token = await authStorageProvider.getAccessToken();
       setState(() {
-        _token = token;
         _role = roleFromString(role);
       });
     } catch (e) {
       setState(() {
-        _token = "NO TOKEN";
         _role = Role.UNKNOWN;
       });
     }
@@ -97,7 +89,7 @@ class _ReportScreenState extends State<ReportScreen> {
   void initState() {
     super.initState();
     _loadAuth();
-    _queued = widget.di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
+    //_queued = widget.di.getDependency<IQueuedRequests>(IQueuedRequestsDIToken);
     _locationProvider = widget.di.getDependency(ILocationProviderDIToken) as ILocationProvider;
 
     _locationListener = () => setState(() {

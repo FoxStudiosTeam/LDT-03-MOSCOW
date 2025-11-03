@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: frontend-container
-          image: 88ba0664-nimble-raven.registry.twcstorage.ru/frontend/frontend:latest
+          image: 88ba0664-nimble-raven.registry.twcstorage.ru/dbj/frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 4000

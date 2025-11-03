@@ -40,12 +40,12 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
   bool _isWorkStopped = false;
 
   // Отфильтрованный список документов для поиска
-  List<String> _filteredDocuments = [];
+  //List<String> _filteredDocuments = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredDocuments = widget.documents.values.toList();
+    //_filteredDocuments = widget.documents.values.toList();
   }
 
   void leaveHandler() {
@@ -102,17 +102,17 @@ class _CreatePunishmentScreenState extends State<CreatePunishmentScreen> {
     print("Добавить фото");
   }
 
-  void _filterDocuments(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredDocuments = widget.documents.values.toList();
-      } else {
-        _filteredDocuments = widget.documents.values.toList()
-            .where((doc) => doc.toLowerCase().contains(query.toLowerCase()))
-            .toList();
-      }
-    });
-  }
+  // void _filterDocuments(String query) {
+  //   setState(() {
+  //     if (query.isEmpty) {
+  //       _filteredDocuments = widget.documents.values.toList();
+  //     } else {
+  //       _filteredDocuments = widget.documents.values.toList()
+  //           .where((doc) => doc.toLowerCase().contains(query.toLowerCase()))
+  //           .toList();
+  //     }
+  //   });
+  // }
 
   void _savePunishment() {
     // if (_formKey.currentState!.validate()) {

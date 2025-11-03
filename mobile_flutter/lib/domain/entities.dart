@@ -1,9 +1,6 @@
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:ffi';
 
 import 'package:flutter/material.dart';
-import 'package:iconify_flutter/icons/cib.dart';
 import 'package:latlong2/latlong.dart';
 
 class Pagination {
@@ -100,7 +97,7 @@ extension ProjectStatusExtension on ProjectStatus {
   }
 
     Color getTintedStatusColor() {
-      return this.getStatusColor().withOpacity(0.5);
+      return getStatusColor().withOpacity(0.5);
     }
 
   Text toRenderingString() {
@@ -583,7 +580,6 @@ class Report {
 
   Map<String, dynamic> toStorageJson() {
     return {
-      'check_date': checkDate,
       'status': status,
       'check_date': checkDate?.toIso8601String()
           .split('T').first,
@@ -598,7 +594,6 @@ class Report {
 
   Map<String, dynamic> toJson() {
     return {
-      'check_date': checkDate,
       'status': status,
       'check_date': checkDate?.toIso8601String()
         .split('T').first,

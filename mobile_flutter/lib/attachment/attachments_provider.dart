@@ -3,10 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
-import 'package:mobile_flutter/main.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/di/dependency_container.dart';
-import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 

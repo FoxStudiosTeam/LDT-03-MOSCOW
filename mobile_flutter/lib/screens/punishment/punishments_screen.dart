@@ -31,7 +31,6 @@ class PunishmentsScreen extends StatefulWidget {
 }
 
 class _PunishmentsScreenState extends State<PunishmentsScreen> {
-  String? _token;
   Role? _role;
   List<PunishmentCard> data = [];
 
@@ -122,14 +121,11 @@ class _PunishmentsScreenState extends State<PunishmentsScreen> {
         IAuthStorageProviderDIToken,
       );
       var role = await authStorageProvider.getRole();
-      var token = await authStorageProvider.getAccessToken();
       setState(() {
-        _token = token;
         _role = roleFromString(role);
       });
     } catch (e) {
       setState(() {
-        _token = "NO TOKEN";
         _role = Role.UNKNOWN;
       });
     }

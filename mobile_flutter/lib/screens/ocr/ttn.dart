@@ -1,13 +1,9 @@
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/tabler.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/bridges/ocr.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
@@ -17,13 +13,11 @@ import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/utils/file_utils.dart';
 import 'package:mobile_flutter/widgets/attachments.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
-import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 import 'package:mobile_flutter/widgets/funny_things.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image/image.dart' as img;
 import 'package:file_picker/file_picker.dart';
-import 'package:uuid/uuid.dart';
 
 const String cameraSvg ='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="24" height="24" fill="none"/><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2"/><path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></g></svg>';
 
@@ -46,7 +40,7 @@ class NameAndNumber {
 }
 
 NameAndNumber? extractNameAndNumber(String text) {
-  var reg = RegExp(r'Наименование\s*[—-]\s*(.+?)[,\.]\s*([^\s]+)');
+  var reg = RegExp(r'Наименование\s*[—-]\s*(.+?)[,.]\s*([^\s]+)');
   var match = reg.firstMatch(text);
   if (match == null) {return null;}
   var name = match.group(1)?.trim();
@@ -755,7 +749,7 @@ class _TTNScanScreenState extends State<TTNScanScreen> {
 
                           final record = TTNRecord(
                             name: _nameController.text,
-                            number: c!.toDouble(),
+                            number: c.toDouble(),
                             unit: _units.indexOf(_selectedUnit!),
                             attachments: attachments,
                             projectId: widget.projectId

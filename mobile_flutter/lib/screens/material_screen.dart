@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/materials/materials_provider.dart';
@@ -37,7 +35,6 @@ class MaterialsScreen extends StatefulWidget {
 }
 
 class _MaterialsScreenState extends State<MaterialsScreen> {
-  String? _token;
   Role? _role;
   Map<int, String>? _measurements;
   List<MaterialCard> materials = [];
@@ -52,14 +49,11 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         IAuthStorageProviderDIToken,
       );
       var role = await authStorageProvider.getRole();
-      var token = await authStorageProvider.getAccessToken();
       setState(() {
-        _token = token;
         _role = roleFromString(role);
       });
     } catch (e) {
       setState(() {
-        _token = "NO TOKEN";
         _role = Role.UNKNOWN;
       });
     }

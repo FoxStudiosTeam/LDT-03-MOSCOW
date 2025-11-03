@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
@@ -27,7 +25,6 @@ class ObjectsScreen extends StatefulWidget {
 }
 
 class _ObjectsScreenState extends State<ObjectsScreen> {
-  String? _token;
   Role? _role;
   List<ProjectAndInspectors> projects = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -60,14 +57,11 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         IAuthStorageProviderDIToken,
       );
       var role = await authStorageProvider.getRole();
-      var token = await authStorageProvider.getAccessToken();
       setState(() {
-        _token = token;
         _role = roleFromString(role);
       });
     } catch (e) {
       setState(() {
-        _token = "NO TOKEN";
         _role = Role.UNKNOWN;
       });
     }
@@ -255,7 +249,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
           'assets/icons/logo.svg',
           width: 40,
           height: 40,
-          color: Colors.black,
+          colorFilter: ColorFilter.mode(Colors.black,BlendMode.clear)
         ),
         title: "ЭСЖ",
         rightIcon: IconButton(
@@ -264,7 +258,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
             'assets/icons/menu.svg',
             width: 40,
             height: 40,
-            color: Colors.black,
+            colorFilter: ColorFilter.mode(Colors.black,BlendMode.clear)
           ),
         ),
       ),

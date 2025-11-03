@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
 import 'package:mobile_flutter/screens/punishment/create_punishment_item.dart';
@@ -38,7 +36,6 @@ class PunishmentItemsScreen extends StatefulWidget {
 }
 
 class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
-  String? _token;
   Role? _role;
   List<PunishmentItemCard> data = [];
 
@@ -103,31 +100,11 @@ class _PunishmentItemsScreenState extends State<PunishmentItemsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAuth();
     if (!widget.is_new){
       _loadCards().then((cards) {
         setState(() {
           data = cards;
         });
-      });
-    }
-  }
-
-  Future<void> _loadAuth() async {
-    try {
-      var authStorageProvider = widget.di.getDependency<IAuthStorageProvider>(
-        IAuthStorageProviderDIToken,
-      );
-      var role = await authStorageProvider.getRole();
-      var token = await authStorageProvider.getAccessToken();
-      setState(() {
-        _token = token;
-        _role = roleFromString(role);
-      });
-    } catch (e) {
-      setState(() {
-        _token = "NO TOKEN";
-        _role = Role.UNKNOWN;
       });
     }
   }

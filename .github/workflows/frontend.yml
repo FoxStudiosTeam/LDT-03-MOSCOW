@@ -2,7 +2,6 @@ name: ⚡ Next.js App 🟢
 
 on:
   push:
-  pull_request:
 
 jobs:
   lint-and-test:
@@ -32,7 +31,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     uses: FoxStudiosTeam/Deployment/.github/workflows/build-image.yml@v0.0.29
     with:
-      image-name: frontend/frontend
+      image-name: dbj/frontend
       namespace: solution
       workdir: './frontend'
       context: './'

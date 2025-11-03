@@ -51,7 +51,7 @@ class PunishmentItemAttachmentCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    data.originalFilename ?? "Файл",
+                    data.originalFilename,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,

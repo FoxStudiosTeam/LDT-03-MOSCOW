@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/screens/punishment/punishment_items_screen.dart';
-import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
 
 class PunishmentCard extends StatelessWidget {
@@ -39,7 +36,7 @@ class PunishmentCard extends StatelessWidget {
             title: const Text('Скачать документ'),
             onTap: () {
               Navigator.pop(ctx);
-              _handleDownloadDocument();
+              //_handleDownloadDocument();
             },
           ),
         ],
@@ -47,15 +44,15 @@ class PunishmentCard extends StatelessWidget {
     );
   }
 
-  void _handleEditPunishment() {
-    // TODO: Реализовать редактирование предписания
-    print("Редактировать предписание: ${data.customNumber}");
-  }
-
-  void _handleDownloadDocument() {
-    // TODO: Реализовать скачивание документа
-    print("Скачать документ предписания: ${data.customNumber}");
-  }
+  // void _handleEditPunishment() {
+  //   // TODO: Реализовать редактирование предписания
+  //   print("Редактировать предписание: ${data.customNumber}");
+  // }
+  //
+  // void _handleDownloadDocument() {
+  //   // TODO: Реализовать скачивание документа
+  //   print("Скачать документ предписания: ${data.customNumber}");
+  // }
 
   Color _getStatusColor(int status) {
     switch (status) {
