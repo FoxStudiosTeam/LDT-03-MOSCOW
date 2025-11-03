@@ -2,7 +2,6 @@ name: ⚡ Rust matrix 🦀
 
 on:
   push:
-  pull_request:
 
 env:
   CARGO_HOME: /mnt/shared/solution/cargo

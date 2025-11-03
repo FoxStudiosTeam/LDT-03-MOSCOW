@@ -2,7 +2,6 @@ name: ⚡ Next.js App 🟢
 
 on:
   push:
-  pull_request:
 
 jobs:
   lint-and-test:
