@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ffi';
 
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:shared_preferences/shared_preferences.dart';

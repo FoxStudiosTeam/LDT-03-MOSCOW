@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:iconify_flutter/icons/majesticons.dart';
 
 class CurrentLocationMarkerLayer extends StatelessWidget {

@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:core';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'dart:developer' as dev;
+
 Future<LatLng?> getCurrentLocation() async {
   bool serviceEnabled;
   LocationPermission permission;

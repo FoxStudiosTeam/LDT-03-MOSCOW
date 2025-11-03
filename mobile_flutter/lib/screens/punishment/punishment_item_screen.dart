@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/widgets/drawer_menu.dart';
@@ -26,57 +25,35 @@ class PunishmentItemScreen extends StatefulWidget {
 }
 
 class _PunishmentItemScreenState extends State<PunishmentItemScreen> {
-  String? _token;
-  Role? _role;
   List<PunishmentItemAttachmentCard> data = [];
 
   void leaveHandler() {
     Navigator.pop(context);
   }
 
-  void _handleAddAttachment() {
-    // TODO: Реализовать добавление вложения
-    print("Добавить новое вложение");
-  }
-
-  void _handleFilterAttachments() {
-    // TODO: Реализовать фильтрацию по типу
-    print("Фильтровать вложения по типу");
-  }
-
-  void _handleDownloadAll() {
-    // TODO: Реализовать скачивание всех вложений
-    print("Скачать все вложения");
-  }
+  // void _handleAddAttachment() {
+  //   // TODO: Реализовать добавление вложения
+  //   print("Добавить новое вложение");
+  // }
+  //
+  // void _handleFilterAttachments() {
+  //   // TODO: Реализовать фильтрацию по типу
+  //   print("Фильтровать вложения по типу");
+  // }
+  //
+  // void _handleDownloadAll() {
+  //   // TODO: Реализовать скачивание всех вложений
+  //   print("Скачать все вложения");
+  // }
 
   @override
   void initState() {
     super.initState();
-    _loadAuth();
     _loadCards().then((cards) {
       setState(() {
         data = cards;
       });
     });
-  }
-
-  Future<void> _loadAuth() async {
-    try {
-      var authStorageProvider = widget.di.getDependency<IAuthStorageProvider>(
-        IAuthStorageProviderDIToken,
-      );
-      var role = await authStorageProvider.getRole();
-      var token = await authStorageProvider.getAccessToken();
-      setState(() {
-        _token = token;
-        _role = roleFromString(role);
-      });
-    } catch (e) {
-      setState(() {
-        _token = "NO TOKEN";
-        _role = Role.UNKNOWN;
-      });
-    }
   }
 
   Future<List<PunishmentItemAttachmentCard>> _loadCards() async {
@@ -117,7 +94,7 @@ class _PunishmentItemScreenState extends State<PunishmentItemScreen> {
       ),
       // Кнопка добавления в FAB для быстрого доступа
       floatingActionButton: FloatingActionButton(
-        onPressed: _handleAddAttachment,
+        onPressed: () => {},
         backgroundColor: FoxThemeButtonActiveBackground,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),

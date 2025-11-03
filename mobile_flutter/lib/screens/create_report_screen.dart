@@ -38,7 +38,6 @@ class ReportRecord {
 }
 
 class _ReportCreationScreenState extends State<ReportCreationScreen> {
-  final TextEditingController _workNameController = TextEditingController();
   List<PlatformFile> attachments = [];
   String? _selectedWorkUuid;
   String? _selectedWorkTitle;
@@ -317,81 +316,81 @@ SingleChildScrollView(
     );
   }
   // Список с вложениями
-  Widget _buildAttachmentsSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                "Вложения",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
-              if (attachments.isNotEmpty) ...[
-                const SizedBox(width: 8),
-                Text(
-                  '(${attachments.length})',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.55,
-            ),
-            child: SingleChildScrollView(
-              child: Wrap(
-                alignment: WrapAlignment.start,
-                spacing: 8,
-                runSpacing: 8,
-                children: attachments.map((file) {
-                  return Chip(
-                    avatar: FileUtils.getFileIcon(file.extension ?? ''),
-                    label: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          file.name,
-                          style: const TextStyle(fontSize: 12),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          FileUtils.formatFileSize(file.size),
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                    onDeleted: () {
-                      setState(() {
-                        attachments.remove(file);
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildAttachmentsSection() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(16),
+  //     width: double.infinity,
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             Text(
+  //               "Вложения",
+  //               style: TextStyle(
+  //                 fontSize: 16,
+  //                 fontWeight: FontWeight.bold,
+  //                 color: Colors.grey[800],
+  //               ),
+  //             ),
+  //             if (attachments.isNotEmpty) ...[
+  //               const SizedBox(width: 8),
+  //               Text(
+  //                 '(${attachments.length})',
+  //                 style: TextStyle(
+  //                   fontSize: 14,
+  //                   color: Colors.grey[600],
+  //                 ),
+  //               ),
+  //             ],
+  //           ],
+  //         ),
+  //         const SizedBox(height: 8),
+  //         Container(
+  //           constraints: BoxConstraints(
+  //             maxHeight: MediaQuery.of(context).size.height * 0.55,
+  //           ),
+  //           child: SingleChildScrollView(
+  //             child: Wrap(
+  //               alignment: WrapAlignment.start,
+  //               spacing: 8,
+  //               runSpacing: 8,
+  //               children: attachments.map((file) {
+  //                 return Chip(
+  //                   avatar: FileUtils.getFileIcon(file.extension ?? ''),
+  //                   label: Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     mainAxisSize: MainAxisSize.min,
+  //                     children: [
+  //                       Text(
+  //                         file.name,
+  //                         style: const TextStyle(fontSize: 12),
+  //                         maxLines: 1,
+  //                         overflow: TextOverflow.ellipsis,
+  //                       ),
+  //                       Text(
+  //                         FileUtils.formatFileSize(file.size),
+  //                         style: TextStyle(
+  //                           fontSize: 10,
+  //                           color: Colors.grey[600],
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   onDeleted: () {
+  //                     setState(() {
+  //                       attachments.remove(file);
+  //                     });
+  //                   },
+  //                 );
+  //               }).toList(),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   void _openAddAttachmentMenu(BuildContext context) {
     showBlurBottomSheet(

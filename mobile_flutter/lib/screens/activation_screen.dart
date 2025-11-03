@@ -1,18 +1,13 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
-import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/object/object_provider.dart';
 import 'package:mobile_flutter/utils/file_utils.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/widgets/attachments.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 import 'package:mobile_flutter/widgets/blur_menu.dart';
-import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:mobile_flutter/widgets/funny_things.dart';
 
 class ChecklistActivationScreen extends StatefulWidget {

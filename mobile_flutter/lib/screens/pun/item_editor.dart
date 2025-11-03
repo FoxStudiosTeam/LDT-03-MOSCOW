@@ -1,7 +1,5 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_flutter/di/dependency_container.dart';
-import 'package:mobile_flutter/domain/entities.dart';
 import 'package:mobile_flutter/screens/pun/item_card.dart';
 import 'package:mobile_flutter/utils/file_utils.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
@@ -451,32 +449,32 @@ class _PunishmentEditorScreenState extends State<PunishmentEditorScreen> {
     );
   }
 
-  Widget _buildAttachmentsSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-            
-        ],
-      ),
-    );
-  }
+  // Widget _buildAttachmentsSection() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(20),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(16),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.05),
+  //           blurRadius: 8,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //       border: Border.all(
+  //         color: Colors.grey.shade200,
+  //         width: 1,
+  //       ),
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildActionButtons() {
     return Container(

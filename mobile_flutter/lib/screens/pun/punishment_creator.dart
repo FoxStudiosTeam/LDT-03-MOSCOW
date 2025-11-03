@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
@@ -9,7 +8,6 @@ import 'package:mobile_flutter/main.dart';
 import 'package:mobile_flutter/punishment/punishment_provider.dart';
 import 'package:mobile_flutter/screens/pun/item_card.dart';
 import 'package:mobile_flutter/screens/pun/item_editor.dart';
-import 'package:mobile_flutter/utils/file_utils.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
 import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';

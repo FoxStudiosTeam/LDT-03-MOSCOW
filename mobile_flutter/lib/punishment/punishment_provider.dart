@@ -2,9 +2,7 @@ import 'dart:async';
 
 import 'package:http/http.dart' as http;
 import 'package:mobile_flutter/auth/auth_storage_provider.dart';
-import 'package:mobile_flutter/main.dart';
 import 'package:mobile_flutter/domain/entities.dart';
-import 'package:mobile_flutter/di/dependency_container.dart';
 import 'dart:convert';
 
 import 'package:mobile_flutter/punishment/punishment_storage_provider.dart';
@@ -287,6 +285,7 @@ class SmartPunishmentProvider implements IPunishmentProvider {
     else {
       //TODO оффлайн функции
     }
+    return null;
   }
 
   Future<UuidResponse?> create_punishment_item(PunishmentItemCreateRequest punishment_item) async {
@@ -326,6 +325,7 @@ class SmartPunishmentProvider implements IPunishmentProvider {
     else {
       //TODO оффлайн функции
     }
+    return null;
   }
 
   Future<UuidResponse?> update_punishment(PunishmentUpdRequest punishment) async {
@@ -364,6 +364,7 @@ class SmartPunishmentProvider implements IPunishmentProvider {
     else {
       //TODO оффлайн функции
     }
+    return null;
   }
 
   Future<UuidResponse?> update_punishment_item(PunishmentItemUpdRequest punishment_item) async {
@@ -403,5 +404,6 @@ class SmartPunishmentProvider implements IPunishmentProvider {
     else {
       //TODO оффлайн функции
     }
+    return null;
   }
 }

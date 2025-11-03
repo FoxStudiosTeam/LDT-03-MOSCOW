@@ -4,12 +4,9 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/tabler.dart';
 import 'package:mobile_flutter/bridges/ocr.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
-import 'package:mobile_flutter/widgets/fox_header.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image/image.dart' as img;
 
@@ -83,7 +80,7 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
   bool _isProcessing = false;
-  MaybeTnn? _maybeTnn;
+//  MaybeTnn? _maybeTnn;
 
   @override
   void initState() {
@@ -150,7 +147,7 @@ class _OcrCameraScreenState extends State<OcrCameraScreen> {
       if (text == null) {
         return;
       }
-      _maybeTnn = MaybeTnn.extract(text);
+      //_maybeTnn = MaybeTnn.extract(text);
 
     } catch (e) {
       log('Error taking picture: $e');

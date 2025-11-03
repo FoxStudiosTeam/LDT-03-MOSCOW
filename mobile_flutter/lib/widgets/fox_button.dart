@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../utils/style_utils.dart';
 
+@immutable
 class FoxButton extends StatelessWidget {
-  void Function()? onPressed;
-  String text;
+  final void Function()? onPressed;
+  final String text;
 
   FoxButton({super.key, required this.onPressed,required this.text});
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_flutter/di/dependency_container.dart';
 import 'package:mobile_flutter/utils/network_utils.dart';
-import 'package:mobile_flutter/utils/style_utils.dart';
 import 'package:mobile_flutter/widgets/base_header.dart';
 
 class QueueHistoryScreen extends StatelessWidget {
