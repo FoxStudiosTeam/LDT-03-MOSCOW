@@ -8,11 +8,15 @@ jobs:
     runs-on: self-hosted
     defaults:
       run:
-        working-directory: ./frontend
+        working-directory: ./mobile_flutter
     name: Flutter Lint & Test
     steps:
       - uses: actions/checkout@v3
 
+      - name: Mark Flutter directory as safe
+        run: |
+          git config --global --add safe.directory /opt/hostedtoolcache/flutter/stable-3.35.4-x64
+      
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
